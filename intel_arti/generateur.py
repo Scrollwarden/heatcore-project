@@ -178,5 +178,5 @@ for session in range(nb_session) :
         succes += entrainement_clos(i%6)
         environnement.reset()
     print(f"Session {session} :", succes, "/12")
-    model_path = model_name + str(session + 1) +  ".h5"
+    model_path = model_name + str(session + 1) +  ".keras"
     agent.model.save(model_path)
