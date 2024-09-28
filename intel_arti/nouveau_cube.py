@@ -1,5 +1,8 @@
 from numpy import zeros, array, ndarray
 from copy import deepcopy
+from random import randint
+from time import perf_counter
+from sys import stdout
 
 # La face à tourner par numéro d'action
 CORRESP_FACE_ACT = (1, 3, 4, 2, 0, 5)
@@ -20,6 +23,15 @@ def check_type(ignore_first, *args_type : type) :
             return fonction(*args)
         return verification
     return decorateur
+
+def mesurer_temps(fonction):
+    def fonction_modifiee(*args, **kwargs):
+        debut = perf_counter()
+        resultat = fonction(*args, **kwargs)
+        fin = perf_counter()
+        print(f"Temps d'exécution de {fonction.__name__}: {fin - debut} secondes.")
+        return resultat
+    return fonction_modifiee
 
 class Cube :
     """La classe Cube enregistre l'état du cube à tout instant et permet de le modifier.
@@ -65,12 +77,21 @@ class Cube :
         """
         for i in range(3) :
             print(*self.faces[face, i])
+    
+    @mesurer_temps
+    def aleatoire(self) :
+        """Change les faces du Cube de façon entièrement aléatoire"""
+        for face in range(6) :
+            for ligne in range(3) :
+                for colonne in range(3) :
+                    self.faces[face, ligne, colonne] = randint(-1, 1)
 
     def reset_cube(self) -> None:
         """Remet le Cube à son état initial."""
         self.faces = zeros((6, 3, 3))
     
     @check_type(True, ndarray)
+    @mesurer_temps
     def set_faces(self, faces : ndarray) -> None:
         """Change entièrement l'état du Cube par celui passé en argument.
         Param
@@ -216,6 +237,7 @@ class Cube :
             pass
     
     @check_type(True, bool, bool)
+    @mesurer_temps
     def symetrie(self, horizontale : bool, verticale : bool) :
         """Renvoie l'état du Cube avec la ou les symétries axiales demandées
         
@@ -224,7 +246,24 @@ class Cube :
             horizontale (bool) : Si la symétrie horizontale doit être appliquée
             verticale (bool) : Si la symétrie verticale doit être appliquée
         """
+        faces = deepcopy(self.faces)
+        original = self.faces
+        if horizontale :
+            for face in (0, 2, 4, 5) :
+                faces[face, 0], faces[face, 2] = original[face, 2], original[face, 0]
+            faces[1], faces[3] = original[3, ::-1], original[1, ::-1]
+        if horizontale and verticale :
+            original = deepcopy(faces)
+        if verticale :
+            for face in (0, 1, 3, 5) :
+                faces[face, :, 0], faces[face, :, 2] = original[face, :, 2], original[face, :, 0]
+            faces[2], faces[4] = original[4, :, ::-1], original[2, :, ::-1]
+        return faces
 
 if __name__ == "__main__" :
-    cube = Cube()
-    print(cube)
+    cube1 = Cube()
+    cube1.aleatoire()
+    cube2 = Cube()
+    cube2.set_faces(cube1.symetrie(True, True))
+    print(cube1)
+    print(cube2)
