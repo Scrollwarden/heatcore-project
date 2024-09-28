@@ -162,7 +162,6 @@ class Cube :
         if 0 in liste_faces : # Cas le plus simple
             if est_ligne :
                 self.faces[liste_faces[0], num, :], self.faces[liste_faces[1], num, :], self.faces[liste_faces[2], num, :], self.faces[liste_faces[3], num, :] = self.faces[liste_faces[1], num, :], self.faces[liste_faces[2], num, :], self.faces[liste_faces[3], num, :], self.faces[liste_faces[0], num, :]
-
         else :
             pass
 
