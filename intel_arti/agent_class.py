@@ -7,7 +7,7 @@ import random
 from collections import deque
 tf.keras.utils.disable_interactive_logging()
 
-def create_model(state_size, action_size):
+def create_model(state_size):
     # À quoi ressemble notre modèle
     model = Sequential()
     model.add(Input(shape=(state_size,)))
@@ -15,7 +15,7 @@ def create_model(state_size, action_size):
     model.add(Dense(64, activation='relu'))
     model.add(Dense(64, activation='relu'))
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(action_size, activation='linear'))
+    model.add(Dense(1, activation='linear'))
     model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001),
                   loss = tf.keras.losses.MeanSquaredError())
     #print("Weights :", model.get_weights())
@@ -58,7 +58,7 @@ class DQNAgent:
         self.epsilon_min = 0.01 # Quand est-ce que l'IA arrête d'explorer
         self.epsilon_decay = 0.95 # À chaque fois, on multiplie self.epsilon par self.epsilon_decay pour qu'il commence à répondre tout seul
         if not no_model :
-            self.model = create_model(state_size, action_size)
+            self.model = create_model(state_size)
         
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -142,4 +142,4 @@ class DQNAgent:
             target[0][action] = reward
             self.model.fit(state, target, epochs=1, verbose=0)
 
-create_model(54, 27)
+create_model(54)

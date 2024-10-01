@@ -1,6 +1,6 @@
 import pygame, sys
 import time
-from nsi_project import Cube
+from nouveau_cube import Cube
 
 # Screen constants
 LINE_WIDTH = 3
@@ -67,6 +67,18 @@ NUM_MAP = {
     pygame.K_8: (1, 2),
     pygame.K_9: (2, 2)
 }
+
+KEY_NUM = (
+    pygame.K_1,
+    pygame.K_2,
+    pygame.K_3,
+    pygame.K_4,
+    pygame.K_5,
+    pygame.K_6,
+    pygame.K_7,
+    pygame.K_8,
+    pygame.K_9
+)
 
 class Param:
     ROUND = 15
@@ -140,7 +152,7 @@ if __name__ == "__main__":
     param = Param()
     temp = time.time()
     cube = Cube()
-    #cube.aleatoire()
+    cube.aleatoire()
     print(cube)
     print(cube.terminal_state())
     reverse_display = False
@@ -157,14 +169,13 @@ if __name__ == "__main__":
             elif event.type == pygame.KEYDOWN:
                 if event.key in KEY_MAP:
                     if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        cube.string_to_move(KEY_MAP[event.key] + "'", False)
+                        cube.string_to_move(KEY_MAP[event.key] + "'", player, False)
                     else:
-                        cube.string_to_move(KEY_MAP[event.key], False)
+                        cube.string_to_move(KEY_MAP[event.key], player, False)
                     print(cube.terminal_state())
                     player *= -1
-                elif event.key in NUM_MAP:
-                    x, y = NUM_MAP[event.key]
-                    cube.faces[0][y][x] = player
+                elif event.key in KEY_NUM:
+                    cube.jouer(event.key - 31, player)
                     player *= -1
                     print(cube.terminal_state())
                 elif event.key == pygame.K_SPACE:

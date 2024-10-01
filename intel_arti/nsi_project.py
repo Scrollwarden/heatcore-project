@@ -8,6 +8,36 @@ class Cube:
     def __str__(self) -> str:
         """Retourne un string dès lors qu'on fait str(Cube) par exemple dans print(Cube)
 
+        Return
+        -------
+            str: Le string retourné représentant le cube
+        """
+        ligne_vide = " " * 9
+        affichage = ""
+        for i in range(3) :
+            ligne = (f"{self.faces[3][i][j]:>2.0f}" for j in range(3))
+            affichage += ligne_vide + " ".join(ligne) + "\n"
+        for i in range(3) :
+            ligne = ((f"{self.faces[f][i][j]:>2.0f}" for j in range(3)) for f in (2, 0, 4, 5))
+            affichage += "|".join(" ".join(morceau) for morceau in ligne) + "\n"
+        for i in range(3) :
+            ligne = (f"{self.faces[1][i][j]:>2.0f}" for j in range(3))
+            affichage += ligne_vide + " ".join(ligne) 
+            affichage += "\n" if i != 2 else ""
+        return affichage
+
+    def aleatoire(self) -> None:
+        """Change les faces du Cube de façon entièrement aléatoire.
+        Si uniquement des -1, 0 et 1 sont utilisés, cela ne signifie pas
+        pour autant que la situation est succeptible d'être atteinte."""
+        for face in range(6) :
+            for ligne in range(3) :
+                for colonne in range(3) :
+                    self.faces[face][ligne][colonne] = randint(-1, 1)
+    
+    def __str2__(self) -> str:
+        """Retourne un string dès lors qu'on fait str(Cube) par exemple dans print(Cube)
+
         Returns:
             str: Le string retourné
         """
@@ -16,6 +46,11 @@ class Cube:
     def reset_cube(self) -> None:
         """Remet le cube à zéro"""
         self.faces = [[[0 for _ in range(3)] for _ in range(3)] for _ in range(6)]
+        for face in range(6) :
+            self.faces[face][0][0] = 1
+            self.faces[face][0][1] = 1
+        self.faces[1][1][1] = -1
+        self.faces[4][0][1] = -1
     
     def terminal_state(self, state : list[list[list[int]]] = None) -> tuple[bool, int]:
         draw = True
@@ -48,15 +83,15 @@ class Cube:
     def general_move(self, 
                      face_path: tuple[int],
                      piece_replacement: tuple[tuple[tuple[int, int]]],
-                     face_rotation: int=0,
-                     reverse=False,
-                     cancel_face_rotation=False) -> None:
+                     face_rotation: int = 0,
+                     reverse: bool = False,
+                     cancel_face_rotation: bool = False) -> None:
         """Fonction qui permet d'effectuer n'importe quel mouvement :)
 
         Args:
             face_path (tuple[int]): Les faces du cube (dans l'ordre) où on effectue le mouvement
             piece_replacement (tuple[tuple[tuple[int, int]]]): Les pieces de chaque face à enlever (en fonction de la face)
-            face_rotation (int, optional): La face où s'effectue la rotation. Defaults to None.
+            face_rotation (int, optional): La face où s'effectue la rotation. Defaults to 0.
             reverse (bool, optional): Si on inverse le mouvement (dans l'autre sens). False de base.
             cancel_face_rotation (bool, optional): Est-ce qu'on effectue pas la rotation de face (pour les tranches). False de base.
         """
