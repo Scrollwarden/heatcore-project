@@ -56,17 +56,6 @@ KEY_MAP = {
     pygame.K_e: "E",
     pygame.K_s: "S",
 }
-NUM_MAP = {
-    pygame.K_1: (0, 0),
-    pygame.K_2: (1, 0),
-    pygame.K_3: (2, 0),
-    pygame.K_4: (0, 1),
-    pygame.K_5: (1, 1),
-    pygame.K_6: (2, 1),
-    pygame.K_7: (0, 2),
-    pygame.K_8: (1, 2),
-    pygame.K_9: (2, 2)
-}
 
 KEY_NUM = (
     pygame.K_1,
