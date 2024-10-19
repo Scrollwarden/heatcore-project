@@ -97,7 +97,7 @@ def display_face(screen, param: Param, cube: Cube, face: int, corner_placement: 
     box = tuple(param.screen_coordinates(border_placement(x, y)) for x, y in ((0, 0), (3, 0), (3, 3), (0, 3)))
     pygame.draw.polygon(screen, colors["grey"], box, 0)
     pygame.draw.polygon(screen, colors["white"], box, LINE_WIDTH)
-    for y, sub in enumerate(cube.faces[face]):
+    for y, sub in enumerate(cube.get_face(face)) :
         for x, ele in enumerate(sub):
             corner = corner_placement(x, y)
             if ele == 1:
@@ -121,13 +121,13 @@ def add_points(point1, point2):
 def display_front(screen, param: Param, cube: Cube, faded_color: bool=False):
     colors = FADED_COLORS if faded_color else COLORS
     display_face(screen, param, cube, 0, lambda x, y: (x, 2 - y, 0), TOP_CROSS, TOP_SQUARE, colors, lambda x, y: (x, 3 - y, 0)) # White face
-    display_face(screen, param, cube, 1, lambda x, y: (0, 2 - y, 2 - x), LEFT_CROSS, LEFT_SQUARE, colors, lambda x, y: (0, 3 - y, 3 - x)) # Orange face
-    display_face(screen, param, cube, 2, lambda x, y: (x, 0, y), RIGHT_CROSS, RIGHT_SQUARE, colors, lambda x, y: (x, 0, y)) # Green face
+    display_face(screen, param, cube, 2, lambda x, y: (0, 2 - y, 2 - x), LEFT_CROSS, LEFT_SQUARE, colors, lambda x, y: (0, 3 - y, 3 - x)) # Orange face
+    display_face(screen, param, cube, 1, lambda x, y: (x, 0, y), RIGHT_CROSS, RIGHT_SQUARE, colors, lambda x, y: (x, 0, y)) # Green face
 
 def display_back(screen, param: Param, cube: Cube, faded_color: bool=False, distance: int=6.5):
     colors = FADED_COLORS if faded_color else COLORS
-    display_face(screen, param, cube, 3, lambda x, y: (distance, 2 - y, x), LEFT_CROSS, LEFT_SQUARE, colors, lambda x, y: (distance, 3 - y, x)) # Red face
-    display_face(screen, param, cube, 4, lambda x, y: (x, distance, 2 - y), RIGHT_CROSS, RIGHT_SQUARE, colors, lambda x, y: (x, distance, 3 - y)) # Blue face
+    display_face(screen, param, cube, 4, lambda x, y: (distance, 2 - y, x), LEFT_CROSS, LEFT_SQUARE, colors, lambda x, y: (distance, 3 - y, x)) # Red face
+    display_face(screen, param, cube, 3, lambda x, y: (x, distance, 2 - y), RIGHT_CROSS, RIGHT_SQUARE, colors, lambda x, y: (x, distance, 3 - y)) # Blue face
     display_face(screen, param, cube, 5, lambda x, y: (2 - x, 2 - y, distance), TOP_CROSS, TOP_SQUARE, colors, lambda x, y: (3 - x, 3 - y, distance)) # Yellow face
 
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     param = Param()
     temp = time.time()
     cube = Cube()
-    cube.aleatoire()
+    #cube.aleatoire()
     print(cube)
     print(cube.terminal_state())
     reverse_display = False
@@ -162,11 +162,13 @@ if __name__ == "__main__":
                     else:
                         cube.string_to_move(KEY_MAP[event.key], player, False)
                     print(cube.terminal_state())
+                    print(cube)
                     player *= -1
                 elif event.key in KEY_NUM:
                     cube.jouer(event.key - 31, player)
                     player *= -1
                     print(cube.terminal_state())
+                    print(cube)
                 elif event.key == pygame.K_SPACE:
                     reverse_display = not reverse_display
 
