@@ -171,6 +171,9 @@ if __name__ == "__main__":
                     print(cube)
                 elif event.key == pygame.K_SPACE:
                     reverse_display = not reverse_display
+                elif event.key == pygame.K_p :
+                    cube.set_symetrie(False, True)
+                    print(cube)
 
         # Fill the screen with black
         screen.fill(BLACK)

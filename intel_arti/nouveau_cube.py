@@ -122,6 +122,9 @@ class Surface :
     def get_state(self) :
         return self.grille
     
+    def set_state(self, state : ndarray) :
+        self.grille = state
+    
     def check_pos(self, pos : tuple[int, int, int]) :
         if not (0 <= pos[0] <= 5 and 0 <= pos[1] <= 2 and 0 <= pos[2] <= 2) :
             raise ValueError(f"La position n'est pas valide : elle est de {pos}")
@@ -398,6 +401,40 @@ class Cube(Surface) :
                 for colonne in range(3) :
                     self.set_pion((face, ligne, colonne), randint(-1, 1))
 
+
+    @check_type(True, bool, bool)
+    def symetrie(self, horizontale : bool, verticale : bool) :
+        """Renvoie l'état du Cube avec la ou les symétries axiales demandées
+        
+        Params
+        -------
+            horizontale (bool) : Si la symétrie horizontale doit être appliquée
+            verticale (bool) : Si la symétrie verticale doit être appliquée
+        """
+        faces = deepcopy(self.grille)
+        original = self.grille
+        if horizontale :
+            for face in (0, 2, 4, 5) :
+                faces[face, 0], faces[face, 2] = original[face, 2], original[face, 0]
+            faces[1], faces[3] = original[3, ::-1], original[1, ::-1]
+        if horizontale and verticale :
+            original = deepcopy(faces)
+        if verticale :
+            for face in (0, 1, 3, 5) :
+                faces[face, :, 0], faces[face, :, 2] = original[face, :, 2], original[face, :, 0]
+            faces[2], faces[4] = original[4, :, ::-1], original[2, :, ::-1]
+        return faces
+
+    def set_symetrie(self, horizonatale : bool, verticale : bool) :
+        self.set_state(self.symetrie(horizonatale, verticale))
+    
+    def actions_possibles(self) :
+        actions = list(range(18))
+        for li in range(3) :
+            for col in range(3) :
+                if self.get_pion((0, li, col)) == 0 :
+                    actions.append(18 + 3 * li + col)
+        return actions
 
 class NCube :
     """La classe Cube enregistre l'état du cube à tout instant et permet de le modifier.
