@@ -119,6 +119,20 @@ class Surface :
             affichage += "\n" if i != 2 else ""
         return affichage
     
+    @check_type(True, int)
+    def afficher_face(self, face : int) :
+        """Affiche la face demandée dans le terminal.
+        
+        Param
+        ------
+            n_face (int) : La face à afficher
+        """
+        affichage = ""
+        for i in range(3) :
+            ligne = (f"{self.get_pion((face, i, j)):>2.0f}" for j in range(3))
+            affichage += " ".join(ligne) + "\n"
+        print(affichage, end="")
+    
     def get_state(self) :
         return self.grille
     
@@ -428,8 +442,11 @@ class Cube(Surface) :
     def set_symetrie(self, horizonatale : bool, verticale : bool) :
         self.set_state(self.symetrie(horizonatale, verticale))
     
-    def actions_possibles(self) :
+    def actions_possibles(self, coup_interdit : int = -1) -> list[int]:
+        """Renvoie toutes les actions possibles dans l'état du jeu."""
         actions = list(range(18))
+        if coup_interdit != -1 :
+            actions.remove(coup_interdit)
         for li in range(3) :
             for col in range(3) :
                 if self.get_pion((0, li, col)) == 0 :
