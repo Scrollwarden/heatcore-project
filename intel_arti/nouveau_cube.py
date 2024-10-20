@@ -3,14 +3,6 @@ from copy import deepcopy
 from random import randint
 from time import perf_counter
 
-# La face à tourner par numéro d'action
-CORRESP_FACE_ACT = (4, 2, 1, 3, 0, 5)
-# Le chemin à prendre par numéro d'action
-CORRESP_PATH_ACT = (
-    (0, 1, 5, 3), # f, b, s
-    (0, 2, 5, 4), # l, r, m
-    (1, 2, 3, 4) # u, d, e
-)
 # Pour des raisons de practicités, le "sens horaire" d'une action est définie d'après la première action de sa catégorie
 # Cela signifie qu'appuyer successivement sur f, b et s revient à tourner entièrement le cube vers la droite
 
