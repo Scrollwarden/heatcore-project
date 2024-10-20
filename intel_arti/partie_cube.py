@@ -3,6 +3,9 @@ from random import choice
 from numpy import zeros
 from time import time
 
+NB_CORE = 8
+ # !!! WARNING !!! : Bien définir NB_CORE par rapport à ta machine. Ne pas dépasser son nombre de cores.
+
 
 class Partie :
     def __init__(self) :
@@ -109,21 +112,41 @@ class Partie :
         self.gagnant = gagnant[1]
         self.states = states
 
-if __name__ == "__main__" :
+from concurrent.futures import ProcessPoolExecutor
+
+def play_random_partie(i) :
+    """Fonction donnée en thread pour les parties aléatoires"""
+    partie = Partie()
+    partie.random_partie()
+    return len(partie.states)
+
+def play_wise_random_partie(i) :
+    """Fonction donnée en thread pour les parties aléatoires sans coups interdits"""
+    partie = Partie()
+    partie.wise_random_partie()
+    return len(partie.states)
+
+if __name__ == "__main__":
     somme = 0
     start = time()
-    for _ in range(10000) :
-        partie = Partie()
-        partie.random_partie()
-        somme += len(partie.states)
+
+    # mise en threading des fonctions précédentes sur tous les cores sauf un (pour garder la souris et l'écran) 10000 fois.
+    # !!! WARNING !!! : Bien définir NB_CORE en haut du fichier par rapport à ta machine. Ne pas dépasser son nombre de cores.
+    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+        results = executor.map(play_random_partie, range(10000))
+
+    somme = sum(results)
+
     print("Temps :", time()-start)
     print("Somme :", somme)
     print('---------')
     somme = 0
     start = time()
-    for _ in range(10000) :
-        partie = Partie()
-        partie.wise_random_partie()
-        somme += len(partie.states)
+
+    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+        results = executor.map(play_wise_random_partie, range(10000))
+    
+    somme = sum(results)
+
     print("Temps :", time()-start)
     print("Somme :", somme)
