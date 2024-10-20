@@ -1,16 +1,19 @@
 from nouveau_cube import Cube, check_type
 from random import choice
-from numpy import zeros
+from numpy import zeros, ndarray, append
 from time import time
 
 
 class Partie :
-    def __init__(self) :
+    def __init__(self, do : bool = False) :
         """Initialise une partie."""
         self.joueur = 1
         self.coup_interdit = -1
         self.cube = Cube()
         self.scratch_cube = Cube()
+        if do :
+            self.wise_random_partie()
+            self.eval_states()
     
     @check_type(True, int)
     def is_allowed(self, action : int) :
@@ -108,22 +111,43 @@ class Partie :
             input()
         self.gagnant = gagnant[1]
         self.states = states
+    
+    def get_data(self) :
+        return self.states, self.rewards
+
+class DataRubi :
+    def __init__(self, n : int) -> None:
+        self.x = ndarray((0, 6, 3, 3), int)
+        self.y = ndarray((0, 1))
+        self.gagnants = [0, 0, 0]
+        self.add_data(n)
+    
+    def add_data(self, n : int) :
+        for _ in range(n) :
+            partie = Partie(True)
+            new_x, new_y = partie.get_data()
+            self.x = append(self.x, new_x, 0)
+            self.y = append(self.y, new_y, 0)
+            if partie.gagnant == 1 :
+                self.gagnants[0] += 1
+            elif partie.gagnant == -1 :
+                self.gagnants[1] += 1
+            else :
+                self.gagnants[2] += 1
+    
+    def reset(self) :
+        self.x = ndarray((0, 3, 3, 1), int)
+        self.y = ndarray((0, 1))
+
+    def get_datas(self) :
+        return self.x, self.y
+
+def generator_datas(batch_size) :
+    while True :
+        partie = Partie(True)
+        x, y = partie.get_data()
+        return x, y
+
 
 if __name__ == "__main__" :
-    somme = 0
-    start = time()
-    for _ in range(10000) :
-        partie = Partie()
-        partie.random_partie()
-        somme += len(partie.states)
-    print("Temps :", time()-start)
-    print("Somme :", somme)
-    print('---------')
-    somme = 0
-    start = time()
-    for _ in range(10000) :
-        partie = Partie()
-        partie.wise_random_partie()
-        somme += len(partie.states)
-    print("Temps :", time()-start)
-    print("Somme :", somme)
+    
