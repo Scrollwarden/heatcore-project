@@ -171,7 +171,7 @@ class Surface :
         """
         return self.grille
     
-    @check_type(True, ndarray)
+    @check_type(True, ndarray, bool)
     def set_state(self, state : ndarray, differenciate : bool = False) -> None :
         """Change l'état du cube en celui passé en paramètre.
         
@@ -299,7 +299,21 @@ class Surface :
         """
         self.check_pos((face, 0, 0))
         self.grille[face] = new_face
+    
+    def any_face(self, face : int) -> bool :
+        return bool(self.get_face(face).any())
+    
+    def any_ligne(self, face : int, ligne : int) -> bool :
+        return bool(self.get_ligne(face, ligne).any())
+    
+    def any_colonne(self, face : int, col : int) -> bool :
+        return bool(self.get_colonne(face, col).any())
 
+    def any_out_face(self, face : int) -> bool :
+        if self.any_ligne(face, 0) or self.get_ligne(face, 2).any() :
+            return True
+        return self.get_pion(face, 1, 0) != 0 or self.get_pion(face, 1, 2) != 0
+    
 
 class Cube(Surface) :
     """Le cube sur lequel on joue au Morpion-Rubick's Cube. Cette classe fait office de plateau.

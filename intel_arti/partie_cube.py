@@ -62,10 +62,11 @@ class Partie :
         if self.cube != self.scratch_cube :
             self.scratch_cube.set_state(self.cube.grille, True)
         self.step(action, True, True)
-        while self.cube == self.scratch_cube :
+        while action < 18 and self.cube == self.scratch_cube :
             actions_possibles.remove(action)
             action = choice(actions_possibles)
-            self.step(action, True, True)
+            if action < 18 :
+                self.step(action, True, True)
         self.step(action, True)
         return self.cube.get_state() * (self.joueur * -1)
     
