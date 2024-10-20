@@ -1,4 +1,4 @@
-from numpy import zeros, array, ndarray
+from numpy import zeros, array, ndarray, array_equal
 from copy import deepcopy
 from random import randint
 from time import perf_counter
@@ -137,6 +137,13 @@ class Surface :
             affichage += "\n" if i != 2 else ""
         return affichage
     
+    def __eq__(self, value):
+        if issubclass(type(value), Surface) :
+            return array_equal(self.grille, value.grille)
+        if isinstance(value, ndarray) :
+            return value.shape == (6, 3, 3) and array_equal(self.grille, value)
+        return False
+
     @check_type(True, int)
     def afficher_face(self, face : int) -> None :
         """Affiche la face demandée dans le terminal.
@@ -165,14 +172,18 @@ class Surface :
         return self.grille
     
     @check_type(True, ndarray)
-    def set_state(self, state : ndarray) -> None :
+    def set_state(self, state : ndarray, differenciate : bool = False) -> None :
         """Change l'état du cube en celui passé en paramètre.
         
         Param
         ------
             state (ndarray) : L'état à appliqué au cube
+            differenciate (bool, optional) : Si l'état doit être copié ou juste appliqué
         """
-        self.grille = state
+        if differenciate :
+            self.grille = deepcopy(state)
+        else :
+            self.grille = state
     
     def check_pos(self, pos : tuple[int, int, int]) -> None:
         """Vérifie que la position passée en argument est valide
