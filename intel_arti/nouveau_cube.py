@@ -402,7 +402,7 @@ class Cube(Surface) :
             self.tourner_face((1, 3, 2, 4, 0, 5)[action], reverse)
 
     @check_type(True, int, bool)
-    def tourner_couronne_plate(self, ligne : int, reverse : bool = False) -> None:
+    def tourner_couronne_plate2(self, ligne : int, reverse : bool = False) -> None:
         """Tourne l'une des couronnes qui se trouve autour de la face du-dessus.
         
         Params
@@ -437,6 +437,48 @@ class Cube(Surface) :
                     else :
                         self.set_ligne(face, chemin[face-1], self.get_colonne(sec_face, chemin[sec_face-1])[::-1])
 
+    @check_type(True, int, bool)
+    def tourner_couronne_plate(self, ligne: int, reverse: bool = False) -> None:
+        """Tourne une couronne autour de la face supérieure.
+
+        Params
+        -------
+            ligne (int) : Le numéro de la couronne à tourner (entre 0 et 2 inclus).
+            reverse (bool, optional) : Si True, tourne dans le sens inverse.
+        """
+        # Détermine le chemin des lignes/colonnes autour de la face du dessus
+        chemin = (ligne, complement_2(ligne), complement_2(ligne), ligne)
+        # Détermine l'ordre des faces à traiter selon le sens de rotation
+        if reverse:
+            face_order = range(1, 5)
+            sec_face_order = first_last(1, 5)
+            memoire_func = self.get_ligne
+        else:
+            face_order = range(4, 0, -1)
+            sec_face_order = first_last(4, 0, -1)
+            memoire_func = self.get_colonne
+        # Sauvegarde la ligne ou colonne initiale en fonction du sens de rotation
+        self.remember_lignes(memoire_func(face_order.start, chemin[face_order.start-1]))
+        # Boucle sur les faces pour effectuer les échanges de lignes/colonnes
+        for i, (face, sec_face) in enumerate(zip(face_order, sec_face_order)):
+            is_last_step = (i == 3)
+            is_col = face in (2, 4)
+            # Obtenir la ligne ou colonne à copier
+            if is_last_step:
+                src = self.memoire[0][::-1]
+            elif is_col : # comme c'est une colonne, on prend une ligne
+                src = self.get_ligne(sec_face, chemin[sec_face-1])
+            else :
+                src = self.get_colonne(sec_face, chemin[sec_face-1])
+            if sec_face not in (1, 4) and face not in (1, 4): # L'inverser dans certains cas mystérieux
+                src = src[::-1]
+            # Déterminer si on doit travailler avec des lignes ou colonnes
+            if is_col:
+                self.set_colonne(face, chemin[face-1], src)
+            else:
+                self.set_ligne(face, chemin[face-1], src)
+
+    
     @check_type(True, int, bool)
     def tourner_couronne_horizontale(self, ligne : int, reverse : bool = False) -> None:
         """Tourne l'une des couronnes horizontales sur le patron.

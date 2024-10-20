@@ -141,7 +141,7 @@ if __name__ == "__main__":
     param = Param()
     temp = time.time()
     cube = Cube()
-    #cube.aleatoire()
+    cube.aleatoire()
     print(cube)
     print(cube.terminal_state())
     reverse_display = False
