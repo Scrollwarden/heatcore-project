@@ -231,6 +231,23 @@ class DataMorpion :
 
     def get_datas(self) :
         return self.x, self.y
+
+class GenDataMorpion :
+    def __init__(self, n : int) -> None:
+        self.gagnants = [0, 0, 0]
+        self.num = n
+    
+    def __iter__(self) :
+        for _ in range(self.num) :
+            partie = RandomPartie()
+            new_x, new_y = partie.get_data()
+            if partie.gagnant == 1 :
+                self.gagnants[0] += 1
+            elif partie.gagnant == -1 :
+                self.gagnants[1] += 1
+            else :
+                self.gagnants[2] += 1
+            yield new_x, new_y
     
 
 if __name__ == "__main__" :

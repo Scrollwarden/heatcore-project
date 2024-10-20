@@ -3,7 +3,7 @@ from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Concatenate # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
 import tensorflow as tf
-from morpion import PartieIAvsH, Morpion, DataMorpion, PartiesIAvsIA
+from morpion import PartieIAvsH, Morpion, DataMorpion, PartiesIAvsIA, GenDataMorpion
 from numpy import reshape
 
 class Choices :
@@ -169,4 +169,14 @@ def jouer_contre_ia() :
         
 
 if __name__ == "__main__" :
-    jouer_contre_ia()
+    data = GenDataMorpion(10000)
+    choix = Choices()
+    agent = AgentMorpion(choix)
+    agent.fit(data)
+    partie = PartieIAvsH()
+    while True :
+        while not partie.jeu.terminal_state()[0] :
+            partie.step(agent(partie.jeu))
+            print(partie.jeu)
+        print(partie.jeu.terminal_state())
+        partie.recommencer()
