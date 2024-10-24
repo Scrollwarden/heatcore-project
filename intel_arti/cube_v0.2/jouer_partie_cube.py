@@ -1,10 +1,7 @@
-from nouveau_cube import Cube, check_type
+from cube import Cube, check_type
 from random import choice
 from numpy import zeros, ndarray, append
 from time import time
-
-NB_CORE = 8
- # !!! WARNING !!! : Bien définir NB_CORE par rapport à ta machine. Ne pas dépasser son nombre de cores.
 
 
 class Partie :
@@ -38,7 +35,7 @@ class Partie :
             action (int) : L'action désirée
             force (bool, optional) : Permet de forcer le coup à être jouer même s'il n'est pas autorisé.
                                      Peut aussi être utilisé lorsque l'on est certain que le coup est légal
-                                     pour éviter de faire des tests inutils
+                                     pour éviter de faire des tests inutiles
             on_scratch (bool, optional) : Si True, l'étape ne sera pas appliquée au cube mais au scratch_cube
         """
         if force or self.is_allowed(action) :
@@ -161,7 +158,7 @@ def play_random_partie(i) :
     return len(partie.states)
 
 def play_wise_random_partie(i) :
-    """Fonction donnée en thread pour les parties aléatoires sans coups interdits"""
+    """Fonction donnée en thread pour les parties aléatoires sans coups inutiles"""
     partie = Partie()
     partie.wise_random_partie()
     return len(partie.states)
@@ -170,9 +167,8 @@ if __name__ == "__main__":
     somme = 0
     start = time()
 
-    # mise en threading des fonctions précédentes sur tous les cores sauf un (pour garder la souris et l'écran) 10000 fois.
-    # !!! WARNING !!! : Bien définir NB_CORE en haut du fichier par rapport à ta machine. Ne pas dépasser son nombre de cores.
-    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+    # mise en threading des fonctions précédentes sur tous les cores 10000 fois.
+    with ProcessPoolExecutor() as executor:
         results = executor.map(play_random_partie, range(10000))
 
     somme = sum(results)
@@ -183,7 +179,7 @@ if __name__ == "__main__":
     somme = 0
     start = time()
 
-    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+    with ProcessPoolExecutor() as executor:
         results = executor.map(play_wise_random_partie, range(10000))
     
     somme = sum(results)
