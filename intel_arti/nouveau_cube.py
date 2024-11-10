@@ -9,6 +9,8 @@ from time import perf_counter
 # Nouvel ordre des actions : f, b, l, r, u, d, s, m, e
 # Ancien ordre des actions : f, b, r, l, u, d, m, s, e
 
+CORRESP_FACE_ACT = (1, 3, 2, 4, 0, 5)
+
 
 def check_type(ignore_first : bool, *args_type : type) :
     """Vérifie que tous les arguments d'une fonction soient du type demandé
@@ -310,9 +312,9 @@ class Surface :
         return bool(self.get_colonne(face, col).any())
 
     def any_out_face(self, face : int) -> bool :
-        if self.any_ligne(face, 0) or self.get_ligne(face, 2).any() :
+        if self.any_ligne(face, 0) or self.any_ligne(face, 2) :
             return True
-        return self.get_pion(face, 1, 0) != 0 or self.get_pion(face, 1, 2) != 0
+        return self.get_pion((face, 1, 0)) != 0 or self.get_pion((face, 1, 2)) != 0
     
 
 class Cube(Surface) :
@@ -413,7 +415,7 @@ class Cube(Surface) :
         elif (ligne := find((4, 8, 5), action)) != -1 :
             self.tourner_couronne_plate(ligne, reverse)
         if action < 6 :
-            self.tourner_face((1, 3, 2, 4, 0, 5)[action], reverse)
+            self.tourner_face(CORRESP_FACE_ACT[action], reverse)
 
     @check_type(True, int, bool)
     def tourner_couronne_plate2(self, ligne : int, reverse : bool = False) -> None:
@@ -698,6 +700,33 @@ class Cube(Surface) :
                 if self.get_pion((0, li, col)) == 0 :
                     actions.append(18 + 3 * li + col)
         return actions
+    
+    def not_wise(self, action : int) :
+        if action < 18 :
+            return False
+        if action >= 9 :
+            action -= 9
+        non_wise = False
+        if (ligne := find((1, 6, 0), action)) != -1 :
+            faces = (0, 4, 5, 2)
+            for face in faces :
+                non_wise = non_wise or self.any_ligne(face, ligne)
+        elif (ligne := find((2, 7, 3), action)) != -1 :
+            faces = (0, 1, 5, 3)
+            for i in range(4) :
+                colonne = ligne if i % 2 else complement_2(ligne)
+                non_wise = non_wise or self.any_colonne(faces[i], colonne)
+        elif (ligne := find((4, 8, 5), action)) != -1 :
+            faces = range(1, 5)
+            chemin = (ligne, complement_2(ligne), complement_2(ligne), ligne)
+            for face in faces :
+                if face % 2 :
+                    self.any_colonne(face, chemin[face-1])
+        if action < 6 :
+            non_wise = non_wise or self.any_out_face(CORRESP_FACE_ACT[action])
+        return non_wise
+        
+        
 
 
 if __name__ == "__main__" :

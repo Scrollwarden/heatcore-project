@@ -1,9 +1,9 @@
-from nouveau_cube import Cube, check_type
+from nouveau_cube import Cube, check_type, CORRESP_FACE_ACT
 from random import choice
 from numpy import zeros, ndarray, append
 from time import time
 
-NB_CORE = 8
+NB_CORE = 4
  # !!! WARNING !!! : Bien définir NB_CORE par rapport à ta machine. Ne pas dépasser son nombre de cores.
 
 
@@ -61,11 +61,12 @@ class Partie :
         self.step(action, True)
         return self.cube.get_state() * (self.joueur * -1)
     
-    def wise_random_step(self) -> None:
+    def wise_random_step(self) -> ndarray :
         """Joue un coup aléatoirement tout en assurant de changer l'état du cube."""
         actions_possibles = self.cube.actions_possibles(self.coup_interdit)
         action = choice(actions_possibles)
         if self.cube != self.scratch_cube :
+            # réinitialise le scratch cube à l'état actuel du cube
             self.scratch_cube.set_state(self.cube.grille, True)
         self.step(action, True, True)
         while action < 18 and self.cube == self.scratch_cube :
@@ -172,7 +173,7 @@ if __name__ == "__main__":
 
     # mise en threading des fonctions précédentes sur tous les cores sauf un (pour garder la souris et l'écran) 10000 fois.
     # !!! WARNING !!! : Bien définir NB_CORE en haut du fichier par rapport à ta machine. Ne pas dépasser son nombre de cores.
-    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+    with ProcessPoolExecutor() as executor:
         results = executor.map(play_random_partie, range(10000))
 
     somme = sum(results)
@@ -183,7 +184,7 @@ if __name__ == "__main__":
     somme = 0
     start = time()
 
-    with ProcessPoolExecutor(max_workers=(NB_CORE-1)) as executor:
+    with ProcessPoolExecutor() as executor:
         results = executor.map(play_wise_random_partie, range(10000))
     
     somme = sum(results)
