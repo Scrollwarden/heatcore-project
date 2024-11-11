@@ -1,6 +1,6 @@
 import pygame, sys
 import time
-from nouveau_cube import Cube
+from cube import Cube
 
 # Screen constants
 LINE_WIDTH = 3
