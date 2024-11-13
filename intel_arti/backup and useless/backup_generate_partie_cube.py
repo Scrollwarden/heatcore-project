@@ -4,7 +4,7 @@ from numpy import zeros, ndarray, append
 from time import time
 
 
-class Partie :
+class GeneratorPartie :
     def __init__(self, do : bool = False) :
         """Initialise une partie."""
         self.joueur = 1
@@ -125,7 +125,7 @@ class DataRubi :
     
     def add_data(self, n : int) :
         for _ in range(n) :
-            partie = Partie(True)
+            partie = GeneratorPartie(True)
             new_x, new_y = partie.get_data()
             self.x = append(self.x, new_x, 0)
             self.y = append(self.y, new_y, 0)
@@ -145,7 +145,7 @@ class DataRubi :
 
 def generator_datas(batch_size) :
     while True :
-        partie = Partie(True)
+        partie = GeneratorPartie(True)
         x, y = partie.get_data()
         return x, y
 
@@ -154,13 +154,13 @@ from concurrent.futures import ProcessPoolExecutor
 
 def play_random_partie(i) :
     """Fonction donnée en thread pour les parties aléatoires"""
-    partie = Partie()
+    partie = GeneratorPartie()
     partie.random_partie()
     return len(partie.states)
 
 def play_wise_random_partie(i) :
     """Fonction donnée en thread pour les parties aléatoires sans coups inutiles"""
-    partie = Partie()
+    partie = GeneratorPartie()
     partie.wise_random_partie()
     return len(partie.states)
 
