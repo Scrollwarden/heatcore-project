@@ -15,8 +15,20 @@ class Agent :
         self.learning_rate = 0.001
         self.exploration_rate = 1.0
         self.memory = []
+        self.create_model(1000)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        self.model(*args, **kwargs)
+
+    def create_model(self, n : int) :
+        self.model = Sequential()
+        self.model.add(Input(shape=(54,)))
+        self.model.add(Dense(n, activation='relu'))
+        self.model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate = self.learning_rate),
+                  loss = tf.keras.losses.MeanSquaredError())
+
     
-    def create_model(self) :
+    def create_model1(self) :
         self.model = Sequential()
         self.model.add(Input(shape=(54,)))
         self.model.add(Dense(64, activation='relu'))

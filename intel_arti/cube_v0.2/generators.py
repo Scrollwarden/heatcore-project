@@ -85,6 +85,8 @@ class GeneratorWinState:
         """
         for _ in range(times):
             line = times%3
+            if times == 1:
+                line = randint(0, 2) # choix random au lieu de toujours la 1ere ligne
             self._randomize_cube()
             situation = deepcopy(self.cube)
             situation.set_ligne(face, line, array([1, 1, 1]))
@@ -100,6 +102,8 @@ class GeneratorWinState:
         """
         for _ in range(times):
             column = times%3
+            if times == 1:
+                column = randint(0, 2) # choix random au lieu de toujours la 1ere colonne
             self._randomize_cube()
             situation = deepcopy(self.cube)
             situation.set_ligne(face, column, array([1, 1, 1]))
