@@ -1,4 +1,8 @@
-import os
+import time
+tmp = time.time()
+from tensorflow.keras.models import Sequential # type: ignore
+print(time.time()-tmp)
+"""import os
 import multiprocessing
 import time
 
@@ -23,4 +27,4 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
 
-    print(f"Processus principal (PID: {os.getpid()}) terminé")
+    print(f"Processus principal (PID: {os.getpid()}) terminé")"""

@@ -1,4 +1,5 @@
 from cube import Cube, check_type
+from generators import GeneratorWinState
 from random import choice
 from numpy import zeros, ndarray, append
 from time import time
@@ -115,6 +116,21 @@ class Partie :
     
     def get_data(self) :
         return self.states, self.rewards
+
+class GenDataRubi :
+    def __init__(self, batch_size : int):
+        self.batch_size = batch_size
+        self.gen_gagnant = GeneratorWinState()
+    
+    def datas(self) :
+        while True :
+            partie = Partie(True)
+            x, y = partie.get_data()
+            taille = self.batch_size-len(x)
+            situation_gagnees = self.gen_gagnant.generate_random_states(taille)
+            x.extend(situation_gagnees)
+            y = append(y, [1.0]*taille)
+            
 
 class DataRubi :
     def __init__(self, n : int) -> None:
