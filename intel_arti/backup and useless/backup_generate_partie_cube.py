@@ -1,7 +1,7 @@
 from intel_arti.cube_v2.cube import Cube, check_type
 from intel_arti.cube_v2.generators import GeneratorWinState
 from random import choice
-from numpy import zeros, ndarray, append
+from numpy import zeros, ndarray, append, array, ones
 from time import time
 
 
@@ -114,7 +114,9 @@ class Partie :
         self.gagnant = gagnant[1]
         self.states = states
     
-    def get_data(self) :
+    def get_data(self) -> tuple[ndarray, ndarray]:
+        if isinstance(self.states, ndarray) :
+            self.states = array(self.states)
         return self.states, self.rewards
 
 class GenDataRubi :
@@ -159,10 +161,19 @@ class DataRubi :
     def get_datas(self) :
         return self.x, self.y
 
+def gen_fin(n:int) :
+    return
+
 def generator_datas(batch_size) :
     while True :
         partie = Partie(True)
         x, y = partie.get_data()
+        if (trop := x.shape[0] - batch_size) > 0 :
+            x = x[trop:]
+            y = y[trop:]
+        elif (manque := batch_size - x.shape[0]) > 0 :
+            x = append(x, gen_fin(manque))
+            y = append(y, ones(manque))
         return x, y
 
 

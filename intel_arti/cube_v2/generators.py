@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from random import randint, choice
 from cube import Cube, check_type
-from numpy import zeros, ndarray, append, array
+from numpy import zeros, ndarray, append, array, ones
 from time import time
 
 
@@ -20,7 +20,6 @@ class GeneratorWinState:
     - get_n_states()
     '''
     def __init__(self):
-        self.cube = Cube()
         self.liste_win_state = []
 
     def generate_all_states(self, times=1):
@@ -46,18 +45,19 @@ class GeneratorWinState:
         - n (int) : le nombre d'états a générer
         """
         self.liste_win_state = []
-        for _ in range(n):
-            face = randint(0, 5)
-            situation_type = randint(0, 2)
-            if situation_type == 0:
+        limit = (n % 6) * 6
+        for i in range(n):
+            face = i % 6 if i < limit else randint(0, 5)
+            situation_type = randint(0, 7)
+            if situation_type < 3 :
                 self._win_on_line(face)
-            elif situation_type == 1:
+            elif situation_type < 6 :
                 self._win_on_column(face)
             else:
                 self._win_on_diagonal(face)
         return self.liste_win_state
 
-    def get_n_states(self, n=None):
+    def get_n_states(self, n=1):
         """
         génère n situations où l'agent a gagné.
         Cette méthode est un générateur yield.
@@ -65,17 +65,17 @@ class GeneratorWinState:
         for _ in range(n):
             i = randint(0, len(self.liste_win_state)-1)
             yield self.liste_win_state[i]
-
-    def _randomize_cube(self):
-        """
-        Pose aléatoirement des pions sur le cube.
-        Enpose moins que la méthode .aleatoire du cube.
-        """
-        self.cube.reset()
-        for _ in range(randint(10, 20)):
-            self.cube.set_pion((randint(0, 5), randint(0, 2), randint(0, 2)), choice((-1, 1)))
         
-    def _win_on_line(self, face, times=1):
+    def random_cube_perdant(self) :
+        winning = True
+        while winning :
+            cube = Cube()
+            for _ in range(randint(0, 20)) :
+                cube.set_pion((randint(0, 5), randint(0, 2), randint(0, 2)), choice((-1, 1)))
+            winning = cube.terminal_state()[0]
+        return cube
+
+    def _win_on_line(self, face : int, times : int = 1) :
         """
         Génère un état où le jeu est gagné par l'agent sur une ligne.
 
@@ -83,16 +83,15 @@ class GeneratorWinState:
         - face (int) : la face sur laquelle on veut générer une victoire
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
         """
-        for _ in range(times):
-            line = times%3
-            if times == 1:
-                line = randint(0, 2) # choix random au lieu de toujours la 1ere ligne
-            self._randomize_cube()
-            situation = deepcopy(self.cube)
+        limit = (times // 3) * 3
+        for i in range(times):
+            line = i % 3 if i < limit else randint(0, 2)
+            cube = self.random_cube_perdant()
+            situation = deepcopy(cube)
             situation.set_ligne(face, line, array([1, 1, 1]))
             self.liste_win_state.append(situation)
 
-    def _win_on_column(self, face, times=1):
+    def _win_on_column(self, face : int, times : int = 1):
         """
         Génère un état où le jeu est gagné par l'agent sur une colonne.
 
@@ -100,16 +99,15 @@ class GeneratorWinState:
         - face (int) : la face sur laquelle on veut générer une victoire
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
         """
-        for _ in range(times):
-            column = times%3
-            if times == 1:
-                column = randint(0, 2) # choix random au lieu de toujours la 1ere colonne
-            self._randomize_cube()
-            situation = deepcopy(self.cube)
-            situation.set_ligne(face, column, array([1, 1, 1]))
+        limit = (times // 3) * 3
+        for i in range(times):
+            column = i % 3 if i < limit else randint(0, 2)
+            cube = self.random_cube_perdant()
+            situation = deepcopy(cube)
+            situation.set_colonne(face, column, array([1, 1, 1]))
             self.liste_win_state.append(situation)
 
-    def _win_on_diagonal(self, face, times=1):
+    def _win_on_diagonal(self, face : int, times : int = 1):
         """
         Génère un état où le jeu est gagné par l'agent sur une diagonale.
 
@@ -118,21 +116,13 @@ class GeneratorWinState:
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
         """
         # première diagonale
-        for _ in range(times):
-            if times % 2 == 0:
-                self._randomize_cube()
-                situation = deepcopy(self.cube)
-                for line, case in ((0, 0), (1, 1), (2, 2)):
-                    situation.set_pion((face, line, case), 1)
-                self.liste_win_state.append(situation)
-            # on recommence pour la diagonale inversée
-            else:
-                self._randomize_cube()
-                situation = deepcopy(self.cube)
-                for line, case in ((0, 2), (1, 1), (2, 0)):
-                    situation.set_pion((face, line, case), 1)
-                self.liste_win_state.append(situation)
-
+        limit = (times // 2) * 2
+        for i in range(times) :
+            num = i % 2 if i < limit else randint(0, 1)
+            cube = self.random_cube_perdant()
+            situation = deepcopy(cube)
+            situation.set_diagonale(face, num, array([1, 1, 1]))
+            self.liste_win_state.append(situation)
 
 # WORKING ON
 # ----------
@@ -148,7 +138,7 @@ class GeneratorWinState:
 #     def __init__(self):
 #         pass
 
-class GeneratorPartie:
+class Partie:
     def __init__(self, do : bool = False) :
         """Initialise une partie."""
         self.joueur = 1
@@ -269,7 +259,7 @@ class DataRubi :
     
     def add_data(self, n : int) :
         for _ in range(n) :
-            partie = GeneratorPartie(True)
+            partie = Partie(True)
             new_x, new_y = partie.get_data()
             self.x = append(self.x, new_x, 0)
             self.y = append(self.y, new_y, 0)
@@ -289,21 +279,34 @@ class DataRubi :
 
 def generator_datas(batch_size) :
     while True :
-        partie = GeneratorPartie(True)
+        partie = Partie(True)
         x, y = partie.get_data()
         return x, y
 
 def play_random_partie(i) :
     """Fonction donnée en thread pour les parties aléatoires"""
-    partie = GeneratorPartie()
+    partie = Partie()
     partie.random_partie()
     return len(partie.states)
 
 def play_wise_random_partie(i) :
     """Fonction donnée en thread pour les parties aléatoires sans coups inutiles"""
-    partie = GeneratorPartie()
+    partie = Partie()
     partie.wise_random_partie()
     return len(partie.states)
+
+
+def generator_datas(batch_size) :
+    while True :
+        partie = Partie(True)
+        x, y = partie.get_data()
+        if (trop := x.shape[0] - batch_size) > 0 :
+            x = x[trop:]
+            y = y[trop:]
+        elif (manque := batch_size - x.shape[0]) > 0 :
+            x = append(x, (manque))
+            y = append(y, ones(manque))
+        return x, y
 
 # if __name__ == "__main__":
 #     somme = 0

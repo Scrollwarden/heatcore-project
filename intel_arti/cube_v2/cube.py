@@ -276,6 +276,13 @@ class Surface :
         self.check_pos((face, 0, num_col))
         self.grille[face, :, num_col] = new_col
     
+    def set_diagonale(self, face : int, num : int, new_dia : ndarray) :
+        for i in range(3) :
+            if num == 0 :
+                self.set_pion((face, i, i), new_dia[i])
+            else :
+                self.set_pion((face, i, complement_2(i)), new_dia[i])
+
     @check_type(True, int)
     def get_face(self, face : int) -> ndarray :
         """Renvoie la face demandée.
