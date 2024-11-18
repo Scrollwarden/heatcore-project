@@ -115,7 +115,7 @@ class Partie :
         self.states = states
     
     def get_data(self) -> tuple[ndarray, ndarray]:
-        if isinstance(self.states, ndarray) :
+        if not isinstance(self.states, ndarray) :
             self.states = array(self.states)
         return self.states, self.rewards
 
@@ -130,7 +130,7 @@ class GenDataRubi :
             x, y = partie.get_data()
             taille = self.batch_size-len(x)
             situation_gagnees = self.gen_gagnant.generate_random_states(taille)
-            x.extend(situation_gagnees)
+            x = append(x, situation_gagnees)
             y = append(y, [1.0]*taille)
             
 

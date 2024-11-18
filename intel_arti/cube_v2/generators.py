@@ -3,7 +3,8 @@ Tous les générateurs de situations de jeu pour entrainer l'agent.
 '''
 
 from concurrent.futures import ProcessPoolExecutor
-from random import randint, choice
+from copy import deepcopy
+from random import randint, choice, gauss
 from cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones
 from time import time
@@ -79,7 +80,7 @@ class GeneratorWinState:
             line = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
             situation.set_ligne(face, line, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
     def _win_on_column(self, face : int, times : int = 1):
         """
@@ -94,7 +95,7 @@ class GeneratorWinState:
             column = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
             situation.set_colonne(face, column, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
     def _win_on_diagonal(self, face : int, times : int = 1):
         """
@@ -109,7 +110,7 @@ class GeneratorWinState:
             num = i % 2 if i < limit else randint(0, 1)
             situation = cube_neutre_random()
             situation.set_diagonale(face, num, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
 def cube_neutre_random():
     """
@@ -119,6 +120,19 @@ def cube_neutre_random():
     cube = Cube()
     randomize(cube)
     SAD_random_wins(cube)
+    return cube
+
+def random_cube_perdant():
+    """
+    """
+    while (n_pions := round(gauss(8, 4))) < 0:
+        pass
+    winning = True
+    while winning :
+        cube = Cube()
+        for _ in range(n_pions) :
+            cube.set_pion((randint(0, 5), randint(0, 2), randint(0, 2)), choice((-1, 1)))
+        winning = cube.terminal_state()[0]
     return cube
 
 def SAD_random_wins(cube:Cube):
@@ -283,7 +297,9 @@ class Partie:
         self.gagnant = gagnant[1]
         self.states = states
     
-    def get_data(self) :
+    def get_data(self) -> tuple[ndarray, ndarray]:
+        if not isinstance(self.states, ndarray) :
+            self.states = array(self.states)
         return self.states, self.rewards
 
 class DataRubi :
@@ -333,6 +349,7 @@ def play_wise_random_partie(i) :
 
 
 def generator_datas(batch_size) :
+    gen = GeneratorWinState()
     while True :
         partie = Partie(True)
         x, y = partie.get_data()
@@ -340,9 +357,9 @@ def generator_datas(batch_size) :
             x = x[trop:]
             y = y[trop:]
         elif (manque := batch_size - x.shape[0]) > 0 :
-            x = append(x, (manque))
+            x = append(x, array(gen.generate_random_states(manque)), 0)
             y = append(y, ones(manque))
-        return x, y
+        yield x, y
 
 # Tests
 # ======
@@ -394,7 +411,8 @@ def generator_datas(batch_size) :
 #                 yield diagonal_win
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
 
-
-generator = GeneratorWinState()
-generator.generate_random_states(10000)
-print('done')
+gen = generator_datas(35)
+temps = time()
+for _ in range(10000) :
+    next(gen)
+print(time()-temps)
