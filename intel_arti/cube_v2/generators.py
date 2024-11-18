@@ -4,7 +4,7 @@ Tous les générateurs de situations de jeu pour entrainer l'agent.
 
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
-from random import randint, choice
+from random import randint, choice, gauss
 from cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones
 from time import time
@@ -67,10 +67,12 @@ class GeneratorWinState:
             yield self.liste_win_state[i]
         
     def random_cube_perdant(self) :
+        while (n_pions := round(gauss(8, 4))) < 0:
+            pass
         winning = True
         while winning :
             cube = Cube()
-            for _ in range(randint(0, 20)) :
+            for _ in range(n_pions) :
                 cube.set_pion((randint(0, 5), randint(0, 2), randint(0, 2)), choice((-1, 1)))
             winning = cube.terminal_state()[0]
         return cube
@@ -89,7 +91,7 @@ class GeneratorWinState:
             cube = self.random_cube_perdant()
             situation = deepcopy(cube)
             situation.set_ligne(face, line, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
     def _win_on_column(self, face : int, times : int = 1):
         """
@@ -105,7 +107,7 @@ class GeneratorWinState:
             cube = self.random_cube_perdant()
             situation = deepcopy(cube)
             situation.set_colonne(face, column, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
     def _win_on_diagonal(self, face : int, times : int = 1):
         """
@@ -122,7 +124,7 @@ class GeneratorWinState:
             cube = self.random_cube_perdant()
             situation = deepcopy(cube)
             situation.set_diagonale(face, num, array([1, 1, 1]))
-            self.liste_win_state.append(situation)
+            self.liste_win_state.append(situation.get_state())
 
 # WORKING ON
 # ----------
@@ -247,7 +249,9 @@ class Partie:
         self.gagnant = gagnant[1]
         self.states = states
     
-    def get_data(self) :
+    def get_data(self) -> tuple[ndarray, ndarray]:
+        if not isinstance(self.states, ndarray) :
+            self.states = array(self.states)
         return self.states, self.rewards
 
 class DataRubi :
@@ -297,6 +301,7 @@ def play_wise_random_partie(i) :
 
 
 def generator_datas(batch_size) :
+    gen = GeneratorWinState()
     while True :
         partie = Partie(True)
         x, y = partie.get_data()
@@ -304,9 +309,9 @@ def generator_datas(batch_size) :
             x = x[trop:]
             y = y[trop:]
         elif (manque := batch_size - x.shape[0]) > 0 :
-            x = append(x, (manque))
+            x = append(x, array(gen.generate_random_states(manque)), 0)
             y = append(y, ones(manque))
-        return x, y
+        yield x, y
 
 # if __name__ == "__main__":
 #     somme = 0
@@ -355,3 +360,9 @@ def generator_datas(batch_size) :
 #             for diagonal_win in self._win_on_diagonal(face, times):
 #                 yield diagonal_win
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
+
+gen = generator_datas(35)
+temps = time()
+for _ in range(10000) :
+    next(gen)
+print(time()-temps)

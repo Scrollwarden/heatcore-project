@@ -1,4 +1,4 @@
-from numpy import zeros, array, ndarray, array_equal
+from numpy import zeros, array, ndarray, array_equal, fliplr
 from copy import deepcopy
 from random import randint
 from time import perf_counter
@@ -282,6 +282,22 @@ class Surface :
                 self.set_pion((face, i, i), new_dia[i])
             else :
                 self.set_pion((face, i, complement_2(i)), new_dia[i])
+
+    def get_diagonale(self, face : int, num_diag : int) -> ndarray :
+        """Renvoie la diagonale de la face et du numéro de diagonale spécifés.
+
+        Params
+        ------
+            face (int) : Le numéro de la face.
+            num_diag (int) : Le numéro de la diagonale.
+        Return
+        -------
+            ndarray : La diagonale demandée
+        """
+        if num_diag == 0 :
+            return self.get_face(face).diagonal()
+        else :
+            return array([self.get_pion((face, i , complement_2(i))) for i in range(3)])
 
     @check_type(True, int)
     def get_face(self, face : int) -> ndarray :
