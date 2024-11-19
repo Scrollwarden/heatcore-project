@@ -313,7 +313,7 @@ class Surface :
             ndarray : La diagonale demandée
         """
         if num_diag == 0 :
-            return self.get_face(face).diagonal()
+            return array([self.get_pion((face, i , i)) for i in range(3)])
         else :
             return array([self.get_pion((face, i , complement_2(i))) for i in range(3)])
 

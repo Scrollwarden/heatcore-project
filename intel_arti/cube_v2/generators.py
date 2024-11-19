@@ -3,7 +3,6 @@ Tous les générateurs de situations de jeu pour entrainer l'agent.
 '''
 
 from concurrent.futures import ProcessPoolExecutor
-from copy import deepcopy
 from random import randint, choice, gauss
 from cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones
@@ -112,15 +111,16 @@ class GeneratorWinState:
             situation.set_diagonale(face, num, array([1, 1, 1]))
             self.liste_win_state.append(situation.get_state())
 
-def cube_neutre_random():
+def cube_neutre_random() -> Cube:
     """
     Créé un cube remplis aléatoirement et ne comprennant  
     pas de victoires.
     """
-    cube = Cube()
-    randomize(cube)
-    SAD_random_wins(cube)
-    return cube
+    # cube = Cube()
+    # randomize(cube)
+    # SAD_random_wins(cube) - Semble plus couteux que de créer pleins de cubes jusqu'à trouver un neutre.
+    # return cube
+    return random_cube_perdant()
 
 def random_cube_perdant():
     """
@@ -413,6 +413,6 @@ def generator_datas(batch_size) :
 
 gen = generator_datas(35)
 temps = time()
-for _ in range(10000) :
+for _ in range(5000) :
     next(gen)
 print(time()-temps)
