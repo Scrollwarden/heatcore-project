@@ -18,7 +18,7 @@ Jeu 3D en FP
 
 Ambiance
 --------
-Mondes ouverts 3D (générés procéduralement ?)
+Mondes ouverts 3D généré procéduralement
 
 GAMEPLAY
 --------

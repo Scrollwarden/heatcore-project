@@ -279,9 +279,27 @@ class Surface :
         self.check_pos((face, 0, num_col))
         self.grille[face, :, num_col] = new_col
     
-    def set_diagonale(self, face : int, num : int, new_dia : ndarray) :
+    def get_diagonale(self, face : int, num_diag : int) -> ndarray :
+        """Renvoie la diagonale de la face et du numéro de diagonale spécifés.
+
+        Params
+        ------
+            face (int) : Le numéro de la face.
+            num_diag (int) : Le numéro de la diagonale.
+        Return
+        -------
+            ndarray : La diagonale demandée
+        """
+        self.check_pos((face, 0, 0))
+        self.check_pos((face, 2, 2))
+        if num_diag == 0 :
+            return array([self.get_pion((face, i ,i)) for i in range(3)])
+        else :
+            return array([self.get_pion((face, i , complement_2(i))) for i in range(3)])
+
+    def set_diagonale(self, face : int, num_diag : int, new_dia : ndarray) :
         for i in range(3) :
-            if num == 0 :
+            if num_diag == 0 :
                 self.set_pion((face, i, i), new_dia[i])
             else :
                 self.set_pion((face, i, complement_2(i)), new_dia[i])
@@ -298,7 +316,7 @@ class Surface :
             ndarray : La diagonale demandée
         """
         if num_diag == 0 :
-            return self.get_face(face).diagonal()
+            return array([self.get_pion((face, i , i)) for i in range(3)])
         else :
             return array([self.get_pion((face, i , complement_2(i))) for i in range(3)])
 
@@ -318,7 +336,7 @@ class Surface :
     
     @check_type(True, int, ndarray)
     def set_face(self, face : int, new_face : ndarray) -> None :
-        """""Remplace la face spécifiée par celle indiquée par new_face.
+        """Remplace la face spécifiée par celle indiquée par new_face.
         
         Param
         -----
@@ -757,9 +775,14 @@ class Cube(Surface) :
 
 
 if __name__ == "__main__" :
-    s = Surface(array([[[-1, -1, -1], [0, 0, 0], [1, 1, 1]], [[1, 0, -1], [-1, 0, 1], [0, 1, -1]], [[1, 1, 0], [1, -1, 0], [0, 0, 1]], [[0, 1, 0], [1, 0, 0], [0, 0, 1]], [[1, -1, 1], [1, 0, 1], [0, 0, 1]],[[-1, 1, 1], [1, -1, 0], [1, -1, -1]]]))
-    cube = Cube(s)
+    # s = Surface(array([[[-1, -1, -1], [0, 0, 0], [1, 1, 1]], [[1, 0, -1], [-1, 0, 1], [0, 1, -1]], [[1, 1, 0], [1, -1, 0], [0, 0, 1]], [[0, 1, 0], [1, 0, 0], [0, 0, 1]], [[1, -1, 1], [1, 0, 1], [0, 0, 1]],[[-1, 1, 1], [1, -1, 0], [1, -1, -1]]]))
+    # cube = Cube(s)
+    cube = Cube()
+    cube.aleatoire()
     print(cube)
-    cube.tourner_couronne_verticale(0)
-    print()
-    print(cube)
+    # print(cube)
+    # cube.tourner_couronne_verticale(0)
+    # print()
+    # print(cube)
+    print(cube.get_diagonale(0, 0))
+    print(cube.get_diagonale(0, 1))
