@@ -4,6 +4,10 @@ from tensorflow.keras.layers import Dense # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
 import tensorflow as tf
 from random import random, randint
+from generators import generator_datas
+from cube import Cube
+from copy import deepcopy
+from numpy import ndarray, append
 
 class AgentParameters :
     def __init__(self):
@@ -18,12 +22,13 @@ class ModelCube(Model) :
         super().__init__()
 
 class Agent :
-    def __init__(self) -> None:
+    def __init__(self, no_model=False) -> None:
         self.params = AgentParameters()
         self.output_size = 1
         self.exploration_rate = 1.0
         self.memory = []
-        self.create_model()
+        if not no_model :
+            self.create_model()
     
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -61,3 +66,25 @@ class Agent :
         if training and random() < self.exploration_rate :
             return randint(0, 26)
         return self.model.predict(x)
+
+    def choisir(self, cube : Cube, joueur : int, coup_interdit : int = -1) :
+        actions = cube.actions_possibles(coup_interdit)
+        situations = ndarray(shape=(0, 54))
+        for action in actions :
+            scratch = deepcopy(cube)
+            scratch.jouer(action, joueur)
+            situations = append(situations, [scratch.get_flatten_state()], 0)
+        values = self(situations)
+        i_max = 0
+        for i in range(1, len(values)) :
+            if values[i] > values[i_max] :
+                i_max = i
+        return actions[i_max]
+
+
+if __name__ == "__main__" :
+    agent = Agent()
+    gen = generator_datas(55)
+
+    agent.fit(gen, steps_per_epoch=1000, epochs=20)
+    agent.model.save("model2.h5")

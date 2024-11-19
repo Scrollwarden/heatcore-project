@@ -171,8 +171,11 @@ class Surface :
         ------
             ndarray : L'état du cube
         """
-        return self.grille
+        return self.grille.flatten()
     
+    def get_flatten_state(self) -> ndarray :
+        return self.grille.flatten()
+
     @check_type(True, ndarray, bool)
     def set_state(self, state : ndarray, differenciate : bool = False) -> None :
         """Change l'état du cube en celui passé en paramètre.
@@ -660,6 +663,7 @@ class Cube(Surface) :
                     print("'", end='')
                 print()
             i += 1
+        return action
     
     def aleatoire(self) -> None:
         """Change les faces du Cube de façon entièrement aléatoire.

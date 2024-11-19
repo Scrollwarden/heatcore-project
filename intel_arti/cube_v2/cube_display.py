@@ -1,6 +1,8 @@
 import pygame, sys
 import time
 from cube import Cube
+from agent import Agent
+from tensorflow.keras.models import load_model #type: ignore
 
 # Screen constants
 LINE_WIDTH = 3
@@ -138,18 +140,31 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     # Setup
+    agent = Agent(True)
+    agent.model = load_model("model2.h5")
     param = Param()
     temp = time.time()
     cube = Cube()
-    cube.aleatoire()
-    print(cube)
-    print(cube.terminal_state())
     reverse_display = False
 
     player = 1
+    coup_interdit = -1
 
     # Main loop
     while True:
+        if player == 1 :
+            action = agent.choisir(cube, player, coup_interdit)
+            cube.jouer(action, player)
+            player *= -1
+            print(cube.terminal_state())
+            print(cube)
+        if action < 18 :
+            if action < 9 :
+                coup_interdit = action + 9
+            else :
+                coup_interdit = action - 9
+        else :
+            coup_interdit = -1
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -158,22 +173,38 @@ if __name__ == "__main__":
             elif event.type == pygame.KEYDOWN:
                 if event.key in KEY_MAP:
                     if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        cube.string_to_move(KEY_MAP[event.key] + "'", player, False)
+                        action = cube.string_to_move(KEY_MAP[event.key] + "'", player, False)
                     else:
-                        cube.string_to_move(KEY_MAP[event.key], player, False)
+                        action = cube.string_to_move(KEY_MAP[event.key], player, False)
+                    if action < 18 :
+                        if action < 9 :
+                            coup_interdit = action + 9
+                        else :
+                            coup_interdit = action - 9
+                    else :
+                        coup_interdit = -1
                     print(cube.terminal_state())
                     print(cube)
                     player *= -1
                 elif event.key in KEY_NUM:
                     cube.jouer(event.key - 31, player)
+                    action = event.key - 31
+                    if action < 18 :
+                        if action < 9 :
+                            coup_interdit = action + 9
+                        else :
+                            coup_interdit = action - 9
+                    else :
+                        coup_interdit = -1
                     player *= -1
                     print(cube.terminal_state())
                     print(cube)
                 elif event.key == pygame.K_SPACE:
                     reverse_display = not reverse_display
                 elif event.key == pygame.K_p :
-                    cube.set_symetrie(False, True)
-                    print(cube)
+                    cube.reset()
+                    player = 1
+                    coup_interdit = -1
 
         # Fill the screen with black
         screen.fill(BLACK)

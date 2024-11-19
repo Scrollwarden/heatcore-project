@@ -305,6 +305,7 @@ def generator_datas(batch_size) :
     while True :
         partie = Partie(True)
         x, y = partie.get_data()
+        y = y.flatten()
         if (trop := x.shape[0] - batch_size) > 0 :
             x = x[trop:]
             y = y[trop:]
@@ -361,8 +362,9 @@ def generator_datas(batch_size) :
 #                 yield diagonal_win
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
 
-gen = generator_datas(35)
-temps = time()
-for _ in range(10000) :
-    next(gen)
-print(time()-temps)
+if __name__ == "__main__" :
+    gen = generator_datas(50)
+    temps = time()
+    for i in range(2) :
+        print(next(gen))
+    print(time()-temps)
