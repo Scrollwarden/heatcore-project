@@ -171,7 +171,7 @@ class Surface :
         ------
             ndarray : L'état du cube
         """
-        return self.grille.flatten()
+        return self.grille
     
     def get_flatten_state(self) -> ndarray :
         return self.grille.flatten()

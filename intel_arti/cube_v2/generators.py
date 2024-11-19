@@ -79,7 +79,7 @@ class GeneratorWinState:
             line = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
             situation.set_ligne(face, line, array([1, 1, 1]))
-            self.liste_win_state.append(situation.get_state())
+            self.liste_win_state.append(situation.get_flatten_state())
 
     def _win_on_column(self, face : int, times : int = 1):
         """
@@ -94,7 +94,7 @@ class GeneratorWinState:
             column = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
             situation.set_colonne(face, column, array([1, 1, 1]))
-            self.liste_win_state.append(situation.get_state())
+            self.liste_win_state.append(situation.get_flatten_state())
 
     def _win_on_diagonal(self, face : int, times : int = 1):
         """
@@ -109,7 +109,7 @@ class GeneratorWinState:
             num = i % 2 if i < limit else randint(0, 1)
             situation = cube_neutre_random()
             situation.set_diagonale(face, num, array([1, 1, 1]))
-            self.liste_win_state.append(situation.get_state())
+            self.liste_win_state.append(situation.get_flatten_state())
 
 def cube_neutre_random() -> Cube:
     """
@@ -329,11 +329,6 @@ class DataRubi :
     def get_datas(self) :
         return self.x, self.y
 
-def generator_datas(batch_size) :
-    while True :
-        partie = Partie(True)
-        x, y = partie.get_data()
-        return x, y
 
 def play_random_partie(i) :
     """Fonction donnée en thread pour les parties aléatoires"""
