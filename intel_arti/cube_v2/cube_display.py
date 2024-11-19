@@ -9,6 +9,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
+MODEL_PATH = r"models\model3.h5"
 
 # Crosses and Squares
 SPACE = 0.2
@@ -141,7 +142,7 @@ if __name__ == "__main__":
 
     # Setup
     agent = Agent(True)
-    agent.model = load_model("model2.h5")
+    agent.model = load_model(MODEL_PATH)
     param = Param()
     temp = time.time()
     cube = Cube()
@@ -149,6 +150,7 @@ if __name__ == "__main__":
 
     player = 1
     coup_interdit = -1
+    action = 50
 
     # Main loop
     while True:
@@ -176,6 +178,8 @@ if __name__ == "__main__":
                         action = cube.string_to_move(KEY_MAP[event.key] + "'", player, False)
                     else:
                         action = cube.string_to_move(KEY_MAP[event.key], player, False)
+                    if action in cube.actions_possibles(coup_interdit) :
+                        print(f"WARNING !!! Coup interdit joué par le joueur{player}")
                     if action < 18 :
                         if action < 9 :
                             coup_interdit = action + 9
@@ -187,8 +191,10 @@ if __name__ == "__main__":
                     print(cube)
                     player *= -1
                 elif event.key in KEY_NUM:
-                    cube.jouer(event.key - 31, player)
                     action = event.key - 31
+                    cube.jouer(action, player)
+                    if action in cube.actions_possibles(coup_interdit) :
+                        print(f"WARNING !!! Coup interdit joué par le joueur{player}")
                     if action < 18 :
                         if action < 9 :
                             coup_interdit = action + 9

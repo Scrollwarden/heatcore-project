@@ -72,6 +72,7 @@ class Agent :
         situations = ndarray(shape=(0, 54))
         for action in actions :
             scratch = deepcopy(cube)
+            scratch.set_state(scratch.grille * joueur, True)
             scratch.jouer(action, joueur)
             situations = append(situations, [scratch.get_flatten_state()], 0)
         values = self(situations)
@@ -86,5 +87,5 @@ if __name__ == "__main__" :
     agent = Agent()
     gen = generator_datas(55)
 
-    agent.fit(gen, steps_per_epoch=1000, epochs=20)
-    agent.model.save("model2.h5")
+    agent.fit(gen, steps_per_epoch=100, epochs=200)
+    agent.model.save(r"models\model3.h5")

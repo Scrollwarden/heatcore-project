@@ -240,7 +240,7 @@ class Partie:
         actions_possibles = self.cube.actions_possibles(self.coup_interdit)
         action = choice(actions_possibles)
         self.step(action, True)
-        return self.cube.get_state() * (self.joueur * -1)
+        return self.cube.get_flatten_state() * (self.joueur * -1)
     
     def wise_random_step(self) -> ndarray :
         """Joue un coup aléatoirement tout en assurant de changer l'état du cube."""
@@ -256,7 +256,7 @@ class Partie:
             if action < 18 :
                 self.step(action, True, True)
         self.step(action, True)
-        return self.cube.get_state() * (self.joueur * -1)
+        return self.cube.get_flatten_state() * (self.joueur * -1)
     
     def random_partie(self) :
         states = []
