@@ -9,11 +9,13 @@ from cube import Cube
 from copy import deepcopy
 from numpy import ndarray, append
 
+from parameters import *
+
 class AgentParameters :
     def __init__(self):
-        self.nombre_neurones = 200
-        self.nombre_couches = 1
-        self.learning_rate = 0.001
+        self.nombre_neurones = NB_NEURONES
+        self.nombre_couches = NB_COUCHES
+        self.learning_rate = LEARNING_RATE
         self.optimizer = tf.keras.optimizers.Adam(learning_rate = self.learning_rate)
         self.loss = tf.keras.losses.MeanSquaredError()
 
@@ -85,7 +87,7 @@ class Agent :
 
 if __name__ == "__main__" :
     agent = Agent()
-    gen = generator_datas(55)
+    gen = generator_datas(BATCH_SIZE)
 
-    agent.fit(gen, steps_per_epoch=100, epochs=200)
-    agent.model.save(r"models\model3.h5")
+    agent.fit(gen, steps_per_epoch=STEP_PER_EPOCH, epochs=EPOCH)
+    agent.model.save(r"models\model1.h5")

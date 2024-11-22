@@ -9,7 +9,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-MODEL_PATH = r"models\model3.h5"
+MODEL_PATH = r"/home/matthew/Documents/GitHub/heatcore-project/intel_arti/cube_v2/models/model3.h5"
 
 # Crosses and Squares
 SPACE = 0.2
