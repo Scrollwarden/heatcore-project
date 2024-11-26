@@ -169,10 +169,10 @@ def jouer_contre_ia() :
         
 
 if __name__ == "__main__" :
-    data = GenDataMorpion(10000)
+    data = DataMorpion(15000)
     choix = Choices()
     agent = AgentMorpion(choix)
-    agent.fit(data)
+    agent.fit(*data.get_datas())
     partie = PartieIAvsH()
     while True :
         while not partie.jeu.terminal_state()[0] :

@@ -9,7 +9,8 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-MODEL_PATH = r"models\model3.h5"
+NUM_MODEL = 3
+MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 
 # Crosses and Squares
 SPACE = 0.2
@@ -151,14 +152,15 @@ if __name__ == "__main__":
     player = 1
     coup_interdit = -1
     action = 50
-
+    winner = (False, 0)
     # Main loop
     while True:
-        if player == 1 :
+        if not winner[0] and player == 1 :
             action = agent.choisir(cube, player, coup_interdit)
             cube.jouer(action, player)
             player *= -1
-            print(cube.terminal_state())
+            winner = cube.terminal_state()
+            print(winner)
             print(cube)
         if action < 18 :
             if action < 9 :
@@ -187,7 +189,8 @@ if __name__ == "__main__":
                             coup_interdit = action - 9
                     else :
                         coup_interdit = -1
-                    print(cube.terminal_state())
+                    winner = cube.terminal_state()
+                    print(winner)
                     print(cube)
                     player *= -1
                 elif event.key in KEY_NUM:
@@ -203,7 +206,8 @@ if __name__ == "__main__":
                     else :
                         coup_interdit = -1
                     player *= -1
-                    print(cube.terminal_state())
+                    winner = cube.terminal_state()
+                    print(winner)
                     print(cube)
                 elif event.key == pygame.K_SPACE:
                     reverse_display = not reverse_display

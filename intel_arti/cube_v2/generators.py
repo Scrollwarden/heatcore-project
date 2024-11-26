@@ -342,20 +342,55 @@ def play_wise_random_partie(i) :
     partie.wise_random_partie()
     return len(partie.states)
 
+class My :
+    def __init__(self) :
+        self.gagnants = {0 : 0, 1 : 0, -1 : 0}
 
-def generator_datas(batch_size) :
-    gen = GeneratorWinState()
-    while True :
+    def generator_datas(self, batch_size : int) :
+        gen = GeneratorWinState()
+        while True :
+            partie = Partie(True)
+            self.gagnants[partie.gagnant] += 1
+            x, y = partie.get_data()
+            y = y.flatten()
+            if (trop := x.shape[0] - batch_size) > 0 :
+                x = x[trop:]
+                y = y[trop:]
+            elif (manque := batch_size - x.shape[0]) > 0 :
+                x = append(x, array(gen.generate_random_states(manque)), 0)
+                y = append(y, ones(manque))
+            yield x, y
+    
+    def generator_datas_inv(self, batch_size : int) :
+        gen = GeneratorWinState()
+        while True :
+            partie = Partie(True)
+            self.gagnants[partie.gagnant] += 1
+            x, y = partie.get_data()
+            y = y.flatten()
+            if (trop := x.shape[0] - batch_size) > 0 :
+                x = x[trop:]
+                y = y[trop:]
+            elif (manque := batch_size - x.shape[0]) > 0 :
+                x = append(x, array(gen.generate_random_states(manque)), 0)
+                y = append(y, ones(manque))
+            yield x, y
+
+    def generators_only_partie(self, batch_size : int) :
         partie = Partie(True)
+        self.gagnants[partie.gagnant] += 1
         x, y = partie.get_data()
         y = y.flatten()
-        if (trop := x.shape[0] - batch_size) > 0 :
-            x = x[trop:]
-            y = y[trop:]
-        elif (manque := batch_size - x.shape[0]) > 0 :
-            x = append(x, array(gen.generate_random_states(manque)), 0)
-            y = append(y, ones(manque))
-        yield x, y
+        while True :
+            partie = Partie(True)
+            self.gagnants[partie.gagnant] += 1
+            new_x, new_y = partie.get_data()
+            x = append(x, new_x, 0)
+            y = append(y, new_y.flatten(), 0)
+            if len(x) >= batch_size :
+                yield x[:batch_size], y[:batch_size]
+                x = x[batch_size:]
+                y = y[batch_size:]
 
 # Tests
 # ======
@@ -408,7 +443,8 @@ def generator_datas(batch_size) :
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
 
 if __name__ == "__main__" :
-    gen = generator_datas(50)
+    obj = My()
+    gen = obj.generator_datas(50)
     temps = time()
     for i in range(2) :
         print(next(gen))
