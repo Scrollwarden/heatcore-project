@@ -81,7 +81,7 @@ class GeneratorWinState:
         for i in range(times):
             line = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
-            situation.set_ligne(face, line, array([joueur, joueur, joueur]))
+            situation.set_ligne(face, line, array([joueur]*3))
             self.liste_win_state.append(situation.get_flatten_state())
 
     def _win_on_column(self, face : int, times : int = 1, joueur : int = 1):
@@ -97,7 +97,7 @@ class GeneratorWinState:
         for i in range(times):
             column = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
-            situation.set_colonne(face, column, array([joueur, joueur, joueur]))
+            situation.set_colonne(face, column, array([joueur]*3))
             self.liste_win_state.append(situation.get_flatten_state())
 
     def _win_on_diagonal(self, face : int, times : int = 1, joueur : int = 1):
@@ -113,7 +113,7 @@ class GeneratorWinState:
         for i in range(times) :
             num = i % 2 if i < limit else randint(0, 1)
             situation = cube_neutre_random()
-            situation.set_diagonale(face, num, array([joueur, joueur, joueur]))
+            situation.set_diagonale(face, num, array([joueur]*3))
             self.liste_win_state.append(situation.get_flatten_state())
 
 def cube_neutre_random() -> Cube:
