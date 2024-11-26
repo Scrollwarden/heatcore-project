@@ -21,29 +21,27 @@ class GeneratorWinState:
     def __init__(self):
         self.liste_win_state = []
 
-    def generate_all_states(self, times=1, joueur=1):
+    def generate_all_states(self, times=1):
         """
         Génère une liste de toutes les situations où le jeu est gagné par l'agent.
 
         INPUT
         - times (int) : le nombre de fois où chaque situation sera générée
         avec le reste des cases définies aléatoirement (1 par défaut)
-        - joueur (int) : l'équipe qui joue entre 1 et -1
         """
         self.liste_win_state = []
         for face in range(6):
-            self._win_on_line(face, times, joueur),
-            self._win_on_column(face, times, joueur),
-            self._win_on_diagonal(face, times, joueur)
+            self._win_on_line(face, times),
+            self._win_on_column(face, times),
+            self._win_on_diagonal(face, times)
 
-    def generate_random_states(self, n=1, joueur=1):
+    def generate_random_states(self, n=1):
         """
         Génère une liste de situations où le jeu est gagné par l'agent.  
         Ces situations sont choisies aléatoirement
         
         INPUT
         - n (int) : le nombre d'états a générer
-        - joueur (int) : l'équipe qui joue entre 1 et -1
         """
         self.liste_win_state = []
         limit = (n % 6) * 6
@@ -51,11 +49,11 @@ class GeneratorWinState:
             face = i % 6 if i < limit else randint(0, 5)
             situation_type = randint(0, 7)
             if situation_type < 3 :
-                self._win_on_line(face, joueur=joueur)
+                self._win_on_line(face)
             elif situation_type < 6 :
-                self._win_on_column(face, joueur=joueur)
+                self._win_on_column(face)
             else:
-                self._win_on_diagonal(face, joueur=joueur)
+                self._win_on_diagonal(face)
         return self.liste_win_state
 
     def get_n_states(self, n=1):
@@ -68,52 +66,49 @@ class GeneratorWinState:
             i = randint(0, len(self.liste_win_state)-1)
             yield self.liste_win_state[i]
 
-    def _win_on_line(self, face : int, times : int = 1, joueur : int = 1) :
+    def _win_on_line(self, face : int, times : int = 1) :
         """
         Génère un état où le jeu est gagné par l'agent sur une ligne.
 
         INPUTS
         - face (int) : la face sur laquelle on veut générer une victoire
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
-        - joueur (int) : l'équipe qui joue entre 1 et -1
         """
         limit = (times // 3) * 3
         for i in range(times):
             line = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
-            situation.set_ligne(face, line, array([joueur, joueur, joueur]))
+            situation.set_ligne(face, line, array([1, 1, 1]))
             self.liste_win_state.append(situation.get_flatten_state())
 
-    def _win_on_column(self, face : int, times : int = 1, joueur : int = 1):
+    def _win_on_column(self, face : int, times : int = 1):
         """
         Génère un état où le jeu est gagné par l'agent sur une colonne.
 
         INPUTS
         - face (int) : la face sur laquelle on veut générer une victoire
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
-        - joueur (int) : l'équipe qui joue entre 1 et -1
         """
         limit = (times // 3) * 3
         for i in range(times):
             column = i % 3 if i < limit else randint(0, 2)
             situation = cube_neutre_random()
-            situation.set_colonne(face, column, array([joueur, joueur, joueur]))
+            situation.set_colonne(face, column, array([1, 1, 1]))
             self.liste_win_state.append(situation.get_flatten_state())
 
-    def _win_on_diagonal(self, face : int, times : int = 1, joueur : int = 1):
+    def _win_on_diagonal(self, face : int, times : int = 1):
         """
         Génère un état où le jeu est gagné par l'agent sur une diagonale.
 
         INPUTS
         - face (int) : la face sur laquelle on veut générer une victoire
         - times (int) : le nombre de fois où la même génération sera générée (par défaut 1)
-        - joueur (int) : l'équipe qui joue entre 1 et -1
         """
         limit = (times // 2) * 2
         for i in range(times) :
             num = i % 2 if i < limit else randint(0, 1)
             situation = cube_neutre_random()
-            situation.set_diagonale(face, num, array([joueur, joueur, joueur]))
+            situation.set_diagonale(face, num, array([1, 1, 1]))
             self.liste_win_state.append(situation.get_flatten_state())
 
 def cube_neutre_random() -> Cube:
@@ -361,79 +356,6 @@ def generator_datas(batch_size) :
             x = append(x, array(gen.generate_random_states(manque)), 0)
             y = append(y, ones(manque))
         yield x, y
-
-
-class GameSaver:
-    '''
-    Sauvegarde les parties jouées.
-    Permet de posséder des jeux d'entraînements basés sur des choix humains.
-    '''
-    def __init__(self) -> None:
-        self.accessed_data = []
-        self.game_datas = {}
-        self.nb_game_datas = 0
-
-    def save(self, data):
-        """
-        sauvegarde un coup joué dans la liste actuellement modifiée
-        
-        INPUT
-        - data (Cube.flatten_state) : l'état du jeu à sauvegarder
-        """
-        self.accessed_data.append(data)
-
-    def save_game(self, name='current', call=True):
-        """
-        Ajoute la liste actuellement modifiée à un jeu du dictionnaire
-        
-        INPUT
-        - name (str | int) : le nom d'un jeu existant auquel ajouter la liste.
-        Si name = 'current', ajoute la liste à la première clef disponible.
-        - call (bool) : si True, print une confirmation dans le terminal.
-        """
-        if name == 'current':
-            self.game_datas[self.nb_game_datas] = self.accessed_data
-            if call: print(f'Game saved as {self.nb_game_datas}')
-        else:
-            self.game_datas[name] = self.accessed_data
-            if call: print(f'Game saved as {name}')
-        self.accessed_data = []
-        self.nb_game_datas += 1
-
-    def get_game(self, name):
-        """Retourne le jeu demandé du dictionnaire"""
-        return self.game_datas[name]
-    
-    def yield_game(self, name):
-        """Générateur qui retourne les coups joués dans un jeu demandé"""
-        yield from self.game_datas[name]
-
-    def get_all_games(self) -> list[str]:
-        """retourne les noms de tous les jeux contenus dans le dictionnaire"""
-        return list(self.game_datas.keys())
-
-    def delete_game(self, name):
-        """supprime un jeu du dictionnaire"""
-        del self.game_datas[name]
-
-    def delete_all_games(self):
-        """vide le dictionnaire"""
-        self.game_datas = {}
-
-    def save_all_to_file(self, file_name=None):
-        """
-        enregistre toutes les données du dictionnaire dans un fichier.
-        le fichier sera enregistré dans un dossier 'data_from_games'.
-        """
-        if file_name is None:
-            ext = 'je sais pas'
-            date = 'on met quoi comme discriminant ?'
-            file_name = f'data_from_games_{date}.{ext}'
-
-    def load_all_from_file(self, file):
-        """charge toutes les données d'un fichier dans le dictionnaire (qui sera remplacé)"""
-
-
 
 # Tests
 # ======

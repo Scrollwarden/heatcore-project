@@ -3,7 +3,6 @@ import time
 from cube import Cube
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
-from generators import GameSaver
 
 # Screen constants
 LINE_WIDTH = 3
@@ -48,29 +47,29 @@ COLORS = {
 }
 FADED_COLORS = {key: tuple(max(0, num - 80) for num in color) for key, color in COLORS.items()}
 
-# Key                Explications par rapport à la vue du joueur et la face du dessus comme référenciel
+# Key
 KEY_MAP = {
-    pygame.K_r: "R", # - Tourne la face directe droite
-    pygame.K_l: "L", # - Tourne la face indirecte gauche
-    pygame.K_f: "F", # - Tourne la face directe gauche
-    pygame.K_b: "B", # - Tourne la face indirecte droite
-    pygame.K_u: "U", # - Tourne la couronne du haut
-    pygame.K_d: "D", # - Tourne la couronne du bas
-    pygame.K_m: "M", # - Tourne la rangée du milieu de la face directe gauche
-    pygame.K_e: "E", # - Tourne la tranche du milieu
-    pygame.K_s: "S", # - Tourne la rangée du milieu de la face directe droite
+    pygame.K_r: "R",
+    pygame.K_l: "L",
+    pygame.K_f: "F",
+    pygame.K_b: "B",
+    pygame.K_u: "U",
+    pygame.K_d: "D",
+    pygame.K_m: "M",
+    pygame.K_e: "E",
+    pygame.K_s: "S",
 }
 
 KEY_NUM = (
-    pygame.K_1, # - Pion en bas de la rangée gauche
-    pygame.K_2, # - Pion au milieu de la rangée gauche
-    pygame.K_3, # - Pion en haut de la rangée gauche
-    pygame.K_4, # - Pion en bas de la rangée milieu
-    pygame.K_5, # - Pion au milieu de la rangée milieu
-    pygame.K_6, # - Pion en haut de la rangée milieu
-    pygame.K_7, # - Pion en bas de la rangée droite
-    pygame.K_8, # - Pion au milieu de la rangée droite
-    pygame.K_9 # - Pion en haut de la rangée droite
+    pygame.K_1,
+    pygame.K_2,
+    pygame.K_3,
+    pygame.K_4,
+    pygame.K_5,
+    pygame.K_6,
+    pygame.K_7,
+    pygame.K_8,
+    pygame.K_9
 )
 
 class Param:
@@ -148,7 +147,6 @@ if __name__ == "__main__":
     temp = time.time()
     cube = Cube()
     reverse_display = False
-    saver = GameSaver()
 
     player = 1
     coup_interdit = -1
@@ -162,11 +160,6 @@ if __name__ == "__main__":
             player *= -1
             print(cube.terminal_state())
             print(cube)
-            # sauvegarde de la partie dans saver
-            saver.save(cube.get_flatten_state())
-            print("step was saved")
-            if cube.terminal_state()[0]:
-                saver.save_game('current')
         if action < 18 :
             if action < 9 :
                 coup_interdit = action + 9
@@ -196,11 +189,6 @@ if __name__ == "__main__":
                         coup_interdit = -1
                     print(cube.terminal_state())
                     print(cube)
-                    # sauvegarde de la partie dans saver
-                    saver.save(cube.get_flatten_state())
-                    print("step was saved")
-                    if cube.terminal_state()[0]:
-                        saver.save_game()
                     player *= -1
                 elif event.key in KEY_NUM:
                     action = event.key - 31
@@ -217,11 +205,6 @@ if __name__ == "__main__":
                     player *= -1
                     print(cube.terminal_state())
                     print(cube)
-                    # sauvegarde de la partie dans saver
-                    saver.save(cube.get_flatten_state())
-                    print("step was saved")
-                    if cube.terminal_state()[0]:
-                        saver.save_game()
                 elif event.key == pygame.K_SPACE:
                     reverse_display = not reverse_display
                 elif event.key == pygame.K_p :
