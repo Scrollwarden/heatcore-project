@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
 import tensorflow as tf
 from random import random, randint
-from generators import My
+from generators import generator_datas
 from cube import Cube
 from copy import deepcopy
 from numpy import ndarray, append
@@ -75,11 +75,9 @@ class Agent :
         for action in actions :
             scratch = deepcopy(cube)
             scratch.set_state(scratch.grille * joueur, True)
-            scratch.jouer(action, 1)
+            scratch.jouer(action, joueur)
             situations = append(situations, [scratch.get_flatten_state()], 0)
         values = self(situations)
-        for i in range(len(situations)) :
-            print(situations[i], values[i])
         i_max = 0
         for i in range(1, len(values)) :
             if values[i] > values[i_max] :
@@ -89,9 +87,7 @@ class Agent :
 
 if __name__ == "__main__" :
     agent = Agent()
-    obj = My()
-    gen = obj.generators_only_partie(55)
+    gen = generator_datas(BATCH_SIZE)
 
-    agent.fit(gen, steps_per_epoch=100, epochs=200)
-    agent.model.save(r"models\model7.h5")
-    print(obj.gagnants)
+    agent.fit(gen, steps_per_epoch=STEP_PER_EPOCH, epochs=EPOCH)
+    agent.model.save(r"models\model1.h5")
