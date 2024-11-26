@@ -347,11 +347,12 @@ def play_wise_random_partie(i) :
     partie.wise_random_partie()
     return len(partie.states)
 
-class My :
+class StateGenerator :
     def __init__(self) :
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
 
     def generator_datas(self, batch_size : int) :
+        """Génère des situations gagnées par l'équipe 1"""
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)
@@ -366,16 +367,17 @@ class My :
                 y = append(y, ones(manque))
             yield x, y
     
-    def generator_datas_inv(self, batch_size : int) :
+    def generator_datas_and_inv(self, batch_size : int) :
+        """Génère les données de generator_data et y ajoute les mêmes données en inversé."""
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
             x, y = partie.get_data()
             y = y.flatten()
-            if (trop := x.shape[0] - batch_size) > 0 :
-                x = x[trop:]
-                y = y[trop:]
+            if (to_many_data := x.shape[0] - batch_size) > 0 :
+                x = x[to_many_data:]
+                y = y[to_many_data:]
             elif (manque := batch_size - x.shape[0]) > 0 :
                 x = append(x, array(gen.generate_random_states(manque)), 0)
                 y = append(y, ones(manque))
@@ -521,9 +523,9 @@ class GameSaver:
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
 
 if __name__ == "__main__" :
-    obj = My()
-    gen = obj.generator_datas(50)
+    generator = StateGenerator()
+    selected_generator = generator.generator_datas(50)
     temps = time()
     for i in range(2) :
-        print(next(gen))
+        print(next(selected_generator))
     print(time()-temps)

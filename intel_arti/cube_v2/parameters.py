@@ -12,6 +12,6 @@ LEARNING_RATE = 0.001 #     M1 : 0.001  | M2 : 0.001    | M3 : 0.001    | M6 : 0
 BATCH_SIZE = 55 #           M1 : 80     | M2 : 55       | M3 : 55       | M6 : 55       | M7 : 55   
 STEP_PER_EPOCH = 100 #      M1 : 1000   | M2 : 1000     | M3 : 100      | M6 : 100      | M7 : 100  
 EPOCH = 200 #               M1 : 10     | M2 : 20       | M3 : 200      | M6 : 100      | M7 : 200  
-# WinState used             M1 : Yes    | M2 : Yes      | M3 : Yes      | M6 : No       | M7 : No
-# Inverted WinState team    M1 : No     | M2 : No       | M3 : No       | M6 : No       | M7 : No
-# Human game examples       M1 : No     | M2 : No       | M3 : No       | M6 : No       | M7 : No
+# WinState used             M1 : Yes    | M2 : Yes      | M3 : Yes      | M6 : No       | M7 : No   
+# Inverted WinState team    M1 : No     | M2 : No       | M3 : No       | M6 : No       | M7 : No   
+# Human game examples       M1 : No     | M2 : No       | M3 : No       | M6 : No       | M7 : No   
