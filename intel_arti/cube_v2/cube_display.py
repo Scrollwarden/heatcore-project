@@ -12,6 +12,8 @@ SCREEN_HEIGHT = 500
 ZOOM = 3
 NUM_MODEL = 3
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+# window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 
 # Crosses and Squares
 SPACE = 0.2

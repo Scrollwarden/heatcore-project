@@ -303,6 +303,10 @@ class Partie:
         self.states = states
     
     def get_data(self) -> tuple[ndarray, ndarray]:
+        """
+        RETURN
+        - states, reward (tuple) : un tuple des états et des récompenses associées
+        """
         if not isinstance(self.states, ndarray) :
             self.states = array(self.states)
         return self.states, self.rewards
@@ -317,9 +321,9 @@ class DataRubi :
     def add_data(self, n : int) :
         for _ in range(n) :
             partie = Partie(True)
-            new_x, new_y = partie.get_data()
-            self.x = append(self.x, new_x, 0)
-            self.y = append(self.y, new_y, 0)
+            new_states, new_rewards = partie.get_data()
+            self.x = append(self.x, new_states, 0)
+            self.y = append(self.y, new_rewards, 0)
             if partie.gagnant == 1 :
                 self.gagnants[0] += 1
             elif partie.gagnant == -1 :
@@ -357,15 +361,15 @@ class StateGenerator :
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
-            x, y = partie.get_data()
-            y = y.flatten()
-            if (trop := x.shape[0] - batch_size) > 0 :
-                x = x[trop:]
-                y = y[trop:]
-            elif (manque := batch_size - x.shape[0]) > 0 :
-                x = append(x, array(gen.generate_random_states(manque)), 0)
-                y = append(y, ones(manque))
-            yield x, y
+            states, rewards = partie.get_data()
+            rewards = rewards.flatten()
+            if (nb_overflow_data := states.shape[0] - batch_size) > 0 :
+                states = states[nb_overflow_data:]
+                rewards = rewards[nb_overflow_data:]
+            elif (manque := batch_size - states.shape[0]) > 0 :
+                states = append(states, array(gen.generate_random_states(manque)), 0)
+                rewards = append(rewards, ones(manque))
+            yield states, rewards
     
     def generator_datas_and_inv(self, batch_size : int) :
         """Génère les données de generator_data et y ajoute les mêmes données en inversé."""
@@ -373,31 +377,31 @@ class StateGenerator :
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
-            x, y = partie.get_data()
-            y = y.flatten()
-            if (to_many_data := x.shape[0] - batch_size) > 0 :
-                x = x[to_many_data:]
-                y = y[to_many_data:]
-            elif (manque := batch_size - x.shape[0]) > 0 :
-                x = append(x, array(gen.generate_random_states(manque)), 0)
-                y = append(y, ones(manque))
-            yield x, y
+            states, rewards = partie.get_data()
+            rewards = rewards.flatten()
+            if (nb_overflow_data := states.shape[0] - batch_size) > 0 :
+                states = states[nb_overflow_data:]
+                rewards = rewards[nb_overflow_data:]
+            elif (manque := batch_size - states.shape[0]) > 0 :
+                states = append(states, array(gen.generate_random_states(manque)), 0)
+                rewards = append(rewards, ones(manque))
+            yield states, rewards
 
     def generators_only_partie(self, batch_size : int) :
         partie = Partie(True)
         self.gagnants[partie.gagnant] += 1
-        x, y = partie.get_data()
-        y = y.flatten()
+        states, rewards = partie.get_data()
+        rewards = rewards.flatten()
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
-            new_x, new_y = partie.get_data()
-            x = append(x, new_x, 0)
-            y = append(y, new_y.flatten(), 0)
-            if len(x) >= batch_size :
-                yield x[:batch_size], y[:batch_size]
-                x = x[batch_size:]
-                y = y[batch_size:]
+            new_states, new_rewards = partie.get_data()
+            states = append(states, new_states, 0)
+            rewards = append(rewards, new_rewards.flatten(), 0)
+            if len(states) >= batch_size :
+                yield states[:batch_size], rewards[:batch_size]
+                states = states[batch_size:]
+                rewards = rewards[batch_size:]
 
 
 class GameSaver:
@@ -469,7 +473,7 @@ class GameSaver:
 
     def load_all_from_file(self, file):
         """charge toutes les données d'un fichier dans le dictionnaire (qui sera remplacé)"""
-
+        pass
 
 
 # Tests
@@ -523,8 +527,8 @@ class GameSaver:
 #         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
 
 if __name__ == "__main__" :
-    generator = StateGenerator()
-    selected_generator = generator.generator_datas(50)
+    generators = StateGenerator()
+    selected_generator = generators.generator_datas(50)
     temps = time()
     for i in range(2) :
         print(next(selected_generator))

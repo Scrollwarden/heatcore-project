@@ -1,3 +1,8 @@
+'''
+Etudie un model chargé
+permet de récupérer différents paramètres.
+'''
+
 from agent import Agent
 from cube import Cube
 from numpy import reshape
@@ -7,6 +12,8 @@ from tensorflow.keras.models import load_model #type: ignore
 
 NUM_MODEL = 7
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+# window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 
 cube = Cube()
 
