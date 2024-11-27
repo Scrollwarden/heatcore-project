@@ -14,6 +14,16 @@ NUM_MODEL = 4
 MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
+DATE_ALL_MODELS = {
+    1: '~ 21-11-2024',
+    2: '~ 21-11-2024',
+    3: '~ 21-11-1014',
+    4: '~ 26-11-2024',
+    5: '~ 26-11-2024',
+    6: '~ 26-11-2024',
+    7: '~ 26-11-2024'
+}
+DATE_MODEL = DATE_ALL_MODELS[NUM_MODEL]
 
 # Crosses and Squares
 SPACE = 0.2
@@ -52,7 +62,7 @@ COLORS = {
 FADED_COLORS = {key: tuple(max(0, num - 80) for num in color) for key, color in COLORS.items()}
 
 # Key                Explications par rapport à la vue du joueur et la face du dessus comme référenciel
-KEY_MAP = {
+KEY_MAP = {#         EXPLICATIONS FAUSSES, A REVERIFIER
     pygame.K_r: "R", # - Tourne la face directe droite
     pygame.K_l: "L", # - Tourne la face indirecte gauche
     pygame.K_f: "F", # - Tourne la face directe gauche
@@ -157,6 +167,10 @@ if __name__ == "__main__":
     coup_interdit = -1
     action = 50
     winner = (False, 0)
+    font_for_text = pygame.font.Font(None, 36)
+    font_for_date = pygame.font.Font(None, 20)
+    text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
+    text_date_model = font_for_date.render(f"Date of creation : ({DATE_MODEL})", True, (255, 255, 255))
     # Main loop
     while True:
         if not winner[0] and player == 1 :
@@ -245,6 +259,8 @@ if __name__ == "__main__":
         else:
             display_back(screen, param, cube, True)
             display_front(screen, param, cube, False)
+        screen.blit(text_model_used, (10, 10))
+        screen.blit(text_date_model, (10, 40))
         
         # Update the display
         pygame.display.flip()
