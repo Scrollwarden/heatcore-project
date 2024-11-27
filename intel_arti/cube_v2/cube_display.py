@@ -162,15 +162,20 @@ if __name__ == "__main__":
     cube = Cube()
     reverse_display = False
     saver = GameSaver()
+    # files = []
+    # for i in range(8):
+    #     files.append(f'cube_v2/data_from_human_games/game_m4_vs_human/game_m4_vs_human_game{i}.npz')
+    # saver.load_all_from_files(*files)
 
     player = 1
     coup_interdit = -1
     action = 50
     winner = (False, 0)
     font_for_text = pygame.font.Font(None, 36)
-    font_for_date = pygame.font.Font(None, 20)
+    font_for_infos = pygame.font.Font(None, 20)
     text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
-    text_date_model = font_for_date.render(f"Date of creation : ({DATE_MODEL})", True, (255, 255, 255))
+    text_date_model = font_for_infos.render(f"Date of creation : ({DATE_MODEL})", True, (255, 255, 255))
+    
     # Main loop
     while True:
         if not winner[0] and player == 1 :
@@ -195,6 +200,7 @@ if __name__ == "__main__":
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                saver.save_all_to_files(f'game_m{NUM_MODEL}_vs_human')
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -261,7 +267,8 @@ if __name__ == "__main__":
             display_front(screen, param, cube, False)
         screen.blit(text_model_used, (10, 10))
         screen.blit(text_date_model, (10, 40))
-        
+        text_saved_games = font_for_infos.render(f"Saved games : {saver.get_all_games()}", True, (255, 255, 255))
+        screen.blit(text_saved_games, (10, 450))
         # Update the display
         pygame.display.flip()
         
