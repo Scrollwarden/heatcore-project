@@ -10,20 +10,23 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-NUM_MODEL = 4
+NUM_MODEL = 7
 MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
-DATE_ALL_MODELS = {
-    1: '~ 21-11-2024',
-    2: '~ 21-11-2024',
-    3: '~ 21-11-1014',
-    4: '~ 26-11-2024',
-    5: '~ 26-11-2024',
-    6: '~ 26-11-2024',
-    7: '~ 26-11-2024'
+INFOS_ALL_MODELS = {
+    1: ('~ 21-11-2024', 'BASE'),
+    2: ('~ 21-11-2024', 'batch size 55 (-) | epoch 20 (+)'),
+    3: ('~ 21-11-1014', 'epoch 200 (+) | step per epoch 100 (-)'),
+    4: ('~ 26-11-2024', 'N/A'),
+    5: ('~ 26-11-2024', 'N/A'),
+    6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
+    7: ('~ 26-11-2024', 'epoch 200 (+)'),
+    8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
+    9: ('27-11-2024', 'epoch 1000 (+)')
 }
-DATE_MODEL = DATE_ALL_MODELS[NUM_MODEL]
+DATE_MODEL = INFOS_ALL_MODELS[NUM_MODEL][0]
+CHANGES_MODEL = INFOS_ALL_MODELS[NUM_MODEL][1]
 
 # Crosses and Squares
 SPACE = 0.2
@@ -174,8 +177,9 @@ if __name__ == "__main__":
     font_for_text = pygame.font.Font(None, 36)
     font_for_infos = pygame.font.Font(None, 20)
     text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
-    text_date_model = font_for_infos.render(f"Date of creation : ({DATE_MODEL})", True, (255, 255, 255))
-    
+    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL}", True, (255, 255, 255))
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL}", True, (255, 255, 255))
+
     # Main loop
     while True:
         if not winner[0] and player == 1 :
@@ -267,6 +271,7 @@ if __name__ == "__main__":
             display_front(screen, param, cube, False)
         screen.blit(text_model_used, (10, 10))
         screen.blit(text_date_model, (10, 40))
+        screen.blit(text_changes_model, (10, 60))
         text_saved_games = font_for_infos.render(f"Saved games : {saver.get_all_games()}", True, (255, 255, 255))
         screen.blit(text_saved_games, (10, 450))
         # Update the display
