@@ -11,7 +11,22 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 NUM_MODEL = 9
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+# window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
+INFOS_ALL_MODELS = {
+    1: ('~ 21-11-2024', 'BASE'),
+    2: ('~ 21-11-2024', 'batch size 55 (-) | epoch 20 (+)'),
+    3: ('~ 21-11-1014', 'epoch 200 (+) | step per epoch 100 (-)'),
+    4: ('~ 26-11-2024', 'N/A'),
+    5: ('~ 26-11-2024', 'N/A'),
+    6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
+    7: ('~ 26-11-2024', 'epoch 200 (+)'),
+    8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
+    9: ('27-11-2024', 'epoch 1000 (+)')
+}
+DATE_MODEL = INFOS_ALL_MODELS[NUM_MODEL][0]
+CHANGES_MODEL = INFOS_ALL_MODELS[NUM_MODEL][1]
 
 # Crosses and Squares
 SPACE = 0.2
@@ -50,7 +65,7 @@ COLORS = {
 FADED_COLORS = {key: tuple(max(0, num - 80) for num in color) for key, color in COLORS.items()}
 
 # Key                Explications par rapport à la vue du joueur et la face du dessus comme référenciel
-KEY_MAP = {
+KEY_MAP = {#         EXPLICATIONS FAUSSES, A REVERIFIER
     pygame.K_r: "R", # - Tourne la face directe droite
     pygame.K_l: "L", # - Tourne la face indirecte gauche
     pygame.K_f: "F", # - Tourne la face directe gauche
@@ -150,11 +165,21 @@ if __name__ == "__main__":
     cube = Cube()
     reverse_display = False
     saver = GameSaver()
+    # files = []
+    # for i in range(8):
+    #     files.append(f'cube_v2/data_from_human_games/game_m4_vs_human/game_m4_vs_human_game{i}.npz')
+    # saver.load_all_from_files(*files)
 
     player = 1
     coup_interdit = -1
     action = 50
     winner = (False, 0)
+    font_for_text = pygame.font.Font(None, 36)
+    font_for_infos = pygame.font.Font(None, 20)
+    text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
+    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL}", True, (255, 255, 255))
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL}", True, (255, 255, 255))
+
     # Main loop
     while True:
         if not winner[0] and player == 1 :
@@ -179,6 +204,7 @@ if __name__ == "__main__":
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                saver.save_all_to_files(f'game_m{NUM_MODEL}_vs_human')
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -243,7 +269,11 @@ if __name__ == "__main__":
         else:
             display_back(screen, param, cube, True)
             display_front(screen, param, cube, False)
-        
+        screen.blit(text_model_used, (10, 10))
+        screen.blit(text_date_model, (10, 40))
+        screen.blit(text_changes_model, (10, 60))
+        text_saved_games = font_for_infos.render(f"Saved games : {saver.get_all_games()}", True, (255, 255, 255))
+        screen.blit(text_saved_games, (10, 450))
         # Update the display
         pygame.display.flip()
         

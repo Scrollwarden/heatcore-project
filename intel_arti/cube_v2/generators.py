@@ -5,8 +5,10 @@ Tous les générateurs de situations de jeu pour entrainer l'agent.
 from concurrent.futures import ProcessPoolExecutor
 from random import randint, choice, gauss
 from cube import Cube, check_type
-from numpy import zeros, ndarray, append, array, ones
+from numpy import zeros, ndarray, append, array, ones, savez, load
 from time import time
+import os
+from datetime import datetime
 
 
 class GeneratorWinState:
@@ -303,6 +305,10 @@ class Partie:
         self.states = states
     
     def get_data(self) -> tuple[ndarray, ndarray]:
+        """
+        RETURN
+        - states, reward (tuple) : un tuple des états et des récompenses associées
+        """
         if not isinstance(self.states, ndarray) :
             self.states = array(self.states)
         return self.states, self.rewards
@@ -317,9 +323,9 @@ class DataRubi :
     def add_data(self, n : int) :
         for _ in range(n) :
             partie = Partie(True)
-            new_x, new_y = partie.get_data()
-            self.x = append(self.x, new_x, 0)
-            self.y = append(self.y, new_y, 0)
+            new_states, new_rewards = partie.get_data()
+            self.x = append(self.x, new_states, 0)
+            self.y = append(self.y, new_rewards, 0)
             if partie.gagnant == 1 :
                 self.gagnants[0] += 1
             elif partie.gagnant == -1 :
@@ -347,27 +353,28 @@ def play_wise_random_partie(i) :
     partie.wise_random_partie()
     return len(partie.states)
 
-class My :
-    proportions = 0.5
+class StateGenerator :
     def __init__(self) :
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
 
     def generator_datas(self, batch_size : int) :
+        """Génère des situations gagnées par l'équipe 1"""
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
-            x, y = partie.get_data()
-            y = y.flatten()
-            if (trop := x.shape[0] - batch_size) > 0 :
-                x = x[trop:]
-                y = y[trop:]
-            elif (manque := batch_size - x.shape[0]) > 0 :
-                x = append(x, array(gen.generate_random_states(manque)), 0)
-                y = append(y, ones(manque))
-            yield x, y
+            states, rewards = partie.get_data()
+            rewards = rewards.flatten()
+            if (nb_overflow_data := states.shape[0] - batch_size) > 0 :
+                states = states[nb_overflow_data:]
+                rewards = rewards[nb_overflow_data:]
+            elif (manque := batch_size - states.shape[0]) > 0 :
+                states = append(states, array(gen.generate_random_states(manque)), 0)
+                rewards = append(rewards, ones(manque))
+            yield states, rewards
     
     def generator_datas_and_inv(self, batch_size : int) :
+        """Génère les données de generator_data et y ajoute les mêmes données en inversé."""
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)
@@ -389,18 +396,18 @@ class My :
     def generators_only_partie(self, batch_size : int) :
         partie = Partie(True)
         self.gagnants[partie.gagnant] += 1
-        x, y = partie.get_data()
-        y = y.flatten()
+        states, rewards = partie.get_data()
+        rewards = rewards.flatten()
         while True :
             partie = Partie(True)
             self.gagnants[partie.gagnant] += 1
-            new_x, new_y = partie.get_data()
-            x = append(x, new_x, 0)
-            y = append(y, new_y.flatten(), 0)
-            if len(x) >= batch_size :
-                yield x[:batch_size], y[:batch_size]
-                x = x[batch_size:]
-                y = y[batch_size:]
+            new_states, new_rewards = partie.get_data()
+            states = append(states, new_states, 0)
+            rewards = append(rewards, new_rewards.flatten(), 0)
+            if len(states) >= batch_size :
+                yield states[:batch_size], rewards[:batch_size]
+                states = states[batch_size:]
+                rewards = rewards[batch_size:]
 
 
 class GameSaver:
@@ -409,8 +416,8 @@ class GameSaver:
     Permet de posséder des jeux d'entraînements basés sur des choix humains.
     '''
     def __init__(self) -> None:
-        self.accessed_data = []
-        self.game_datas = {}
+        self.accessed_data = [] # liste des états de cube d'une partie
+        self.game_datas = {} # liste des parties
         self.nb_game_datas = 0
 
     def save(self, data):
@@ -460,19 +467,46 @@ class GameSaver:
         """vide le dictionnaire"""
         self.game_datas = {}
 
-    def save_all_to_file(self, file_name=None):
+    def save_all_to_files(self, folder_name=None):
         """
-        enregistre toutes les données du dictionnaire dans un fichier.
-        le fichier sera enregistré dans un dossier 'data_from_games'.
+        enregistre toutes les données du dictionnaire, créant un fichier par partie.
+        les fichiers seront enregistrés dans un dossier '' créé dans le dossier 'data_from_human_games'.
+        Un nom générique est déjà donné aux fichiers, modifiable.
         """
-        if file_name is None:
-            ext = 'je sais pas'
-            date = 'on met quoi comme discriminant ?'
-            file_name = f'data_from_games_{date}.{ext}'
+        if folder_name is None:
+            date = datetime.now().strftime('%d-%m-%Y')
+            folder_name = f'dfhg_{date}' # datas from human games -> dfhg
+        folder_name_incremented = generate_directory_name(folder_name)
 
-    def load_all_from_file(self, file):
-        """charge toutes les données d'un fichier dans le dictionnaire (qui sera remplacé)"""
+        os.mkdir(f'cube_v2/data_from_human_games/{folder_name_incremented}')
 
+        for partie in self.game_datas.keys():
+            file_name = f'{folder_name_incremented}_game{partie}.npz'
+            savez(f'cube_v2/data_from_human_games/{folder_name_incremented}/{file_name}', *self.game_datas[partie]) # save is from numpy, save the value in a .npz format
+
+        print(f"Data saved in folder '{folder_name_incremented}'")
+
+    def load_all_from_files(self, *files):
+        """
+        charge toutes les données de tous les fichiers donnés dans le dictionnaire (qui sera remplacé). Vide aussi accessed_data.
+
+        WARNING : si l'un des dossiers donnés n'existe pas, causera une erreur.
+        """
+        self.delete_all_games()
+        for file in files:
+            loaded_data = load(file)
+            self.accessed_data = loaded_data.values() # loaded_data is NpzFile class, dictionnay-like object so .values() is possible.
+            self.save_game()
+        print("Data loaded in GameSaver.")
+
+def generate_directory_name(name, x=0):
+    """créé le nom du répertoire avec incrémentation si nécessaire"""
+    while True: # break with return
+        dir_name = (name + ('_(' + str(x) + ')' if x is not 0 else '')).strip()
+        if not os.path.exists('cube_v2/data_from_human_games/' + dir_name):
+            return dir_name
+        else:
+            x = x + 1
 
 
 # Tests
@@ -501,34 +535,10 @@ class GameSaver:
 #     print("Temps :", time()-start)
 #     print("Somme :", somme)
 
-
-
-
-# backup 
-# ============
-# 
-# def generate_state(self, times=1):
-#         """
-#         Génère un état où le jeu est gagné par l'agent.
-#         Cette methode est un générateur qui fonctionne avec yield.
-
-#         INPUT
-#         - times (int) : le nombre de fois où chaque situation sera générée
-#         avec le reste des cases définies aléatoirement (1 par défaut)
-#         """
-#         for face in range(6):
-#             for line_win in self._win_on_line(face, times):
-#                 yield line_win
-#             for column_win in self._win_on_column(face, times):
-#                 yield column_win
-#             for diagonal_win in self._win_on_diagonal(face, times):
-#                 yield diagonal_win
-#         # TODO : instead of yielding each, store and then yeld one of the loop output randomly
-
-if __name__ == "__main__" :
-    obj = My()
-    gen = obj.generator_datas(50)
-    temps = time()
-    for i in range(2) :
-        print(next(gen))
-    print(time()-temps)
+# if __name__ == "__main__" :
+#     generators = StateGenerator()
+#     selected_generator = generators.generator_datas(50)
+#     temps = time()
+#     for i in range(2) :
+#         print(next(selected_generator))
+#     print(time()-temps)

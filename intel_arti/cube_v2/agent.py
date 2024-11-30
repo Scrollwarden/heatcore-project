@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
 import tensorflow as tf
 from random import random, randint
-from generators import My
+from generators import StateGenerator
 from cube import Cube
 from copy import deepcopy
 from numpy import ndarray, append
@@ -89,9 +89,9 @@ class Agent :
 
 if __name__ == "__main__" :
     agent = Agent()
-    obj = My()
-    gen = obj.generator_datas(55)
+    generators = StateGenerator()
+    selected_gen = generators.generators_only_partie(55)
 
-    agent.fit(gen, steps_per_epoch=100, epochs=1000)
+    agent.fit(selected_gen, steps_per_epoch=100, epochs=1000)
     agent.model.save(r"models\model9.h5")
-    print(obj.gagnants)
+    print(generators.gagnants)
