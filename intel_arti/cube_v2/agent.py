@@ -90,8 +90,8 @@ class Agent :
 if __name__ == "__main__" :
     agent = Agent()
     obj = My()
-    gen = obj.generators_only_partie(55)
+    gen = obj.generator_datas(55)
 
-    agent.fit(gen, steps_per_epoch=100, epochs=200)
-    agent.model.save(r"models\model7.h5")
+    agent.fit(gen, steps_per_epoch=100, epochs=1000)
+    agent.model.save(r"models\model9.h5")
     print(obj.gagnants)

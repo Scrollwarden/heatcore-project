@@ -10,7 +10,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-NUM_MODEL = 3
+NUM_MODEL = 9
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 
 # Crosses and Squares

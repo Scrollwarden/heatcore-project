@@ -348,6 +348,7 @@ def play_wise_random_partie(i) :
     return len(partie.states)
 
 class My :
+    proportions = 0.5
     def __init__(self) :
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
 
@@ -366,7 +367,7 @@ class My :
                 y = append(y, ones(manque))
             yield x, y
     
-    def generator_datas_inv(self, batch_size : int) :
+    def generator_datas_and_inv(self, batch_size : int) :
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)
@@ -377,8 +378,12 @@ class My :
                 x = x[trop:]
                 y = y[trop:]
             elif (manque := batch_size - x.shape[0]) > 0 :
-                x = append(x, array(gen.generate_random_states(manque)), 0)
-                y = append(y, ones(manque))
+                # Le nombre de 
+                positifs = int(manque * self.proportions)
+                x = append(x, array(gen.generate_random_states(positifs, -1)), 0)
+                y = append(y, ones(positifs)*(-1))
+                x = append(x, array(gen.generate_random_states(manque - positifs, 1)), 0)
+                y = append(y, ones(manque-positifs))
             yield x, y
 
     def generators_only_partie(self, batch_size : int) :

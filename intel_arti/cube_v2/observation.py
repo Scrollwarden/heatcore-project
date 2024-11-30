@@ -5,32 +5,33 @@ from collections import deque
 from statistics import mean
 from tensorflow.keras.models import load_model #type: ignore
 
-NUM_MODEL = 7
+NUM_MODEL = 9
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 
 cube = Cube()
 
 agent = Agent(True)
 agent.model = load_model(MODEL_PATH)
+weights, bias = agent.model.layers[1].get_weights()
 
-NUM_NEURONE = 193
-weights, bias = agent.model.layers[0].get_weights()
 
-print("Bais", bias[NUM_NEURONE])
-liste = []
-for i in range(54) :
-    liste.append((i,  weights[i][NUM_NEURONE]))
-liste.sort(key=lambda x: abs(x[1]), reverse=True)
+while True :
+    NUM_NEURONE = int(input("Numéro du neurone : "))
+    print("Bais", bias[NUM_NEURONE])
+    liste = []
+    for i in range(54) :
+        liste.append((i,  weights[i][NUM_NEURONE]))
+    liste.sort(key=lambda x: abs(x[1]), reverse=True)
 
-for i in range(54) :
-    print(liste[i][0], ":", liste[i][1])
+    for i in range(54) :
+        print(liste[i][0], ":", liste[i][1])
 
 """
-parmi_premiers = [0]*200
+parmi_premiers = [0]*400
 for i in range(54) :
     positif = 0
     maxi = [0]*7
-    for j in range(200) :
+    for j in range(400) :
         if weights[i][j] > 0 :
             positif += 1
         if weights[i][j] > weights[i][maxi[-1]] :
@@ -49,6 +50,7 @@ for i in range(200) :
     if not parmi_premiers[i] :
         quantite += 1
 print("Nombre :", quantite)
+
 """
 
 """
