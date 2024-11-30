@@ -48,10 +48,10 @@ INFOS_ALL_MODELS = {
     9: ('27-11-2024', 'epoch 1000 (+)')
 }
 
-def DATE_MODEL(NUM_MODEL):
+def date_model(NUM_MODEL):
     """cherche pas, c'est une constante fonction"""
     return INFOS_ALL_MODELS[NUM_MODEL][0]
 
-def CHANGES_MODEL(NUM_MODEL):
+def changes_model(NUM_MODEL):
     """cherche pas, c'est une constante fonction"""
     return INFOS_ALL_MODELS[NUM_MODEL][1]

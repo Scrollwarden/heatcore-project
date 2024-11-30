@@ -4,7 +4,7 @@ from cube import Cube
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
 from generators import GameSaver
-from parameters import DATE_MODEL, CHANGES_MODEL
+from parameters import date_model, changes_model
 
 # Screen constants
 LINE_WIDTH = 3
@@ -166,8 +166,8 @@ if __name__ == "__main__":
     font_for_text = pygame.font.Font(None, 36)
     font_for_infos = pygame.font.Font(None, 20)
     text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
-    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL(NUM_MODEL)}", True, (255, 255, 255))
-    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL(NUM_MODEL)}", True, (255, 255, 255))
+    text_date_model = font_for_infos.render(f"Date of creation : {date_model(NUM_MODEL)}", True, (255, 255, 255))
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {changes_model(NUM_MODEL)}", True, (255, 255, 255))
 
     # Main loop
     while True:
