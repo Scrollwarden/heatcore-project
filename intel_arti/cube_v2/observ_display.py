@@ -2,6 +2,7 @@ import pygame, sys
 import time
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
+from parameters import CHANGES_MODEL, DATE_MODEL
 
 # Screen constants
 LINE_WIDTH = 3
@@ -10,7 +11,9 @@ SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
 NUM_MODEL = 9
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+# window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 NOMBRE_NEURONES = 400
 
 # Colors
@@ -112,6 +115,13 @@ if __name__ == "__main__":
     param = Param()
     temp = time.time()
 
+    # infos
+    font_for_text = pygame.font.Font(None, 36)
+    font_for_infos = pygame.font.Font(None, 20)
+    text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
+    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL(NUM_MODEL)}", True, (255, 255, 255))
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL(NUM_MODEL)}", True, (255, 255, 255))
+
     # Main loop
     while True:
         # Handle events
@@ -123,18 +133,26 @@ if __name__ == "__main__":
                 if event.key == pygame.K_RIGHT :
                     num_neurone = (num_neurone+1) % NOMBRE_NEURONES
                     neurone_weights = model_weights[:, num_neurone]
-                    affichage_infos(num_neurone)
+                    # affichage_infos(num_neurone)
                 elif event.key == pygame.K_LEFT :
                     num_neurone = (num_neurone-1) % NOMBRE_NEURONES
                     neurone_weights = model_weights[:, num_neurone]
-                    affichage_infos(num_neurone)
+                    # affichage_infos(num_neurone)
 
         # Fill the screen with black
         screen.fill(BLACK)
         
         # Display
         display_front(screen, param)
-        
+        screen.blit(text_model_used, (10, 10))
+        screen.blit(text_date_model, (10, 40))
+        screen.blit(text_changes_model, (10, 60))
+        text_num_neurone = font_for_text.render(f"Neurone {num_neurone}", True, (255, 255, 255))
+        text_biais_neurone = font_for_infos.render(f"Biais : {str(bias[num_neurone])[:10]}", True, (255, 255, 255))
+        text_wieght_neurone = font_for_infos.render(f"Poids de sortie : {str(output_weights[num_neurone][0])[:10]}", True, (255, 255, 255))
+        screen.blit(text_num_neurone, (10, 100))
+        screen.blit(text_biais_neurone, (10, 130))
+        screen.blit(text_wieght_neurone, (10, 150))
         # Update the display
         pygame.display.flip()
         

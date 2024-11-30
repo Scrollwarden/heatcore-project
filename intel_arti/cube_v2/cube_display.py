@@ -4,6 +4,7 @@ from cube import Cube
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
 from generators import GameSaver
+from parameters import DATE_MODEL, CHANGES_MODEL
 
 # Screen constants
 LINE_WIDTH = 3
@@ -14,19 +15,7 @@ NUM_MODEL = 9
 MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
-INFOS_ALL_MODELS = {
-    1: ('~ 21-11-2024', 'BASE'),
-    2: ('~ 21-11-2024', 'batch size 55 (-) | epoch 20 (+)'),
-    3: ('~ 21-11-1014', 'epoch 200 (+) | step per epoch 100 (-)'),
-    4: ('~ 26-11-2024', 'N/A'),
-    5: ('~ 26-11-2024', 'N/A'),
-    6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
-    7: ('~ 26-11-2024', 'epoch 200 (+)'),
-    8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
-    9: ('27-11-2024', 'epoch 1000 (+)')
-}
-DATE_MODEL = INFOS_ALL_MODELS[NUM_MODEL][0]
-CHANGES_MODEL = INFOS_ALL_MODELS[NUM_MODEL][1]
+
 
 # Crosses and Squares
 SPACE = 0.2
@@ -177,8 +166,8 @@ if __name__ == "__main__":
     font_for_text = pygame.font.Font(None, 36)
     font_for_infos = pygame.font.Font(None, 20)
     text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
-    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL}", True, (255, 255, 255))
-    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL}", True, (255, 255, 255))
+    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL(NUM_MODEL)}", True, (255, 255, 255))
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL(NUM_MODEL)}", True, (255, 255, 255))
 
     # Main loop
     while True:

@@ -35,3 +35,23 @@ EPOCH = 200 #               M1 : 10     | M2 : 20     | M3 : 200    | M6 : 100  
 
 # 200 epoch seem good
 # WinState seem to ensure model to use pawns at beginning
+
+INFOS_ALL_MODELS = {
+    1: ('~ 21-11-2024', 'BASE'),
+    2: ('~ 21-11-2024', 'batch size 55 (-) | epoch 20 (+)'),
+    3: ('~ 21-11-1014', 'epoch 200 (+) | step per epoch 100 (-)'),
+    4: ('~ 26-11-2024', 'N/A'),
+    5: ('~ 26-11-2024', 'N/A'),
+    6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
+    7: ('~ 26-11-2024', 'epoch 200 (+)'),
+    8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
+    9: ('27-11-2024', 'epoch 1000 (+)')
+}
+
+def DATE_MODEL(NUM_MODEL):
+    """cherche pas, c'est une constante fonction"""
+    return INFOS_ALL_MODELS[NUM_MODEL][0]
+
+def CHANGES_MODEL(NUM_MODEL):
+    """cherche pas, c'est une constante fonction"""
+    return INFOS_ALL_MODELS[NUM_MODEL][1]
