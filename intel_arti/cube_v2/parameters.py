@@ -25,13 +25,15 @@ EPOCH = 200 #               M1 : 10     | M2 : 20     | M3 : 200    | M6 : 100  
 
 
 # "Normal" players  Strange players (no pawns at beginning)     MAIN CLASSMENT
-# #1 : M4           #1 : M7                                     #1 : M4
-# #2 : M3           #2 : M5                                     #2 : M7
-# #3 : M2                                                       #3 : M5
-# #4 : M1                                                       #4 : M3
-# #5 : M6                                                       #5 : M2
-#                                                               #6 : M1
-#                                                               #7 : M6
+# #1 : M9           #1 : M8                                     #1 : M9
+# #2 : M4           #2 : M7                                     #2 : M4
+# #3 : M3           #3 : M5                                     #3 : M8
+# #4 : M2                                                       #4 : M7
+# #5 : M1                                                       #5 : M5
+# #6 : M6                                                       #6 : M3
+#                                                               #7 : M2
+#                                                               #8 : M1
+#                                                               #9 : M6
 
 # 200 epoch seem good
 # WinState seem to ensure model to use pawns at beginning
