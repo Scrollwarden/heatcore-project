@@ -4,29 +4,18 @@ from cube import Cube
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
 from generators import GameSaver
+from parameters import date_model, changes_model
 
 # Screen constants
 LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-NUM_MODEL = 9
+NUM_MODEL = 4
 MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
-INFOS_ALL_MODELS = {
-    1: ('~ 21-11-2024', 'BASE'),
-    2: ('~ 21-11-2024', 'batch size 55 (-) | epoch 20 (+)'),
-    3: ('~ 21-11-1014', 'epoch 200 (+) | step per epoch 100 (-)'),
-    4: ('~ 26-11-2024', 'N/A'),
-    5: ('~ 26-11-2024', 'N/A'),
-    6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
-    7: ('~ 26-11-2024', 'epoch 200 (+)'),
-    8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
-    9: ('27-11-2024', 'epoch 1000 (+)')
-}
-DATE_MODEL = INFOS_ALL_MODELS[NUM_MODEL][0]
-CHANGES_MODEL = INFOS_ALL_MODELS[NUM_MODEL][1]
+
 
 # Crosses and Squares
 SPACE = 0.2
@@ -150,6 +139,11 @@ def display_back(screen, param: Param, cube: Cube, faded_color: bool=False, dist
     display_face(screen, param, cube, 3, lambda x, y: (x, distance, 2 - y), RIGHT_CROSS, RIGHT_SQUARE, colors, lambda x, y: (x, distance, 3 - y)) # Blue face
     display_face(screen, param, cube, 5, lambda x, y: (2 - x, 2 - y, distance), TOP_CROSS, TOP_SQUARE, colors, lambda x, y: (3 - x, 3 - y, distance)) # Yellow face
 
+def fill_case(border_placement, colors):
+    for y in range(3) :
+        for x in range(3):
+            corners = tuple(param.screen_coordinates(border_placement(i, j)) for i, j in ((x, y), (x+1, y), (x+1, y+1), (x, y+1)))
+            pygame.draw.polygon(screen, colors[y*3+x], corners, 0)
 
 if __name__ == "__main__":
     # Initialize Pygame
@@ -176,9 +170,9 @@ if __name__ == "__main__":
     winner = (False, 0)
     font_for_text = pygame.font.Font(None, 36)
     font_for_infos = pygame.font.Font(None, 20)
-    text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, (255, 255, 255))
-    text_date_model = font_for_infos.render(f"Date of creation : {DATE_MODEL}", True, (255, 255, 255))
-    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {CHANGES_MODEL}", True, (255, 255, 255))
+    text_model_used = font_for_text.render(f"Model : {NUM_MODEL}", True, WHITE)
+    text_date_model = font_for_infos.render(f"Date of creation : {date_model(NUM_MODEL)}", True, WHITE)
+    text_changes_model = font_for_infos.render(f"M{NUM_MODEL-1} vs M{NUM_MODEL} : {changes_model(NUM_MODEL)}", True, WHITE)
 
     # Main loop
     while True:
@@ -272,7 +266,7 @@ if __name__ == "__main__":
         screen.blit(text_model_used, (10, 10))
         screen.blit(text_date_model, (10, 40))
         screen.blit(text_changes_model, (10, 60))
-        text_saved_games = font_for_infos.render(f"Saved games : {saver.get_all_games()}", True, (255, 255, 255))
+        text_saved_games = font_for_infos.render(f"Saved games : {saver.get_all_games()}", True, WHITE)
         screen.blit(text_saved_games, (10, 450))
         # Update the display
         pygame.display.flip()

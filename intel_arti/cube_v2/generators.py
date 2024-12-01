@@ -473,18 +473,19 @@ class GameSaver:
         les fichiers seront enregistrés dans un dossier '' créé dans le dossier 'data_from_human_games'.
         Un nom générique est déjà donné aux fichiers, modifiable.
         """
-        if folder_name is None:
-            date = datetime.now().strftime('%d-%m-%Y')
-            folder_name = f'dfhg_{date}' # datas from human games -> dfhg
-        folder_name_incremented = generate_directory_name(folder_name)
+        if len(self.game_datas) != 0:
+            if folder_name is None:
+                date = datetime.now().strftime('%d-%m-%Y')
+                folder_name = f'dfhg_{date}' # datas from human games -> dfhg
+            folder_name_incremented = generate_directory_name(folder_name)
 
-        os.mkdir(f'cube_v2/data_from_human_games/{folder_name_incremented}')
+            os.mkdir(f'cube_v2/data_from_human_games/{folder_name_incremented}')
 
-        for partie in self.game_datas.keys():
-            file_name = f'{folder_name_incremented}_game{partie}.npz'
-            savez(f'cube_v2/data_from_human_games/{folder_name_incremented}/{file_name}', *self.game_datas[partie]) # save is from numpy, save the value in a .npz format
+            for partie in self.game_datas.keys():
+                file_name = f'{folder_name_incremented}_game{partie}.npz'
+                savez(f'cube_v2/data_from_human_games/{folder_name_incremented}/{file_name}', *self.game_datas[partie]) # save is from numpy, save the value in a .npz format
 
-        print(f"Data saved in folder '{folder_name_incremented}'")
+            print(f"Data saved in folder '{folder_name_incremented}'")
 
     def load_all_from_files(self, *files):
         """
