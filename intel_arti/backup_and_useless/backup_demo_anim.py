@@ -10,7 +10,7 @@ SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
 NUM_MODEL = 9
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
 NOMBRE_NEURONES = 400
 
 # Colors
@@ -29,9 +29,7 @@ def affichage_infos(neurone : int) :
     print("Neurone", neurone, "ayant un biais de", bias[neurone])
     print("Poids de sortie :", output_weights[neurone][0])
 
-
 affichage_infos(num_neurone)
-
 
 def weights_color(weights : list[float]) :
     maxi = max(weights)
@@ -48,15 +46,14 @@ def weights_color(weights : list[float]) :
             couleurs.append(GREY)
     return couleurs
 
-
 class Param:
     ROUND = 15
     LIMIT = 10
-    
+
     def __init__(self) -> None:
         self.ij_data: tuple[tuple[float, float], tuple[float, float], tuple[float, float]]
         self.reset((8.5, 5.0), (-8.5, 5.0), (0.0, -10.0))
-    
+
     def reset(self, pdf_x = None, pdf_y = None, pdf_z = None) -> None:
         if pdf_x == None:
             pdf_x = self.ij_data[0]
@@ -65,7 +62,7 @@ class Param:
         if pdf_z == None:
             pdf_z = self.ij_data[2]
         self.ij_data = (pdf_x, pdf_y, pdf_z)
-    
+
     def screen_coordinates(self, point: tuple[float, float, float]) -> tuple[float, float]:
         i, j = 0.0, 0.0
         for k in range(3):
@@ -82,9 +79,16 @@ def display_face(screen, param: Param, face: int, border_placement: callable, co
     for y in range(3) :
         for x in range(3):
             corners = tuple(param.screen_coordinates(border_placement(i, j)) for i, j in ((x, y), (x+1, y), (x+1, y+1), (x, y+1)))
-            if etat_tourner in (value + x, value + x - 1, value + x -2) and y == 2:
-                pygame.draw.polygon(screen, GREY, corners, 0)
-            else :
+            if etat_tourner != -1 and y == 2:
+                if etat_tourner < 15 and x == 0:
+                    pygame.draw.polygon(screen, WHITE, corners, 0)
+                elif 5 <= etat_tourner < 20 and x == 1:
+                    pygame.draw.polygon(screen, WHITE, corners, 0)
+                elif 10 <= etat_tourner < 25 and x == 2:
+                    pygame.draw.polygon(screen, WHITE, corners, 0)
+                else:
+                    pygame.draw.polygon(screen, colors[y*3+x], corners, 0)
+            else:
                 pygame.draw.polygon(screen, colors[y*3+x], corners, 0)
     for i in range(2):
         point0, point1 = param.screen_coordinates(border_placement(1 + i, 0)), param.screen_coordinates(border_placement(1 + i, 3))
@@ -135,21 +139,21 @@ if __name__ == "__main__":
                     num_neurone = (num_neurone-1) % NOMBRE_NEURONES
                     neurone_weights = model_weights[:, num_neurone]
                     affichage_infos(num_neurone)
-                elif event.key == pygame.K_t :
+                elif event.key == pygame.K_f :
                     etat_tourner = 0
 
         # Fill the screen with black
         screen.fill(BLACK)
-        
+
         # Display
         display_front(screen, param, etat_tourner)
         if etat_tourner != -1 :
-            if etat_tourner < 11 :
+            if etat_tourner < 60 :
                 etat_tourner += 1
             else :
                 etat_tourner = -1
 
         # Update the display
         pygame.display.flip()
-        
-        clock.tick(10)
+
+        clock.tick(60)
