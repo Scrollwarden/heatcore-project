@@ -11,8 +11,8 @@ SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
 NUM_MODEL = 4
-MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
-# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+MODEL_PATH = f"intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 NOMBRE_NEURONES = 200 if NUM_MODEL <= 7 else 400
 
