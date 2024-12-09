@@ -41,7 +41,10 @@ def point_in_triangle_barycentric(point: Vector2, triangle: tuple[Vector2, Vecto
     dot02 = v0.dot(v2)
     dot11 = v1.dot(v1)
     dot12 = v1.dot(v2)
-    inv_denom = 1 / (dot00 * dot11 - dot01 * dot01)
+    temp = (dot00 * dot11 - dot01 * dot01)
+    if temp == 0:
+        return False
+    inv_denom = 1 / temp
     u = (dot11 * dot02 - dot01 * dot12) * inv_denom
     v = (dot00 * dot12 - dot01 * dot02) * inv_denom
     return u >= 0 and v >= 0 and (u + v) <= 1
@@ -162,6 +165,17 @@ class Line:
     def draw(self, screen):
         pygame.draw.line(screen, self.color, *self.points_on_screen, width=self.width)
 
+class EventsListener:
+    def __init__(self):
+        self.button_hovered: tuple[int, int] = (-1, -1)
+        self.button_clicked: tuple[int, int] = (-1, -1)
+        self.turn_button_pressed: int = -1
+
+    def reset(self):
+        self.button_hovered: tuple[int, int] = (-1, -1)
+        self.button_clicked: tuple[int, int] = (-1, -1)
+        self.turn_button_pressed: int = -1
+
 class ConvexPolygon3D:
     __slots__ = ['points', 'points_screen_coordinates', 'minimum_corner', 'maximum_corner', 'color']
 
@@ -201,6 +215,9 @@ class ConvexPolygon3D:
         pygame.draw.polygon(screen, color if color else self.color,
                             [(point.x, point.y) for point in self.points_screen_coordinates])
 
+    def __repr__(self):
+        return f"<ConvexPolygon3D{self.points}>"
+
 class Button:
     __slots__ = ['hitbox', 'border_color', 'border_width', 'actions']
 
@@ -216,7 +233,7 @@ class Button:
     def add_action(self, action):
         self.actions.append(action)
 
-    def draw(self, screen, mouse, click: bool):
+    def draw(self, screen: SurfaceType, mouse, click: bool) -> bool:
         self.hitbox.draw_filled(screen)
         if self.hitbox.full_collision_check(mouse):
             self.hitbox.draw(screen)
@@ -230,6 +247,9 @@ class Button:
             self.hitbox.draw(screen, self.border_color, self.border_width)
             return False
 
+    def __repr__(self):
+        return f"<Button{self.hitbox}>"
+
 
 class HiddenButton(Button):
     __slots__ = ['hitbox', 'show_area', 'color', 'border_width', 'actions']
@@ -238,31 +258,27 @@ class HiddenButton(Button):
         super().__init__(hitbox, color, border_width)
         self.show_area = show_area
 
-    def draw(self, screen, mouse, click):
+    def reset_info(self, renderer: Renderer):
+        super().reset_info(renderer)
+        self.show_area.reset_info(renderer)
+
+    def draw(self, screen: SurfaceType, mouse, click) -> tuple[bool, bool]:
         if not self.show_area.full_collision_check(mouse):
-            return
-        super().draw(screen, mouse, click)
+            return False, False
+        return True, super().draw(screen, mouse, click)
 
-class EventsListener:
-    def __init__(self):
-        self.button_coordinates: tuple[int, int] = (-1, -1)
-        self.button_hovered: bool = False
-        self.button_clicked: bool = False
-
-    def reset(self):
-        self.button_coordinates = (-1, -1)
-        self.button_hovered = False
-        self.button_clicked = False
+    def __repr__(self):
+        return f"<HiddenButton({self.hitbox}, {self.show_area})>"
 
 class CubeUI:
     DISPLACEMENT = ((0, 0), (1, 0), (1, 1), (0, 1))
     POINT_3D_PLACEMENT = (
-        lambda i, j, da, db: Vector3(i - 1.5 + da,        - 1.5, 0.5 - j + db), # face 0
-        lambda i, j, da, db: Vector3(i - 1.5 + da, 0.5 - j + db,        - 1.5), # face 1
-        lambda i, j, da, db: Vector3(         1.5, i - 1.5 - da, 0.5 - j + db), # face 2
-        lambda i, j, da, db: Vector3(i - 1.5 + da, j - 1.5 - db,          1.5), # face 3
-        lambda i, j, da, db: Vector3(         1.5, 0.5 - i + da, 0.5 - j + db), # face 4
-        lambda i, j, da, db: Vector3(1.5 - i - da,          1.5, 0.5 - j + db), # face 5
+        lambda i, j, da, db: Vector3(i - 1.5 + da,        - 1.5, 1.5 - j - db), # face 0
+        lambda i, j, da, db: Vector3(i - 1.5 + da, j - 1.5 + db,        - 1.5), # face 1
+        lambda i, j, da, db: Vector3(       - 1.5, 1.5 - i - da, 1.5 - j - db), # face 2
+        lambda i, j, da, db: Vector3(i - 1.5 + da, 1.5 - j - db,          1.5), # face 3
+        lambda i, j, da, db: Vector3(         1.5, i - 1.5 + da, 1.5 - j - db), # face 4
+        lambda i, j, da, db: Vector3(1.5 - i - da,          1.5, 1.5 - j - db), # face 5
     )
     LINE_COLOR = WHITE
     FACE_COLOR = DARK_GREY
@@ -276,6 +292,7 @@ class CubeUI:
         self.top_face_center = Vector3(0, 1.5, 0)
         self.top_face_normal = Vector3(0, 1, 0)
         self.top_face = [[None for _ in range(3)] for _ in range(3)]
+        self.top_face_border = None
         self.top_face_creation()
         self.lines = []
         self.faces = []
@@ -284,54 +301,61 @@ class CubeUI:
         self.cube_cell_points = None
         self.reset_cube_cell_points()
 
-        self.turn_buttons = []
+        self.top_turn_buttons = []
+        self.side_turn_buttons = []
         self.reset_turn_buttons()
 
     def reset_info(self, renderer: Renderer):
         for sub in self.top_face:
             for button in sub:
                 button.reset_info(renderer)
+        self.top_face_border.reset_info(renderer)
         for face_lines in self.lines:
             for line in face_lines:
                 line.reset_info(renderer)
         for face in self.faces:
             face.reset_info(renderer)
+        for turn_button in self.top_turn_buttons:
+            turn_button.reset_info(renderer)
+        for turn_button in self.side_turn_buttons:
+            turn_button.reset_info(renderer)
 
     def top_face_creation(self):
         """Créer tous les boutons qui composent la face du dessus, ce qui veut dire là où le joueur peut placer un pion"""
         def foo(x, y):
             def goo():
                 print(f"Button ({x}, {y}) pressed !")
+                self.events_listener.button_clicked = (x, y)
             return goo
+        point_creation_function = self.POINT_3D_PLACEMENT[0]
         for j in range(3):
             for i in range(3):
-                points = tuple(Vector3(i - 1.5 + da, -1.5, 0.5 - j + db) * self.button_side_length
+                points = tuple(point_creation_function(i, j, da, db) * self.button_side_length
                                for da, db in self.DISPLACEMENT)
                 polygon = ConvexPolygon3D(points, self.renderer, self.FACE_COLOR)
                 button = Button(polygon, self.LINE_COLOR, 1)
                 button.add_action(foo(i, j))
                 self.top_face[j][i] = button
+        points = tuple(Vector3(-1.5 + 3 * da, -1.5, -1.5 + 3 * db) * self.button_side_length
+                       for da, db in self.DISPLACEMENT)
+        self.top_face_border = ConvexPolygon3D(points, self.renderer, self.LINE_COLOR)
 
     def lines_and_faces(self):
         """Créer tous les objets 3D pour afficher le cube"""
-        # Fonction qui renvoie un coin en 3D de chaque face
-        point_creation_functions = (
-            #lambda i, j: Vector3(  i, -1.5,    j) * self.button_side_length, # face 0
-            lambda i, j: Vector3(   i,    j,  1.5) * self.button_side_length, # face 1
-            lambda i, j: Vector3(-1.5,    i,    j) * self.button_side_length, # face 2
-            lambda i, j: Vector3(   i,    j, -1.5) * self.button_side_length, # face 3
-            lambda i, j: Vector3( 1.5,    i,    j) * self.button_side_length, # face 4
-            lambda i, j: Vector3(   i,  1.5,    j) * self.button_side_length, # face 5
-        )
         # Positions des lignes par rapport à la face
-        lines_pos = ((-1.5, -1.5, 1.5, -1.5), (1.5, -1.5, 1.5, 1.5), (1.5, 1.5, -1.5, 1.5), (-1.5, 1.5, -1.5, -1.5),
-                     (-0.5, -1.5, -0.5, 1.5), (0.5, -1.5, 0.5, 1.5), (-1.5, -0.5, 1.5, -0.5), (-1.5, 0.5, 1.5, 0.5))
+        lines_pos = (
+            ((1, 0), (1, 3)),
+            ((2, 0), (2, 3)),
+            ((0, 1), (3, 1)),
+            ((0, 2), (3, 2))
+        )
         # Positions des coins dans chaque face
-        faces_pos = ((-1.5, -1.5), (1.5, -1.5), (1.5, 1.5), (-1.5, 1.5))
-        for point_creation_function in point_creation_functions:
-            self.lines.append(tuple(Line(point_creation_function(i, j), point_creation_function(m, n),
-                                         self.renderer, self.LINE_COLOR, 1) for i, j, m, n in lines_pos)) # Ajouts des lignes
-            points = tuple(point_creation_function(i, j) for i, j in faces_pos)
+        faces_pos = ((0, 0), (3, 0), (3, 3), (0, 3))
+        for point_creation_function in self.POINT_3D_PLACEMENT[1:]:
+            self.lines.append(tuple(Line(point_creation_function(*p1, 0, 0) * self.button_side_length,
+                                         point_creation_function(*p2, 0, 0) * self.button_side_length,
+                                         self.renderer, self.LINE_COLOR, 1) for p1, p2 in lines_pos)) # Ajouts des lignes
+            points = tuple(point_creation_function(i, j, 0, 0) * self.button_side_length for i, j in faces_pos)
             self.faces.append(ConvexPolygon3D(points, self.renderer, self.FACE_COLOR)) # Ajouts des faces
 
     def reset_cube_cell_points(self):
@@ -352,26 +376,44 @@ class CubeUI:
         point_creation_function = self.POINT_3D_PLACEMENT[face_index]
         points = tuple(point_creation_function(i, j, da * shrink_factor + gap, db * shrink_factor + gap)
                        * self.button_side_length for da, db in self.DISPLACEMENT)
-        print(face_index, i, j, points)
         return points
 
     def reset_turn_buttons(self):
         def foo(index):
             def goo():
                 print(f"Rotation at button {index}")
+                self.events_listener.turn_button_pressed = index
             return goo
         triangle_pos = ((0, 0), (0.5, 0.5), (0, 1))
         index = 0
         top_face_creation = self.POINT_3D_PLACEMENT[0]
+        side_face_creation = self.POINT_3D_PLACEMENT[1]
         for m in (-1, 1):
-            for j in range(3):
-                show_area = tuple(top_face_creation(2 * m, j, 4 * da, db) for da, db in self.DISPLACEMENT)
-                triangle = tuple(top_face_creation(2 * m, j, da, db) for da, db in triangle_pos)
+            for d in range(3):
+                show_area = tuple(top_face_creation(-1.5, d, 6 * da, db) * self.button_side_length for da, db in self.DISPLACEMENT)
+                triangle = tuple(top_face_creation(1.5 + 2 * m, d, da * m, db) * self.button_side_length for da, db in triangle_pos)
                 button = HiddenButton(ConvexPolygon3D(triangle, self.renderer, GREEN),
                                       ConvexPolygon3D(show_area, self.renderer, BLACK),
                                       GREEN, 2)
                 button.add_action(foo(index))
-                self.turn_buttons.append(button)
+                self.top_turn_buttons.append(button)
+                index += 1
+                show_area = tuple(top_face_creation(d, -1.5, db, 6 * da) * self.button_side_length for da, db in self.DISPLACEMENT)
+                triangle = tuple(top_face_creation(d, 1.5 + 2 * m, db, da * m) * self.button_side_length for da, db in triangle_pos)
+                button = HiddenButton(ConvexPolygon3D(triangle, self.renderer, GREEN),
+                                      ConvexPolygon3D(show_area, self.renderer, BLACK),
+                                      GREEN, 2)
+                button.add_action(foo(index))
+                self.top_turn_buttons.append(button)
+                index += 1
+            for j in range(3):
+                show_area = tuple(side_face_creation(-1.5, j, 6 * da, db) * self.button_side_length for da, db in self.DISPLACEMENT)
+                triangle = tuple(side_face_creation(1.5 + 2 * m, j, da * m, db) * self.button_side_length for da, db in triangle_pos)
+                button = HiddenButton(ConvexPolygon3D(triangle, self.renderer, GREEN),
+                                      ConvexPolygon3D(show_area, self.renderer, BLACK),
+                                      GREEN, 2)
+                button.add_action(foo(index))
+                self.side_turn_buttons.append(button)
                 index += 1
 
     def draw_cell(self, screen: SurfaceType, face: int, i: int, j: int):
@@ -387,9 +429,10 @@ class CubeUI:
             pygame.draw.polygon(screen, BLUE, points, width)
 
     def draw_face(self, screen: SurfaceType, face_index: int):
-        face = self.faces[face_index]
+        face: ConvexPolygon3D = self.faces[face_index]
         lines = self.lines[face_index]
-        face.draw(screen)
+        face.draw_filled(screen)
+        face.draw(screen, self.LINE_COLOR, width=1)
         for line in lines:
             line.draw(screen)
         for j in range(3):
@@ -401,24 +444,24 @@ class CubeUI:
             for i, button in enumerate(sub):
                 hovered = button.draw(screen, mouse, click)
                 if hovered:
-                    self.events_listener.button_hovered = True
-                    self.events_listener.button_coordinates = (i, j)
+                    self.events_listener.button_hovered = (i, j)
                 self.draw_cell(screen, 0, i, j)
-        if self.events_listener.button_hovered:
-            i, j = self.events_listener.button_coordinates
+        self.top_face_border.draw(screen, width=3)
+        if self.events_listener.button_hovered != (-1, -1):
+            i, j = self.events_listener.button_hovered
             button = self.top_face[j][i]
             button.draw(screen, mouse, False)
             self.draw_cell(screen, 0, i, j)
             if click:
-                self.events_listener.button_clicked = True
+                self.events_listener.button_clicked = (i, j)
 
     def face_visible(self, face_index: int):
         if face_index == 0:
-            return abs(self.renderer.camera.longitude - math.pi / 2) > math.pi / 2
+            return abs(self.renderer.camera.longitude - math.pi / 2) < math.pi / 2
         elif face_index == 1:
             return abs(self.renderer.camera.longitude - math.pi) > math.pi / 2
         elif face_index == 2:
-            return abs(self.renderer.camera.longitude - math.pi / 2) < math.pi / 2
+            return abs(self.renderer.camera.longitude - math.pi / 2) > math.pi / 2
         elif face_index == 3:
             return abs(self.renderer.camera.longitude - math.pi) < math.pi / 2
         elif face_index == 4:
@@ -436,15 +479,19 @@ class CubeUI:
         """
         self.events_listener.reset()
         visible_faces = [index for index in range(5) if self.face_visible(index)] + ([-1] if self.top_face_visible() else []) # -1 for top face
-        # Sort faces by depth (distance to camera)
-        visible_faces
         for face_index in visible_faces:
             if face_index == -1:
                 self.draw_top_face(screen, mouse, click)
             else:
                 self.draw_face(screen, face_index)
+        for side_turn_button in self.side_turn_buttons:
+            side_turn_button.draw(screen, mouse, click)
+        for top_turn_button in self.top_turn_buttons:
+            top_turn_button.draw(screen, mouse, click)
+        return visible_faces
 
 
+ROTATION_TRANSLATOR = (10, 11, 15, 16, 9, 12, 4, 8, 5, 1, 2, 6, 7, 0, 3, 13, 17, 14)
 
 if __name__ == "__main__":
 
@@ -454,7 +501,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     # Setup
-    camera = Camera(latitude=math.radians(45), longitude=math.radians(30), distance=10)
+    camera = Camera(latitude=math.radians(35), longitude=math.radians(70), distance=10)
     renderer = Renderer(screen_data=Vector2(800, 600), camera=camera)
     cube = Cube()
     cube_ui = CubeUI(cube, renderer, 50)
@@ -464,9 +511,13 @@ if __name__ == "__main__":
 
     running = True
     while running:
+        show_visible_face = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    show_visible_face = True
 
         # Mouse detections
         mouse_buttons = pygame.mouse.get_pressed()
@@ -492,8 +543,8 @@ if __name__ == "__main__":
         else:
             prev_mouse_x, prev_mouse_y = mouse_pos
 
-        if cube_ui.events_listener.button_clicked:
-            i, j = cube_ui.events_listener.button_coordinates
+        if cube_ui.events_listener.button_clicked != (-1, -1):
+            i, j = cube_ui.events_listener.button_clicked
             pion_string = "cross" if player == 1 else "circle"
             if cube.get_pion((0, j, i)) != 0:
                 print(f"Can't place a {pion_string} there")
@@ -501,13 +552,20 @@ if __name__ == "__main__":
                 print(f"A {pion_string} got placed at coordinates {(i, j)}")
                 cube.set_pion((0, j, i), player)
                 player *= -1
+        elif (rotation := cube_ui.events_listener.turn_button_pressed) != -1:
+            actual_rotation = ROTATION_TRANSLATOR[rotation]
+            cube_ui.cube.jouer_tourner(actual_rotation)
+            print(f"Le joueur a décidé de tourner {actual_rotation} (originalement indice {rotation})")
+            player *= -1
 
         # Fill the screen with black
         screen.fill(BLACK)
 
         # Draw the cube
-        cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
-
+        faces = cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        if show_visible_face:
+            print(cube)
+            print([index + 1 for index in faces])
 
         # Update the display
         pygame.display.flip()
