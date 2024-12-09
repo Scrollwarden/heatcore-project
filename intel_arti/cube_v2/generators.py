@@ -504,7 +504,7 @@ def generate_directory_name(name, x=0):
     """créé le nom du répertoire avec incrémentation si nécessaire"""
     while True: # break with return
         dir_name = (name + ('_(' + str(x) + ')' if x is not 0 else '')).strip()
-        if not os.path.exists('cube_v2/data_from_human_games/' + dir_name):
+        if not os.path.exists('intel_arti/cube_v2/data_from_human_games/' + dir_name):
             return dir_name
         else:
             x = x + 1
