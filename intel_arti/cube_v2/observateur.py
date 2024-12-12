@@ -12,7 +12,7 @@ from tensorflow.keras.models import load_model #type: ignore
 
 NUM_MODEL = 9
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
-# linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
+# linux (depuis la racine de Matthew) : "intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 
 cube = Cube()
