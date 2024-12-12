@@ -46,14 +46,14 @@ class AgentMorpion :
             self.create_model()
         elif num_model == 1 :
             self.create_model2()
-        else :
+        elif num_model == 2 :
             self.create_model3()
     
     def create_model(self) :
         self.model = Sequential()
         self.model.add(Input(shape=(3, 3, 1)))
         self.model.add(Flatten())
-        self.model.add(Dense(200, activation='relu'))
+        self.model.add(Dense(100, activation='relu'))
         self.model.add(Dense(1, activation='linear'))
         self.model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate = self.learning_rate),
                   loss = tf.keras.losses.MeanAbsoluteError())
@@ -173,6 +173,7 @@ if __name__ == "__main__" :
     choix = Choices()
     agent = AgentMorpion(choix)
     agent.fit(*data.get_datas())
+    agent.model.save("model_morpion100.h5")
     partie = PartieIAvsH()
     while True :
         while not partie.jeu.terminal_state()[0] :

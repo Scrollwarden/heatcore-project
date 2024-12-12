@@ -460,7 +460,7 @@ class Cube(Surface) :
             self.tourner_couronne_plate(ligne, reverse)
         if action < 6 :
             face = CORRESP_FACE_ACT[action]
-            if face == 5:
+            if face == 5 :
                 reverse = not reverse
             self.tourner_face(face, reverse)
 
