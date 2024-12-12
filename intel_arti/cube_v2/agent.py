@@ -93,5 +93,5 @@ if __name__ == "__main__" :
     selected_gen = generators.generators_only_partie(55)
 
     agent.fit(selected_gen, steps_per_epoch=100, epochs=1000)
-    agent.model.save(r"models\model9.h5")
+    agent.model.save(r"models\model10.h5")
     print(generators.gagnants)

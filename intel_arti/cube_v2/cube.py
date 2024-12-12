@@ -459,7 +459,10 @@ class Cube(Surface) :
         elif (ligne := find((4, 8, 5), action)) != -1 :
             self.tourner_couronne_plate(ligne, reverse)
         if action < 6 :
-            self.tourner_face(CORRESP_FACE_ACT[action], reverse)
+            face = CORRESP_FACE_ACT[action]
+            if face == 5 :
+                reverse = not reverse
+            self.tourner_face(face, reverse)
 
     @check_type(True, int, bool)
     def tourner_couronne_plate2(self, ligne : int, reverse : bool = False) -> None:

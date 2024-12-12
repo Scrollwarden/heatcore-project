@@ -4,7 +4,7 @@ Les paramètres des models.
 
 # Best                                                      BEST
 
-NB_NEURONES = 200 #         M1 : 200    | M2 : 200    | M3 : 200    | M6 : 200    | M7 : 200    | M8 : 400      | M9 : 400
+NB_NEURONES = 800 #         M1 : 200    | M2 : 200    | M3 : 200    | M6 : 200    | M7 : 200    | M8 : 400      | M9 : 400
 NB_COUCHES = 1 #            M1 : 1      | M2 : 1      | M3 : 1      | M6 : 1      | M7 : 1      | M8 : 1        | M9 : 1
 LEARNING_RATE = 0.001 #     M1 : 0.001  | M2 : 0.001  | M3 : 0.001  | M6 : 0.001  | M7 : 0.001  | M8 : 0.001    | M9 : 0.001
 # optimizer                 M1 : ADAM   | M2 : ADAM   | M3 : ADAM   | M6 : ADAM   | M7 : ADAM   | M8 : ADAM     | M9 : ADAM
@@ -47,7 +47,8 @@ INFOS_ALL_MODELS = {
     6: ('~ 26-11-2024', 'epoch 100 (-) | WinState used False'),
     7: ('~ 26-11-2024', 'epoch 200 (+)'),
     8: ('27-11-2024', 'nb neurones 400 (+) | WinState used True'),
-    9: ('27-11-2024', 'epoch 1000 (+)')
+    9: ('27-11-2024', 'epoch 1000 (+)'),
+    10 : ('10-12-2024', 'nb neurones 800 (+)')
 }
 
 def date_model(NUM_MODEL):

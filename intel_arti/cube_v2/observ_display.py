@@ -10,8 +10,8 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
-NUM_MODEL = 4
-MODEL_PATH = f"cube_v2/models/model{NUM_MODEL}.h5"
+NUM_MODEL = 9
+MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 NOMBRE_NEURONES = 200 if NUM_MODEL <= 7 else 400
@@ -90,10 +90,10 @@ def display_front(screen, param: Param):
     distance = 6.5
     colors = weights_color(neurone_weights)
     display_face(screen, param, 0, lambda x, y: (x, 3 - y, 0), colors[:9])
-    display_face(screen, param, 2, lambda x, y: (0, 3 - y, 3 - x), colors[18:27])
     display_face(screen, param, 1, lambda x, y: (x, 0, y), colors[9:18])
-    display_face(screen, param, 4, lambda x, y: (distance, 3 - y, x), colors[36:45])
+    display_face(screen, param, 2, lambda x, y: (0, 3 - y, 3 - x), colors[18:27])
     display_face(screen, param, 3, lambda x, y: (x, distance, 3 - y), colors[27:36])
+    display_face(screen, param, 4, lambda x, y: (distance, 3 - y, x), colors[36:45])
     display_face(screen, param, 5, lambda x, y: (3 - x, 3 - y, distance), colors[45:])
 
 
