@@ -675,6 +675,8 @@ if __name__ == "__main__":
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     show_visible_face = True
+                elif event.key == pygame.K_r:
+                    cube.reset()
 
         # Mouse detections
         mouse_buttons = pygame.mouse.get_pressed()
