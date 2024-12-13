@@ -197,10 +197,6 @@ if __name__ == "__main__":
                 running = False
 
         screen.fill((0, 0, 0))
-        #for x in range(CHUNK_SIZE + 1):
-        #   for y in range(CHUNK_SIZE + 1):
-        #        pygame.draw.rect(screen, test_chunk.color_data[x, y],
-        #                         (x * scale, y * scale, (x + 1) * scale, (y + 1) * scale))
         display_chunk(screen, test_chunk)
         pygame.display.flip()
 

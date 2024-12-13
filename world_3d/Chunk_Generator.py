@@ -7,9 +7,12 @@ from collections.abc import Iterable # Just to know the size of the chunk
 import sys # Just to know the size of the chunk
 import time # Just for time taken on terminal
 
-CHUNK_SIZE: int = 8
+CHUNK_SIZE: int = 16
+SCALE = 20
 
 class HeightParams:
+    __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b']
+
     def __init__(self) -> None:
         self.x1, self.y1 = 0.6, 0.044
         self.p, self.q = 2, 1
@@ -26,6 +29,8 @@ class HeightParams:
 
 
 class ColorParams:
+    __slots__ = ['heights_limit', 'colors']
+
     def __init__(self) -> None:
         self.heights_limit = [0.005, 0.02, 0.25, 0.4, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.85]
         self.colors = [( 21,  47,  88), ( 25,  54, 100), ( 33,  69, 120), ( 44,  87, 147), # Water
@@ -42,6 +47,8 @@ class ColorParams:
 
 
 class ChunkTerrain:
+    __slots__ = ['coord', 'height_data', 'color_data', 'vertices', 'triangles', 'colors']
+
     def __init__(self, x_chunk: int, y_chunk: int, height_data, color_data) -> None:
         self.coord: Vector2 = Vector2(x_chunk, y_chunk)
         # The data have a (CHUNK_SIZE + 1, CHUNK_SIZE + 1) shape because it needs the points on each side
@@ -51,7 +58,7 @@ class ChunkTerrain:
         self.triangles = None
         self.colors = None
 
-    def update_detail(self, new_level_of_detail, scale) -> None:
+    def update_detail(self, new_level_of_detail: int, scale: float) -> None:
         """Change the level of detail of a chunk depending on the distance and adjust triangles to be isosceles
         0 for best detail and math.log2(CHUNK_SIZE) - 1 for worst detail"""
         if not (isinstance(new_level_of_detail, int) and 0 <= new_level_of_detail < math.log2(CHUNK_SIZE)):
@@ -117,6 +124,8 @@ def generate_chunk(x_chunk: int, y_chunk: int, height_arrangement: HeightParams,
 
     return ChunkTerrain(x_chunk, y_chunk, height_data, color_data)
 
+def get_chunk_size(chunk: ChunkTerrain):
+    return sum(get_total_size(ele) for ele in (chunk.triangles, chunk.colors, chunk.color_data, chunk.height_data, chunk.vertices, chunk.coord))
 
 def get_total_size(obj, seen=None):
     """Recursively find the total size of an object and its contents."""
@@ -152,11 +161,14 @@ def format_size(size_bytes):
     else:
         return f"{size_bytes / 1024 ** 2:.1f}Mo"
 
-def display_chunk(chunk: ChunkTerrain):
+def display_chunk(screen, chunk: ChunkTerrain):
     """Example of a function that could display a chunk on screen"""
     def display_triangle(a, b, c, color):
         """A function that displays a triangle. Here it doesn't display on screen, but it's just for reference"""
-        print(f"Triangle ({a}, {b}, {c}) displayed with color {color}")
+        #print(f"Triangle ({a}, {b}, {c}) displayed with color {color}")
+        pygame.draw.polygon(screen, color, ((a[0] * SCALE, a[2] * SCALE),
+                                            (b[0] * SCALE, b[2] * SCALE),
+                                            (c[0] * SCALE, c[2] * SCALE)))
 
     if chunk.triangles is None:
         raise ValueError("The chunk needs to be loaded")
@@ -174,31 +186,35 @@ if __name__ == "__main__":
     start_time = time.time()
     test_chunk = generate_chunk(0, 0, height_param, color_param, 1, 75, 5)
     middle_time = time.time()
-    test_chunk.update_detail(0)
+    test_chunk.update_detail(0, 1)
     end_time = time.time()
-    display_chunk(test_chunk)
     print(f"The chunk has been generated in: \033[;4m{middle_time - start_time:.5f}s\033[0m")
     print(f"The details has been created in: \033[;4m{end_time - middle_time:.5f}s\033[0m")
-    print(f"The chunk takes exactly \033[;4m{format_size(get_total_size(test_chunk))}\033[0m in memory space")
+    print(f"The chunk takes exactly \033[;4m{format_size(get_chunk_size(test_chunk))}\033[0m in memory space")
 
-    scale = 20
     pygame.init()
-    screen = pygame.display.set_mode(((CHUNK_SIZE + 1) * scale, (CHUNK_SIZE + 1) * scale))
+    screen = pygame.display.set_mode(((CHUNK_SIZE + 1) * SCALE, (CHUNK_SIZE + 1) * SCALE))
     clock = pygame.time.Clock()
     surface = pygame.surfarray.make_surface(test_chunk.color_data)
 
+    detail = 0
     running = True
     while running:
         # Handle Pygame events to keep the window responsive
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    detail -= 1
+                elif event.key == pygame.K_DOWN:
+                    detail += 1
+                detail = max(0, min(detail, int(math.log2(CHUNK_SIZE))))
+                test_chunk.update_detail(detail, 1)
+
 
         screen.fill((0, 0, 0))
-        for x in range(CHUNK_SIZE + 1):
-            for y in range(CHUNK_SIZE + 1):
-                pygame.draw.rect(screen, test_chunk.color_data[x, y],
-                                 (x * scale, y * scale, (x + 1) * scale, (y + 1) * scale))
+        display_chunk(screen, test_chunk)
         pygame.display.flip()
 
         # Update clock
