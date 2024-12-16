@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="Ajoute une possibilité de reset">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/Chunk_Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/world_3d/Chunk_Generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/intel_arti/cube_v2/cube_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/intel_arti/cube_v2/cube_ui.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,6 +26,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.Chunk_Generator.executor": "Run",
     "Python.chunk_class.executor": "Run",
     "Python.cube_ui.executor": "Run",
     "Python.world_3d_preview.executor": "Run",
