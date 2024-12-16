@@ -479,11 +479,15 @@ class GameSaver:
                 folder_name = f'dfhg_{date}' # datas from human games -> dfhg
             folder_name_incremented = generate_directory_name(folder_name)
 
-            os.mkdir(f'cube_v2/data_from_human_games/{folder_name_incremented}')
+            os.mkdir(f'data_from_human_games\\{folder_name_incremented}')
+            # depuis la racine de Matthew : intel_arti/cube_v2/data_from_human_games/{folder_name_incremented}
+            #depuis la racine de Lou : data_from_human_games\\{folder_name_incremented}
 
             for partie in self.game_datas.keys():
                 file_name = f'{folder_name_incremented}_game{partie}.npz'
-                savez(f'cube_v2/data_from_human_games/{folder_name_incremented}/{file_name}', *self.game_datas[partie]) # save is from numpy, save the value in a .npz format
+                savez(f'data_from_human_games\\{folder_name_incremented}\\{file_name}', *self.game_datas[partie]) # save is from numpy, save the value in a .npz format
+                # depuis la racine de Matthew : intel_arti/cube_v2/data_from_human_games/{folder_name_incremented}/{file_name}
+                #depuis la racine de Lou : data_from_human_games\\{folder_name_incremented}\\{file_name}
 
             print(f"Data saved in folder '{folder_name_incremented}'")
 
