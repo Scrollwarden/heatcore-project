@@ -11,7 +11,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
-NUM_MODEL = 10
+NUM_MODEL = 11
 MODEL_PATH = f"intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
