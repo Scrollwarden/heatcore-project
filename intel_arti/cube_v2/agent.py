@@ -90,8 +90,8 @@ class Agent :
 if __name__ == "__main__" :
     agent = Agent()
     generators = StateGenerator()
-    selected_gen = generators.generators_only_partie(55)
+    selected_gen = generators.generator_datas_and_inv(65)
 
     agent.fit(selected_gen, steps_per_epoch=100, epochs=1000)
-    agent.model.save(r"models\model10.h5")
+    agent.model.save(r"models\model12.h5")
     print(generators.gagnants)

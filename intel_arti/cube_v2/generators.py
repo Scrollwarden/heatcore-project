@@ -355,6 +355,7 @@ def play_wise_random_partie(i) :
 
 class StateGenerator :
     def __init__(self) :
+        self.proportions = 0.5
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
 
     def generator_datas(self, batch_size : int) :
@@ -386,11 +387,12 @@ class StateGenerator :
                 y = y[trop:]
             elif (manque := batch_size - x.shape[0]) > 0 :
                 # Le nombre de 
-                positifs = int(manque * self.proportions)
-                x = append(x, array(gen.generate_random_states(positifs, -1)), 0)
-                y = append(y, ones(positifs)*(-1))
-                x = append(x, array(gen.generate_random_states(manque - positifs, 1)), 0)
-                y = append(y, ones(manque-positifs))
+                negatifs = int(manque * self.proportions)
+                if negatifs :
+                    x = append(x, array(gen.generate_random_states(negatifs, -1)), 0)
+                    y = append(y, ones(negatifs)*(-1))
+                x = append(x, array(gen.generate_random_states(manque - negatifs, 1)), 0)
+                y = append(y, ones(manque-negatifs))
             yield x, y
 
     def generators_only_partie(self, batch_size : int) :
@@ -507,7 +509,7 @@ class GameSaver:
 def generate_directory_name(name, x=0):
     """créé le nom du répertoire avec incrémentation si nécessaire"""
     while True: # break with return
-        dir_name = (name + ('_(' + str(x) + ')' if x is not 0 else '')).strip()
+        dir_name = (name + ('_(' + str(x) + ')' if x != 0 else '')).strip()
         if not os.path.exists('intel_arti/cube_v2/data_from_human_games/' + dir_name):
             return dir_name
         else:
@@ -547,3 +549,4 @@ def generate_directory_name(name, x=0):
 #     for i in range(2) :
 #         print(next(selected_generator))
 #     print(time()-temps)
+    
