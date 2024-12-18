@@ -357,6 +357,7 @@ class StateGenerator :
     def __init__(self) :
         self.proportions = 0.5
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
+        self.proportions = 0.5
 
     def generator_datas(self, batch_size : int) :
         """Génère des situations gagnées par l'équipe 1"""
@@ -375,7 +376,10 @@ class StateGenerator :
             yield states, rewards
     
     def generator_datas_and_inv(self, batch_size : int) :
-        """Génère les données de generator_data et y ajoute les mêmes données en inversé."""
+        """
+        Génère les données de generator_data et y ajoute les mêmes données en inversé.
+        moy 45 +10gagne en moyenne +10perd en moyenne
+        """
         gen = GeneratorWinState()
         while True :
             partie = Partie(True)

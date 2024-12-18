@@ -1,12 +1,12 @@
+import math
 import pygame, sys
+import time
 from pygame import Vector2, SurfaceType, Vector3
 from cube import Cube
-import math
 
 LINE_WIDTH = 3
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 500
-ZOOM = 3
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 
 # Colors
 BLACK = (0, 0, 0)
@@ -29,6 +29,12 @@ COLORS = {
     "white": WHITE
 }
 FADED_COLORS = {key: tuple(max(0, num - 80) for num in color) for key, color in COLORS.items()}
+
+def lerp(a: float, b: float, t: float) -> float:
+    return a * t + b * (1 - t)
+
+def lerp2(a: float, b: float, t: float) -> float:
+    return (b - a) * (2 * t - t ** 2) + a
 
 # Barycentric approach
 def point_in_triangle_barycentric(point: Vector2, triangle: tuple[Vector2, Vector2, Vector2]) -> bool:
@@ -122,8 +128,8 @@ class Camera:
         for point in world_points:
             relative_point = point - self.position
 
-            x_proj = relative_point.dot(right)
-            y_proj = relative_point.dot(up)
+            x_proj = relative_point.dot(right) / self.distance
+            y_proj = relative_point.dot(up) / self.distance
 
             transformed_points.append(Vector2(x_proj, y_proj))
 
@@ -159,7 +165,7 @@ class Renderer:
         Return:
         * Vector2 | tuple[float, float]: les coordonnées 2D sur la fenêtre du point (en Vector2 ou tuple)"""
         ij = sum((point[k] * self.ij_data[k] for k in range(3)), Vector2(0, 0))
-        coordinates = self.screen_data + ZOOM * ij
+        coordinates = self.screen_data + ij
         if to_tuple:
             return coordinates.x, coordinates.y
         return coordinates
@@ -558,7 +564,7 @@ class CubeUI:
         * face (int): l'indice de la face
         * i (int): son positionnement vertical sur la face (colonne)
         * j (int): son positionnement horizontal sur la face (ligne)"""
-        width: int = 2
+        width: int = SCREEN_HEIGHT // 250
         pion = self.cube.get_pion((face, j, i))
         if pion == 0:
             return
@@ -648,6 +654,46 @@ class CubeUI:
         return visible_faces
 
 
+def cinematique_debut_cube(screen: SurfaceType, clock,
+                           cube_length: int = SCREEN_HEIGHT * 4,
+                           camera_distance: float = 10.0,
+                           time_length: float = 3.0,
+                           number_of_rotations: float = 1.5) -> None | tuple[Camera, Renderer, Cube, CubeUI]:
+    frame_speed = lambda x: (2 * x - x ** 2) * 2 * math.pi * number_of_rotations - 1 * math.pi / 3
+    frame_distance = lambda x: lerp2(10 * camera_distance, camera_distance, x)
+    camera = Camera(latitude=math.radians(30), longitude=math.radians(2 * math.pi / 3), distance=camera_distance)
+    renderer = Renderer(screen_data=Vector2(SCREEN_WIDTH, SCREEN_HEIGHT), camera=camera)
+    cube = Cube()
+    cube_ui = CubeUI(cube=cube, renderer=renderer, side_length=cube_length)
+    start_time = time.time()
+    last_time = time.time()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+        pourcentage_time = (last_time - start_time) / time_length
+        if pourcentage_time >= 1:
+            break
+
+        camera.longitude = frame_speed(pourcentage_time)
+        camera.distance = frame_distance(pourcentage_time)
+        print(camera.distance)
+        camera.reset_position()
+        renderer.reset()
+        cube_ui.reset_info(renderer)
+
+        screen.fill(BLACK)
+        cube_ui.draw(screen, Vector2(pygame.mouse.get_pos()), False)
+        pygame.display.flip()
+
+        clock.tick(60)
+        last_time = time.time()
+    camera.distance = camera_distance
+
+    return camera, renderer, cube, cube_ui
+
+
 ROTATION_TRANSLATOR = (10, 11, 15, 16, 9, 12, 4, 8, 5, 1, 2, 6, 7, 0, 3, 13, 17, 14)
 
 if __name__ == "__main__":
@@ -658,10 +704,10 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     # Setup
-    camera = Camera(latitude=math.radians(35), longitude=math.radians(70), distance=10)
-    renderer = Renderer(screen_data=Vector2(800, 600), camera=camera)
-    cube = Cube()
-    cube_ui = CubeUI(cube, renderer, 50)
+    temp = cinematique_debut_cube(screen, clock)
+    if temp is None:
+        sys.exit()
+    camera, renderer, cube, cube_ui = temp
     mouse_click = [0, 0]
     prev_mouse_x, prev_mouse_y = pygame.mouse.get_pos()
     player = 1
