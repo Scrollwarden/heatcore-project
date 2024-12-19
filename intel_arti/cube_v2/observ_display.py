@@ -10,7 +10,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
-NUM_MODEL = 9
+NUM_MODEL = 8
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
