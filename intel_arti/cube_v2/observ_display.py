@@ -10,11 +10,11 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
-NUM_MODEL = 9
+NUM_MODEL = 12
 MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
-NOMBRE_NEURONES = 200 if NUM_MODEL <= 7 else 400
+NOMBRE_NEURONES = 800
 
 # Colors
 BLACK = (0, 0, 0)

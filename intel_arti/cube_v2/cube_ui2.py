@@ -851,7 +851,7 @@ if __name__ == "__main__":
         # Check if the right mouse button is pressed
         if mouse_click[1] != 0:  # Right click is held down
             current_mouse_x, current_mouse_y = mouse_pos
-            delta_x = (prev_mouse_x - current_mouse_x) * camera.orientation
+            delta_x = prev_mouse_x - current_mouse_x 
             delta_y =  prev_mouse_y - current_mouse_y
             prev_mouse_x, prev_mouse_y = current_mouse_x, current_mouse_y
 
