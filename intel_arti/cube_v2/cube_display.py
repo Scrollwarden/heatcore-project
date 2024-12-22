@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, os
 import time
 from cube import Cube
 from agent import Agent
@@ -12,9 +12,8 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 NUM_MODEL = 10
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
-# linux (depuis la racine de Matthew) : "intel_arti/cube_v2/models/model{NUM_MODEL}.h5"
-# window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
+MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
+
 
 
 # Crosses and Squares

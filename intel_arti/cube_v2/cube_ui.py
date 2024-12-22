@@ -1,5 +1,5 @@
 import math
-import pygame, sys
+import pygame, sys, os, pyautogui
 from random import choice
 import time
 from pygame import Vector2, SurfaceType, Vector3
@@ -9,10 +9,10 @@ from cube import Cube
 from generators import GameSaver
 
 LINE_WIDTH = 3
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = pyautogui.size().width
+SCREEN_HEIGHT = pyautogui.size().height
 NUM_MODEL = 10
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -22,6 +22,7 @@ BLUE = (0, 128, 255)
 ORANGE = (255, 128, 0)
 YELLOW = (255, 255, 0)
 GREY = (200, 200, 200)
+MIDDLE_GREY = (150, 150, 150)
 DARK_GREY = (100, 100, 100)
 WHITE = (255, 255, 255)
 COLORS = {
@@ -68,6 +69,7 @@ def point_in_triangle_barycentric(point: Vector2, triangle: tuple[Vector2, Vecto
     u = (dot11 * dot02 - dot01 * dot12) * inv_denom
     v = (dot00 * dot12 - dot01 * dot02) * inv_denom
     return u >= 0 and v >= 0 and (u + v) <= 1
+
 
 class Camera:
     __slots__ = ['latitude', 'longitude', 'distance', 'position', 'orientation']
@@ -225,6 +227,72 @@ class EventsListener:
         self.button_clicked: tuple[int, int] = (-1, -1)
         self.turn_button_pressed: int = -1
 
+class ConvexPolygon:
+    __slots__ = ['points', 'minimum_corner', 'maximum_corner', 'color']
+
+    def __init__(self, points: tuple[Vector2, ...], color):
+        """Initialise un polygone convexe en 2D.
+
+        Params:
+        * points (tuple[Vector2, ...]): les points définissant le polygone.
+        * color: la couleur du polygone."""
+        self.points = points
+        self.minimum_corner = Vector2([min(point[k] for point in self.points) for k in range(2)])
+        self.maximum_corner = Vector2([max(point[k] for point in self.points) for k in range(2)])
+        self.color = color
+
+    def lazy_rectangle_collision_check(self, point: Vector2) -> bool:
+        """Vérifie si un point se trouve dans le rectangle englobant du polygone.
+
+        Params:
+        * point (Vector2): le point à vérifier.
+
+        Return:
+        * bool: True si le point est dans le rectangle, sinon False."""
+        return all(self.minimum_corner[k] <= point[k] <= self.maximum_corner[k] for k in range(2))
+
+    def full_collision_check(self, point: Vector2) -> bool:
+        """Vérifie si un point se trouve dans le polygone via la méthode complète.
+
+        Params:
+        * point (Vector2): le point à vérifier.
+
+        Return:
+        * bool: True si le point est dans le polygone, sinon False."""
+        if not self.lazy_rectangle_collision_check(point):
+            return False
+        for i in range(1, len(self.points) - 1):
+            triangle = (self.points[0],
+                        self.points[i],
+                        self.points[i + 1])
+            if point_in_triangle_barycentric(point, triangle):
+                return True
+        return False
+
+    def draw(self, screen: SurfaceType, color = None, width: int = 0):
+        """Dessine le contour du polygone sur l'écran.
+
+        Params:
+        * screen (SurfaceType): l'écran sur lequel dessiner.
+        * color: couleur de remplissage (par défaut, utilise la couleur du polygone).
+        * width (int): épaisseur des contours (0 pour un polygone rempli)."""
+        pygame.draw.polygon(screen, color if color else self.color,
+                            [(point.x, point.y) for point in self.points],
+                            width=width)
+
+    def draw_filled(self, screen: SurfaceType, color = None):
+        """Dessine un polygone rempli sur l'écran.
+
+        Params:
+        * screen (SurfaceType): l'écran sur lequel dessiner.
+        * color: couleur de remplissage (par défaut, utilise la couleur du polygone)."""
+        pygame.draw.polygon(screen, color if color else self.color,
+                            [(point.x, point.y) for point in self.points])
+
+    def __repr__(self) -> str:
+        """Retourne une représentation en chaîne de caractères du polygone."""
+        return f"<ConvexPolygon{self.points}>"
+
 class ConvexPolygon3D:
     __slots__ = ['points', 'points_screen_coordinates', 'minimum_corner', 'maximum_corner', 'color']
 
@@ -306,11 +374,11 @@ class ConvexPolygon3D:
 class Button:
     __slots__ = ['hitbox', 'border_color', 'border_width', 'actions']
 
-    def __init__(self, hitbox: ConvexPolygon3D, border_color, border_width: int):
-        """Initialise un bouton cliquable avec une hitbox 3D.
+    def __init__(self, hitbox: ConvexPolygon3D | ConvexPolygon, border_color, border_width: int):
+        """Initialise un bouton cliquable avec une hitbox 3D ou 2D.
 
         Params:
-        * hitbox (ConvexPolygon3D): la hitbox définissant la zone du bouton.
+        * hitbox (ConvexPolygon3D | ConvexPolygon): la hitbox définissant la zone du bouton.
         * border_color: la couleur de la bordure.
         * border_width: l'épaisseur de la bordure."""
         self.hitbox = hitbox
@@ -323,7 +391,8 @@ class Button:
 
         Params:
         * renderer (Renderer): l'objet Renderer utilisé pour les calculs."""
-        self.hitbox.reset_info(renderer)
+        if isinstance(self.hitbox, ConvexPolygon3D):
+            self.hitbox.reset_info(renderer)
 
     def add_action(self, action):
         """Ajoute une action au bouton.
@@ -400,6 +469,14 @@ class HiddenButton(Button):
         return f"<HiddenButton({self.hitbox}, {self.show_area})>"
 
 class Face :
+    DANS_PORTION = ((lambda camera : abs(camera.longitude - math.pi * 3 / 2) <= math.pi / 4,
+                     lambda camera : abs(camera.longitude - math.pi / 2) <= math.pi / 4),
+                    (lambda camera : abs(camera.longitude - math.pi) < math.pi / 4,
+                     lambda camera : math.pi > abs(camera.longitude - math.pi) > math.pi * 3 / 4),
+                    (lambda camera : abs(camera.longitude - math.pi / 2) <= math.pi / 4,
+                     lambda camera : abs(camera.longitude - math.pi * 3 / 2) <= math.pi / 4),
+                    (lambda camera : math.pi > abs(camera.longitude - math.pi) > math.pi * 3 / 4,
+                     lambda camera : abs(camera.longitude - math.pi) < math.pi / 4))
     def __init__(self, polygone : ConvexPolygon3D, num : int, renderer : Renderer) -> None:
         """Initialise la face.
         
@@ -426,7 +503,16 @@ class Face :
             self.fonction = lambda : camera.latitude < 0
         else :
             self.fonction = lambda : camera.latitude >= 0
-    
+        
+    def proportion_suffisante(self) :
+        if self.num in (0, 5) :
+            return True
+        if not self.visible() :
+            return False
+        camera = self.renderer.camera
+        avant = abs(camera.latitude) <= math.pi / 2
+        return self.DANS_PORTION[self.num-1][avant](camera)
+
     def add_button(self, button : HiddenButton) -> None :
         """Ajoute un bouton à la face.
         
@@ -503,6 +589,7 @@ class CubeUI:
     )
     LINE_COLOR = WHITE
     FACE_COLOR = DARK_GREY
+    TOP_FACE_COLOR = MIDDLE_GREY
 
     def __init__(self, cube: Cube, renderer: Renderer, side_length: float):
         """Initialise l'interface utilisateur pour manipuler un Rubik's Cube.
@@ -552,7 +639,7 @@ class CubeUI:
             for i in range(3):
                 points = tuple(point_creation_function(i, j, da, db) * self.button_side_length
                                for da, db in self.DISPLACEMENT)
-                polygon = ConvexPolygon3D(points, self.renderer, self.FACE_COLOR)
+                polygon = ConvexPolygon3D(points, self.renderer, self.TOP_FACE_COLOR)
                 button = Button(polygon, self.LINE_COLOR, 1)
                 button.add_action(foo(i, j))
                 self.top_face[j][i] = button
@@ -642,12 +729,27 @@ class CubeUI:
                     self.faces[face].add_button(button)
                     inv *= 1
                 index += 1
-            for j in range(3) :
+            for d in range(3) :
                 for face in (1, 3) :
-                    if face == 3 :
-                        j = 2 - j
+                    if face == 1 :
+                        j = d
+                    else :
+                        j = 2 - d
                     show_area = tuple(self.POINT_3D_PLACEMENT[face](-1.5, j, 6 * da, db) * self.button_side_length for da, db in self.DISPLACEMENT)
                     triangle = tuple(self.POINT_3D_PLACEMENT[face](1.5 + 2 * m * inv, j, da * m * inv, db) * self.button_side_length for da, db in triangle_pos)
+                    button = HiddenButton(ConvexPolygon3D(triangle, self.renderer, GREEN),
+                                        ConvexPolygon3D(show_area, self.renderer, BLACK),
+                                        GREEN, 2)
+                    button.add_action(foo(index))
+                    self.faces[face].add_button(button)
+                    inv *= -1
+                for face in (2, 4) :
+                    if face == 4 :
+                        j = d
+                    else :
+                        j = 2 - d
+                    show_area = tuple(self.POINT_3D_PLACEMENT[face](j, -1.5, db, 6 * da) * self.button_side_length for da, db in self.DISPLACEMENT)
+                    triangle = tuple(self.POINT_3D_PLACEMENT[face](j, 1.5 + 2 * m * inv, db, da * m * inv) * self.button_side_length for da, db in triangle_pos)
                     button = HiddenButton(ConvexPolygon3D(triangle, self.renderer, GREEN),
                                         ConvexPolygon3D(show_area, self.renderer, BLACK),
                                         GREEN, 2)
@@ -696,7 +798,7 @@ class CubeUI:
         * screen (SurfaceType): la surface Pygame où la face sera dessiné
         * mouse (tuple[int, int]): la position actuelle de la souris
         * click (bool): True si un clic est détecté"""
-        if not self.faces[0].draw(screen, width=3) :
+        if not self.faces[0].visible() :
             return False
         for j, sub in enumerate(self.top_face):
             for i, button in enumerate(sub):
@@ -711,6 +813,7 @@ class CubeUI:
             self.draw_cell(screen, 0, i, j)
             if click:
                 self.events_listener.button_clicked = (i, j)
+        self.faces[0].draw_anyway(screen, width=3)
         return True
 
     def draw(self, screen: SurfaceType, mouse: Vector2, click: bool):
@@ -722,28 +825,29 @@ class CubeUI:
         * click (bool): True si un clic est détecté"""
         self.events_listener.reset()
         visible_faces : list[int] = []
-        for face_index in range(6):
+        for face_index in range(5, -1, -1):
             if face_index == 0:
                 if self.draw_top_face(screen, mouse, click) :
-                    visible_faces.append(face_index-1)
+                    visible_faces.append(face_index)
             else:
                 if self.draw_face(screen, face_index) :
-                    visible_faces.append(face_index-1)
+                    visible_faces.append(face_index)
         for face_index in visible_faces:
-            face = self.faces[face_index+1]
-            for button in face.buttons :
-                button.draw(screen, mouse, click)
+            face = self.faces[face_index]
+            if face.proportion_suffisante() :
+                for button in face.buttons :
+                    button.draw(screen, mouse, click)
         return visible_faces
 
 
 def cinematique_debut_cube(screen: SurfaceType, clock,
-                           cube_length: int = SCREEN_HEIGHT * 4,
+                           cube_length: int = SCREEN_HEIGHT * math.pi,
                            camera_distance: float = 10.0,
                            time_length: float = 3.0,
                            number_of_rotations: float = 1.5) -> None | tuple[Camera, Renderer, Cube, CubeUI]:
     frame_speed = lambda x: (2 * x - x ** 2) * 2 * math.pi * number_of_rotations - 1 * math.pi / 3
     frame_distance = lambda x: lerp2(10 * camera_distance, camera_distance, x)
-    camera = Camera(latitude=math.radians(30), longitude=math.radians(2 * math.pi / 3), distance=camera_distance)
+    camera = Camera(latitude=math.radians(30), longitude=2 * math.pi / 3, distance=camera_distance)
     renderer = Renderer(screen_data=Vector2(SCREEN_WIDTH, SCREEN_HEIGHT), camera=camera)
     cube = Cube()
     cube_ui = CubeUI(cube=cube, renderer=renderer, side_length=cube_length)
@@ -760,7 +864,6 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
 
         camera.longitude = frame_speed(pourcentage_time)
         camera.distance = frame_distance(pourcentage_time)
-        print(camera.distance)
         camera.reset_position()
         renderer.reset()
         cube_ui.reset_info(renderer)
@@ -775,6 +878,35 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
 
     return camera, renderer, cube, cube_ui
 
+def go_position_initial(nb_frame : int = 120) :
+    longitude_actuelle = cube_ui.renderer.camera.longitude
+    latitude_actuelle = cube_ui.renderer.camera.latitude
+    longitude_finale = 2 * math.pi / 3
+    latitude_finale = math.pi / 6
+    step_x = (longitude_finale - longitude_actuelle) / nb_frame
+    step_y = (latitude_finale - latitude_actuelle) / nb_frame
+    for i in range(nb_frame) :
+        if i != nb_frame - 1 :
+            coeff = 2 * (nb_frame - i) / nb_frame
+            cube_ui.renderer.camera.longitude += step_x * coeff
+            cube_ui.renderer.camera.latitude += step_y * coeff
+        else :
+            cube_ui.renderer.camera.longitude = longitude_finale
+            cube_ui.renderer.camera.latitude = latitude_finale
+        renderer.reset()
+        cube_ui.reset_info(renderer)
+        # Fill the screen with black
+        screen.fill(BLACK)
+
+        # Draw the cube
+        cube_ui.draw(screen, Vector2(mouse_pos), False)
+        bouton_reset_pos.draw(screen, Vector2(mouse_pos), False)
+        pygame.display.flip()
+        clock.tick(60)
+    camera.reset_position()
+    renderer.reset()
+    cube_ui.reset_info(renderer)
+
 
 ROTATION_TRANSLATOR = (10, 11, 15, 16, 9, 12, 4, 8, 5, 1, 2, 6, 7, 0, 3, 13, 17, 14)
 
@@ -782,11 +914,12 @@ if __name__ == "__main__":
 
     # Initialize Pygame
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     clock = pygame.time.Clock()
 
+    lenght = SCREEN_HEIGHT * math.pi
     # Setup
-    temp = cinematique_debut_cube(screen, clock)
+    temp = cinematique_debut_cube(screen, clock, lenght)
     if temp is None:
         sys.exit()
     camera, renderer, cube, cube_ui = temp
@@ -799,6 +932,13 @@ if __name__ == "__main__":
     agent = Agent(True)
     agent.model = load_model(MODEL_PATH)
     saver = GameSaver()
+
+    # Création du bouton pour revenir à la position initiale
+    pos = (SCREEN_WIDTH, SCREEN_HEIGHT)
+    points = (Vector2(pos[0] - 500, pos[1] - 200), Vector2(pos[0]- 2, pos[1] - 200), Vector2(pos[0] - 2, pos[1] - 2), Vector2(pos[0] - 500, pos[1] - 2))
+    bouton_reset_pos = Button(ConvexPolygon(points, BLUE), WHITE, 1)
+    bouton_reset_pos.add_action(go_position_initial)
+
 
     running = True
     while running :
@@ -872,7 +1012,7 @@ if __name__ == "__main__":
                 player *= -1
                 coup_interdit = -1
                 change = True
-        elif (rotation := cube_ui.events_listener.turn_button_pressed) != -1 and not fini :
+        elif (rotation := cube_ui.events_listener.turn_button_pressed) != -1 and not fini:
             actual_rotation = ROTATION_TRANSLATOR[rotation]
             if actual_rotation == coup_interdit :
                 print("Il s'agit d'un coup interdit. L'action a été annulée.")
@@ -898,9 +1038,10 @@ if __name__ == "__main__":
 
         # Draw the cube
         faces = cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        bouton_reset_pos.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         if show_visible_face:
             print(cube)
-            print([index + 1 for index in faces])
+            print([index for index in faces])
 
         # Update the display
         pygame.display.flip()

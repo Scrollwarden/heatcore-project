@@ -1,5 +1,5 @@
 import math
-import pygame, sys
+import pygame, sys, os
 from random import choice
 import time
 from pygame import Vector2, SurfaceType, Vector3
@@ -12,7 +12,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 NUM_MODEL = 10
-MODEL_PATH = f"models\\model{NUM_MODEL}.h5"
+MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
 
 # Colors
 BLACK = (0, 0, 0)
