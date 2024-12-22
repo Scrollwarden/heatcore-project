@@ -574,6 +574,33 @@ class Face :
             for line in self.lines:
                 line.reset_info(self.renderer)
 
+class Conseil :
+    def __init__(self, boutons : list[Button]):
+        self.active = False
+        self.boutons = boutons
+        self.action = 0
+
+    def is_active(self) :
+        return self.active
+    
+    def activate(self, action : int) :
+        self.active = True
+        self.action = action
+    
+    def desactivate(self) :
+        self.active = False
+    
+    def draw_i(self, i : int) :
+        self.boutons[i].hitbox.draw(screen, RED)
+
+    def draw(self, screen) :
+        if not self.is_active() :
+            return
+        if self.action < 18 :
+            self.boutons[self.action].hitbox.draw(screen, RED)
+        else :
+            self.boutons[self.action].hitbox.draw(screen, RED, width=3)
+
 
 class CubeUI:
     # Les points d'un carré
@@ -599,6 +626,7 @@ class CubeUI:
         * renderer (Renderer): l'objet Renderer utilisé pour afficher le cube
         * side_length (float): la longueur d'un côté du cube"""
         self.cube = cube
+        self.num = 0
         self.events_listener = EventsListener()
         self.renderer = renderer
         self.button_side_length = side_length / 3
@@ -613,8 +641,32 @@ class CubeUI:
         self.cube_cell_points = None
         self.create_cube_cell_points()
 
-
         self.create_turn_buttons()
+        self.create_conseil()
+    
+    def create_conseil(self) :
+        boutons = []
+        boutons.append(self.faces[0].buttons[10])
+        boutons.append(self.faces[0].buttons[6])
+        boutons.append(self.faces[0].buttons[7])
+        boutons.append(self.faces[0].buttons[11])
+        boutons.append(self.faces[1].buttons[3])
+        boutons.append(self.faces[1].buttons[5])
+        boutons.append(self.faces[0].buttons[8])
+        boutons.append(self.faces[0].buttons[9])
+        boutons.append(self.faces[1].buttons[4])
+        boutons.append(self.faces[0].buttons[4])
+        boutons.append(self.faces[0].buttons[0])
+        boutons.append(self.faces[0].buttons[1])
+        boutons.append(self.faces[0].buttons[5])
+        boutons.append(self.faces[1].buttons[0])
+        boutons.append(self.faces[1].buttons[2])
+        boutons.append(self.faces[0].buttons[2])
+        boutons.append(self.faces[0].buttons[3])
+        boutons.append(self.faces[1].buttons[1])
+        for i in range(3) :
+            boutons.extend(self.top_face[i])
+        self.conseil = Conseil(boutons)
 
     def reset_info(self, renderer: Renderer):
         """Met à jour les informations de rendu pour toutes les parties de l'interface utilisateur.
@@ -837,6 +889,7 @@ class CubeUI:
             if face.proportion_suffisante() :
                 for button in face.buttons :
                     button.draw(screen, mouse, click)
+        self.conseil.draw(screen)
         return visible_faces
 
 
@@ -860,6 +913,11 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
                 return None
         pourcentage_time = (last_time - start_time) / time_length
         if pourcentage_time >= 1:
+            camera.longitude = 2 * math.pi / 3
+            camera.latitude = math.pi / 6
+            camera.reset_position()
+            renderer.reset()
+            cube_ui.reset_info(renderer)
             break
 
         camera.longitude = frame_speed(pourcentage_time)
@@ -879,6 +937,8 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
     return camera, renderer, cube, cube_ui
 
 def go_position_initial(nb_frame : int = 120) :
+    if camera.longitude == 2 * math.pi / 3 and camera.latitude == math.pi / 6 :
+        return
     longitude_actuelle = cube_ui.renderer.camera.longitude
     latitude_actuelle = cube_ui.renderer.camera.latitude
     longitude_finale = 2 * math.pi / 3
@@ -901,11 +961,18 @@ def go_position_initial(nb_frame : int = 120) :
         # Draw the cube
         cube_ui.draw(screen, Vector2(mouse_pos), False)
         bouton_reset_pos.draw(screen, Vector2(mouse_pos), False)
+        bouton_conseil.draw(screen, Vector2(mouse_pos), False)
         pygame.display.flip()
         clock.tick(60)
     camera.reset_position()
     renderer.reset()
     cube_ui.reset_info(renderer)
+
+def give_advise(agent : Agent, cube : Cube) :
+    action = agent.choisir(cube, ia_player * -1, coup_interdit)
+    if 0 not in faces or 1 not in faces or not cube_ui.faces[1].proportion_suffisante():
+        go_position_initial()
+    cube_ui.conseil.activate(action)
 
 
 ROTATION_TRANSLATOR = (10, 11, 15, 16, 9, 12, 4, 8, 5, 1, 2, 6, 7, 0, 3, 13, 17, 14)
@@ -939,6 +1006,10 @@ if __name__ == "__main__":
     bouton_reset_pos = Button(ConvexPolygon(points, BLUE), WHITE, 1)
     bouton_reset_pos.add_action(go_position_initial)
 
+    # Création du bouton de conseil
+    points = (Vector2(0, 0), Vector2(0, 200), Vector2(100, 200), Vector2(100, 0))
+    bouton_conseil = Button(ConvexPolygon(points, RED), WHITE, 1)
+    bouton_conseil.add_action(lambda : give_advise(agent, cube))
 
     running = True
     while running :
@@ -975,7 +1046,16 @@ if __name__ == "__main__":
                     cube_ui.reset_info(renderer)
                 elif event.key == pygame.K_c :
                     cube_ui.cube.aleatoire()
-
+                elif event.key == pygame.K_RIGHT:
+                    cube_ui.num += 1
+                    cube_ui.num %= 12
+                    print(cube_ui.num)
+                elif event.key == pygame.K_LEFT:
+                    cube_ui.num -= 1
+                    cube_ui.num %= 12
+                    print(cube_ui.num)
+                elif event.key == pygame.K_0 :
+                    cube.jouer(2, 1)
 
         # Mouse detections
         mouse_buttons = pygame.mouse.get_pressed()
@@ -1009,6 +1089,7 @@ if __name__ == "__main__":
             else:
                 print(f"A {pion_string} got placed at coordinates {(i, j)}")
                 cube.set_pion((0, j, i), player)
+                cube_ui.conseil.desactivate()
                 player *= -1
                 coup_interdit = -1
                 change = True
@@ -1018,6 +1099,7 @@ if __name__ == "__main__":
                 print("Il s'agit d'un coup interdit. L'action a été annulée.")
             else :
                 cube_ui.cube.jouer_tourner(actual_rotation)
+                cube_ui.conseil.desactivate()
                 print(f"Le joueur a décidé de tourner {actual_rotation} (originalement indice {rotation})")
                 player *= -1
                 if actual_rotation < 18 :
@@ -1039,6 +1121,7 @@ if __name__ == "__main__":
         # Draw the cube
         faces = cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         bouton_reset_pos.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        bouton_conseil.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         if show_visible_face:
             print(cube)
             print([index for index in faces])
