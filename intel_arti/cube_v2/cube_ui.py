@@ -12,7 +12,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = pyautogui.size().width
 SCREEN_HEIGHT = pyautogui.size().height
 NUM_MODEL = 10
-MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
+MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/model{NUM_MODEL}.h5")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -372,7 +372,7 @@ class ConvexPolygon3D:
         return f"<ConvexPolygon3D{self.points}>"
 
 class Button:
-    __slots__ = ['hitbox', 'border_color', 'border_width', 'actions']
+    __slots__ = ['hitbox', 'border_color', 'border_width', 'actions', 'running']
 
     def __init__(self, hitbox: ConvexPolygon3D | ConvexPolygon, border_color, border_width: int):
         """Initialise un bouton cliquable avec une hitbox 3D ou 2D.
@@ -575,6 +575,7 @@ class Face :
                 line.reset_info(self.renderer)
 
 class Conseil :
+    BOUTONS_FACE_1 = (4, 5, 8, 13, 14, 17)
     def __init__(self, boutons : list[Button]):
         self.active = False
         self.boutons = boutons
@@ -593,13 +594,16 @@ class Conseil :
     def draw_i(self, i : int) :
         self.boutons[i].hitbox.draw(screen, RED)
 
-    def draw(self, screen) :
+    def draw(self, screen, faces_visibles : list[int]) :
         if not self.is_active() :
             return
         if self.action < 18 :
-            self.boutons[self.action].hitbox.draw(screen, RED)
+            face_bouton = 1 if self.action in self.BOUTONS_FACE_1 else 0
+            if face_bouton in faces_visibles :
+                self.boutons[self.action].hitbox.draw(screen, RED)
         else :
-            self.boutons[self.action].hitbox.draw(screen, RED, width=3)
+            if 0 in faces_visibles :
+                self.boutons[self.action].hitbox.draw(screen, RED, width=3)
 
 
 class CubeUI:
@@ -650,20 +654,20 @@ class CubeUI:
         boutons.append(self.faces[0].buttons[6])
         boutons.append(self.faces[0].buttons[7])
         boutons.append(self.faces[0].buttons[11])
-        boutons.append(self.faces[1].buttons[3])
-        boutons.append(self.faces[1].buttons[5])
+        boutons.append(self.faces[1].buttons[0])
+        boutons.append(self.faces[1].buttons[2])
         boutons.append(self.faces[0].buttons[8])
         boutons.append(self.faces[0].buttons[9])
-        boutons.append(self.faces[1].buttons[4])
+        boutons.append(self.faces[1].buttons[1])
         boutons.append(self.faces[0].buttons[4])
         boutons.append(self.faces[0].buttons[0])
         boutons.append(self.faces[0].buttons[1])
         boutons.append(self.faces[0].buttons[5])
-        boutons.append(self.faces[1].buttons[0])
-        boutons.append(self.faces[1].buttons[2])
+        boutons.append(self.faces[1].buttons[3])
+        boutons.append(self.faces[1].buttons[5])
         boutons.append(self.faces[0].buttons[2])
         boutons.append(self.faces[0].buttons[3])
-        boutons.append(self.faces[1].buttons[1])
+        boutons.append(self.faces[1].buttons[4])
         for i in range(3) :
             boutons.extend(self.top_face[i])
         self.conseil = Conseil(boutons)
@@ -889,7 +893,7 @@ class CubeUI:
             if face.proportion_suffisante() :
                 for button in face.buttons :
                     button.draw(screen, mouse, click)
-        self.conseil.draw(screen)
+        self.conseil.draw(screen, visible_faces)
         return visible_faces
 
 
@@ -943,7 +947,10 @@ def go_position_initial(nb_frame : int = 120) :
     latitude_actuelle = cube_ui.renderer.camera.latitude
     longitude_finale = 2 * math.pi / 3
     latitude_finale = math.pi / 6
-    step_x = (longitude_finale - longitude_actuelle) / nb_frame
+    if longitude_actuelle > math.pi + longitude_finale :
+        step_x = (longitude_finale + 2*math.pi - longitude_actuelle) / nb_frame
+    else :
+        step_x = (longitude_finale - longitude_actuelle) / nb_frame
     step_y = (latitude_finale - latitude_actuelle) / nb_frame
     for i in range(nb_frame) :
         if i != nb_frame - 1 :
@@ -970,6 +977,7 @@ def go_position_initial(nb_frame : int = 120) :
 
 def give_advise(agent : Agent, cube : Cube) :
     action = agent.choisir(cube, ia_player * -1, coup_interdit)
+    print("Coup conseillé :", action)
     if 0 not in faces or 1 not in faces or not cube_ui.faces[1].proportion_suffisante():
         go_position_initial()
     cube_ui.conseil.activate(action)
@@ -1011,6 +1019,13 @@ if __name__ == "__main__":
     bouton_conseil = Button(ConvexPolygon(points, RED), WHITE, 1)
     bouton_conseil.add_action(lambda : give_advise(agent, cube))
 
+    points = (Vector2(SCREEN_WIDTH - 100, 0), Vector2(SCREEN_WIDTH, 0), Vector2(SCREEN_WIDTH, 100), Vector2(SCREEN_WIDTH - 100, 100))
+    bouton_fermer = Button(ConvexPolygon(points, RED), WHITE, 1)
+    bouton_fermer.running = True
+    def quit_game() :
+        bouton_fermer.running = False
+    bouton_fermer.add_action(quit_game)
+
     running = True
     while running :
         if not fini and player == ia_player :
@@ -1039,6 +1054,8 @@ if __name__ == "__main__":
                 elif event.key == pygame.K_r :
                     cube.reset()
                     fini = False
+                    player = 1
+                    ia_player = choice((1, -1))
                 elif event.key == pygame.K_p :
                     camera.longitude = 0
                     camera.latitude = 0
@@ -1122,6 +1139,8 @@ if __name__ == "__main__":
         faces = cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         bouton_reset_pos.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         bouton_conseil.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        bouton_fermer.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        running = bouton_fermer.running
         if show_visible_face:
             print(cube)
             print([index for index in faces])
