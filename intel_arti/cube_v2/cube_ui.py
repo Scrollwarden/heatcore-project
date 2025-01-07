@@ -12,7 +12,7 @@ LINE_WIDTH = 3
 SCREEN_WIDTH = pyautogui.size().width
 SCREEN_HEIGHT = pyautogui.size().height
 NUM_MODEL = 10
-MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
+MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/model{NUM_MODEL}.h5")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -375,12 +375,14 @@ class Button:
     __slots__ = ['hitbox', 'border_color', 'border_width', 'actions']
 
     def __init__(self, hitbox: ConvexPolygon3D | ConvexPolygon, border_color, border_width: int):
-        """Initialise un bouton cliquable avec une hitbox 3D ou 2D.
+        """
+        Initialise un bouton cliquable avec une hitbox 3D ou 2D.
 
         Params:
         * hitbox (ConvexPolygon3D | ConvexPolygon): la hitbox définissant la zone du bouton.
         * border_color: la couleur de la bordure.
-        * border_width: l'épaisseur de la bordure."""
+        * border_width: l'épaisseur de la bordure.
+        """
         self.hitbox = hitbox
         self.border_color = border_color
         self.border_width = border_width
@@ -645,28 +647,28 @@ class CubeUI:
         self.create_conseil()
     
     def create_conseil(self) :
-        boutons = []
-        boutons.append(self.faces[0].buttons[10])
-        boutons.append(self.faces[0].buttons[6])
-        boutons.append(self.faces[0].buttons[7])
-        boutons.append(self.faces[0].buttons[11])
-        boutons.append(self.faces[1].buttons[3])
-        boutons.append(self.faces[1].buttons[5])
-        boutons.append(self.faces[0].buttons[8])
-        boutons.append(self.faces[0].buttons[9])
-        boutons.append(self.faces[1].buttons[4])
-        boutons.append(self.faces[0].buttons[4])
-        boutons.append(self.faces[0].buttons[0])
-        boutons.append(self.faces[0].buttons[1])
-        boutons.append(self.faces[0].buttons[5])
-        boutons.append(self.faces[1].buttons[0])
-        boutons.append(self.faces[1].buttons[2])
-        boutons.append(self.faces[0].buttons[2])
-        boutons.append(self.faces[0].buttons[3])
-        boutons.append(self.faces[1].buttons[1])
+        liste_boutons = []
+        liste_boutons.append(self.faces[0].buttons[10])
+        liste_boutons.append(self.faces[0].buttons[6])
+        liste_boutons.append(self.faces[0].buttons[7])
+        liste_boutons.append(self.faces[0].buttons[11])
+        liste_boutons.append(self.faces[1].buttons[3])
+        liste_boutons.append(self.faces[1].buttons[5])
+        liste_boutons.append(self.faces[0].buttons[8])
+        liste_boutons.append(self.faces[0].buttons[9])
+        liste_boutons.append(self.faces[1].buttons[4])
+        liste_boutons.append(self.faces[0].buttons[4])
+        liste_boutons.append(self.faces[0].buttons[0])
+        liste_boutons.append(self.faces[0].buttons[1])
+        liste_boutons.append(self.faces[0].buttons[5])
+        liste_boutons.append(self.faces[1].buttons[0])
+        liste_boutons.append(self.faces[1].buttons[2])
+        liste_boutons.append(self.faces[0].buttons[2])
+        liste_boutons.append(self.faces[0].buttons[3])
+        liste_boutons.append(self.faces[1].buttons[1])
         for i in range(3) :
-            boutons.extend(self.top_face[i])
-        self.conseil = Conseil(boutons)
+            liste_boutons.extend(self.top_face[i])
+        self.conseil = Conseil(liste_boutons)
 
     def reset_info(self, renderer: Renderer):
         """Met à jour les informations de rendu pour toutes les parties de l'interface utilisateur.
@@ -892,12 +894,39 @@ class CubeUI:
         self.conseil.draw(screen)
         return visible_faces
 
+class ToolbarButton(Button):
+    '''
+    Classe de style des boutons de la barre d'outils
+    '''
+    def __init__(self, pos, color, infos, border_color, border_width):
+        """
+        INPUTS
+        - pos (tuple) : les points qui définissent le bouton
+        - color (tuple) : la couleur du bouton
+        - infos (str) : le texte affiché sur le bouton
+        - border_color (int) : la couleur de la bordure
+        - border_width (int) : la taille de la bordure
+        """
+        super().__init__(ConvexPolygon(pos, color), border_color, border_width)
+        self.text = infos
+        self.center = (0, 0)
+
+    def display_text(self):
+        """affiche le texte sur le bouton"""
+        font = pygame.font.Font(None, 24)
+        text = font.render(self.text, 1, (255, 255, 255), None)
+        screen.blit(text, self.center)
+    def hover(self):
+        """change la couleur du bouton quand il est survolé"""
+        self.hitbox.color -= (10, 10, 10)
+
 
 def cinematique_debut_cube(screen: SurfaceType, clock,
                            cube_length: int = SCREEN_HEIGHT * math.pi,
                            camera_distance: float = 10.0,
                            time_length: float = 3.0,
                            number_of_rotations: float = 1.5) -> None | tuple[Camera, Renderer, Cube, CubeUI]:
+    """Cinématique de lancement qui fait tourner le cube (c'est joli)"""
     frame_speed = lambda x: (2 * x - x ** 2) * 2 * math.pi * number_of_rotations - 1 * math.pi / 3
     frame_distance = lambda x: lerp2(10 * camera_distance, camera_distance, x)
     camera = Camera(latitude=math.radians(30), longitude=2 * math.pi / 3, distance=camera_distance)
@@ -937,6 +966,7 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
     return camera, renderer, cube, cube_ui
 
 def go_position_initial(nb_frame : int = 120) :
+    """fonction du bouton 'affichage base' qui replace le cube dans sa position initiale."""
     if camera.longitude == 2 * math.pi / 3 and camera.latitude == math.pi / 6 :
         return
     longitude_actuelle = cube_ui.renderer.camera.longitude
@@ -969,6 +999,7 @@ def go_position_initial(nb_frame : int = 120) :
     cube_ui.reset_info(renderer)
 
 def give_advise(agent : Agent, cube : Cube) :
+    """fonction du bouton 'conseil' qui affiche les conseils de l'IA au joueur"""
     action = agent.choisir(cube, ia_player * -1, coup_interdit)
     if 0 not in faces or 1 not in faces or not cube_ui.faces[1].proportion_suffisante():
         go_position_initial()
@@ -977,7 +1008,24 @@ def give_advise(agent : Agent, cube : Cube) :
 
 ROTATION_TRANSLATOR = (10, 11, 15, 16, 9, 12, 4, 8, 5, 1, 2, 6, 7, 0, 3, 13, 17, 14)
 
+def create_button_area():
+    """Créé la barre d'actions"""
+    points_toolbar = (Vector2(0, SCREEN_HEIGHT-150),
+                    Vector2(SCREEN_WIDTH, SCREEN_HEIGHT-150),
+                    Vector2(SCREEN_WIDTH, SCREEN_HEIGHT),
+                    Vector2(0, SCREEN_HEIGHT))
+    toolbar = ConvexPolygon(points_toolbar, (205, 205, 210))
+    return toolbar
+
+
+def create_shape_from_pos(pos_x, width=200):
+    """Créé une forme de base de bouton à partir de la position x (y est toujours le même)."""
+    pos_y = SCREEN_HEIGHT
+    return (Vector2(pos_x, pos_y-140), Vector2(pos_x+width, pos_y-140), Vector2(pos_x+width, pos_y-10), Vector2(pos_x, pos_y-10))
+
+
 if __name__ == "__main__":
+    running = True
 
     # Initialize Pygame
     pygame.init()
@@ -1000,18 +1048,27 @@ if __name__ == "__main__":
     agent.model = load_model(MODEL_PATH)
     saver = GameSaver()
 
+    toolbar = create_button_area()
     # Création du bouton pour revenir à la position initiale
-    pos = (SCREEN_WIDTH, SCREEN_HEIGHT)
-    points = (Vector2(pos[0] - 500, pos[1] - 200), Vector2(pos[0]- 2, pos[1] - 200), Vector2(pos[0] - 2, pos[1] - 2), Vector2(pos[0] - 500, pos[1] - 2))
-    bouton_reset_pos = Button(ConvexPolygon(points, BLUE), WHITE, 1)
+    points = create_shape_from_pos(215)
+    bouton_reset_pos = ToolbarButton(points, (0, 0, 255), 'Vue initiale', (255, 255, 255), 1)
     bouton_reset_pos.add_action(go_position_initial)
 
     # Création du bouton de conseil
-    points = (Vector2(0, 0), Vector2(0, 200), Vector2(100, 200), Vector2(100, 0))
-    bouton_conseil = Button(ConvexPolygon(points, RED), WHITE, 1)
+    points = create_shape_from_pos(10)
+    bouton_conseil = ToolbarButton(points, (0, 255, 0), 'Demander conseil', (255, 255, 255), 1)
     bouton_conseil.add_action(lambda : give_advise(agent, cube))
 
-    running = True
+    # Création du bouton 'quitter'
+    points = create_shape_from_pos(SCREEN_WIDTH - 110, width=100)
+    bouton_quitter = ToolbarButton(points, (255, 0, 0), 'Quitter', (255, 255, 255), 1)
+    bouton_quitter.add_action(lambda : quit())
+
+    # Création du bouton 'restart game'
+    point = create_shape_from_pos(420)
+    bouton_restart = ToolbarButton(point, (255, 0, 0), 'Restart', (255, 255, 255), 1)
+    #bouton_restart.add_action()
+
     while running :
         if not fini and player == ia_player :
             action = agent.choisir(cube_ui.cube, player, coup_interdit)
@@ -1120,8 +1177,11 @@ if __name__ == "__main__":
 
         # Draw the cube
         faces = cube_ui.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        toolbar.draw(screen)
         bouton_reset_pos.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         bouton_conseil.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        bouton_restart.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
+        bouton_quitter.draw(screen, Vector2(mouse_pos), mouse_click[0] == 1)
         if show_visible_face:
             print(cube)
             print([index for index in faces])
