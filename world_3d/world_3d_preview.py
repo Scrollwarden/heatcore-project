@@ -5,6 +5,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import numpy as np
 from Chunk_Generator import ChunkTerrain, generate_chunk, HeightParams, ColorParams
+import time
 
 # Constants
 WINDOW_WIDTH = 800
@@ -47,7 +48,7 @@ def main():
     height_param = HeightParams()
     color_param = ColorParams()
     chunks = []
-    scale = 1.0
+    scale = 3.0
     seed = 1
     chunk_positions = [(x, y) for x in range(-5, 5) for y in range(-5, 5)]  # A grid of 10x10 chunks
     for x_chunk, y_chunk in chunk_positions:
@@ -62,7 +63,8 @@ def main():
     sensitivity = 0.2
 
     clock = pygame.time.Clock()
-
+    last_time = time.time()
+    
     running = True
     while running:
         # Handle Pygame events
@@ -76,7 +78,7 @@ def main():
         # Mouse look
         mouse_dx, mouse_dy = pygame.mouse.get_rel()
         camera_rot[1] += mouse_dx * sensitivity  # Yaw
-        camera_rot[0] -= mouse_dy * sensitivity  # Pitch
+        camera_rot[0] += mouse_dy * sensitivity  # Pitch
         camera_rot[0] = max(-89, min(89, camera_rot[0]))  # Clamp pitch
 
         # Movement
@@ -94,13 +96,13 @@ def main():
         up = np.array([0, 1, 0])
 
         move_direction = np.array([0.0, 0.0, 0.0])
-        if keys[pygame.K_w]:
+        if keys[pygame.K_z]:
             move_direction += forward
         if keys[pygame.K_s]:
             move_direction -= forward
         if keys[pygame.K_d]:
             move_direction += right
-        if keys[pygame.K_a]:
+        if keys[pygame.K_q]:
             move_direction -= right
         if keys[pygame.K_SPACE]:
             move_direction += up
@@ -123,6 +125,11 @@ def main():
 
         pygame.display.flip()
         clock.tick(60)
+        
+        end_time = time.time()
+        print(f"FPS: {1 / (end_time - last_time)}")
+        last_time = end_time
+        
 
     pygame.quit()
 

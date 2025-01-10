@@ -1,31 +1,34 @@
-from pygame import Vector2
 import numpy as np
-import math # Just for height adjustment
-import noise # Just to generate chunk
-import pygame # Just for 2D display at the end
-from collections.abc import Iterable # Just to know the size of the chunk
-import sys # Just to know the size of the chunk
-import time # Just for time taken on terminal
+import math
+import noise
+
+import pygame
+
+import time
+from tqdm import tqdm
 
 CHUNK_SIZE: int = 16
-SCALE = 20
+SCALE = 30
 
 class HeightParams:
-    __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b']
+    __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
 
-    def __init__(self) -> None:
-        self.x1, self.y1 = 0.6, 0.044
-        self.p, self.q = 2, 1
-        self.a = self.y1 / math.pow(self.x1, self.p)
-        self.b = (self.y1 - 1) / (math.pow(self.x1, self.q) - 1)
+    def __init__(self, scale: float = 1.0) -> None:
+        self.x1: float = 0.6
+        self.y1: float = 0.044
+        self.p: float = 2
+        self.q: float = 1
+        self.a: float = self.y1 / math.pow(self.x1, self.p)
+        self.b: float = (self.y1 - 1) / (math.pow(self.x1, self.q) - 1)
+        self.scale = scale
 
     def height_from_noise(self, noise_value: float) -> float:
         if noise_value < self.x1:
-            return self.a * math.pow(noise_value, self.p)
+            return self.a * math.pow(noise_value, self.p) * self.scale
         elif noise_value > self.x1:
-            return self.b * (math.pow(noise_value, self.q) - 1) + 1
+            return (self.b * (math.pow(noise_value, self.q) - 1) + 1) * self.scale
         else:
-            return self.y1
+            return self.y1 * self.scale
 
 
 class ColorParams:
@@ -47,55 +50,78 @@ class ColorParams:
 
 
 class ChunkTerrain:
+    """Class for a chunk, contains all the necessary informations to render it or update its details.
+    
+    | Attribute     | Shape                                 | Description                                    |
+    |---------------|---------------------------------------|------------------------------------------------|
+    | `coord`       | `(2, )`                               | Coordinate of the coordinate system of chunks. |
+    | `height_data` | `(chunk_size + 1, chunk_size + 1)`    | Grid of height values for each point.          |
+    | `color_data`  | `(chunk_size + 1, chunk_size + 1, 3)` | Grid of RGB colors for the chunk.              |
+    | `vertices`    | `(num_vertices, 3)`                   | List of unique 3D vertex positions.            |
+    | `triangles`   | `(num_triangles, 3)`                  | Indices of vertices forming each triangle.     |
+    | `colors`      | `(num_triangles, 3)`                  | List the color of each triangle.               |
+    """
     __slots__ = ['coord', 'height_data', 'color_data', 'vertices', 'triangles', 'colors']
 
     def __init__(self, x_chunk: int, y_chunk: int, height_data, color_data) -> None:
-        self.coord: Vector2 = Vector2(x_chunk, y_chunk)
-        # The data have a (CHUNK_SIZE + 1, CHUNK_SIZE + 1) shape because it needs the points on each side
-        self.height_data = height_data # type is np.array(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.float16)
-        self.color_data = color_data # type is np.array(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1, 3), dtype=np.uint8)
+        self.coord = np.array([x_chunk, y_chunk], dtype=np.int32)
+        self.height_data = height_data
+        self.color_data = color_data
         self.vertices = None
         self.triangles = None
         self.colors = None
 
-    def update_detail(self, new_level_of_detail: int, scale: float) -> None:
+    def update_detail(self, new_level_of_detail: int, progress_bar: bool = True) -> None:
         """Change the level of detail of a chunk depending on the distance and adjust triangles to be isosceles
-        0 for best detail and math.log2(CHUNK_SIZE) - 1 for worst detail"""
-        if not (isinstance(new_level_of_detail, int) and 0 <= new_level_of_detail < math.log2(CHUNK_SIZE)):
-            raise ValueError(f"The level of detail ({new_level_of_detail}) is not correct, it should be an integer between 0 and {int(math.log2(CHUNK_SIZE)) - 1}")
+        
+        Args:
+            new_level_of_detail (int): the detail of the chunk, 0 for best detail and math.log2(CHUNK_SIZE) - 1 for worst detail.
+            scale (float): how much you spread the coordinates of the render
+
+        Raises:
+            ValueError: Whenever the level of detail is not between 0 and math.log2(CHUNK_SIZE) - 1.
+        """
+        if not isinstance(new_level_of_detail, int) or new_level_of_detail < 0 or new_level_of_detail >= math.log2(CHUNK_SIZE):
+            raise ValueError(f"The level of detail ({new_level_of_detail}) is not correct,"
+                             f"it should be an integer between 0 and {int(math.log2(CHUNK_SIZE)) - 1}")
 
         simplification_increment: int = 2 ** new_level_of_detail
         vertices_per_line: int = CHUNK_SIZE // simplification_increment + 1
 
-        self.vertices = np.zeros(shape=(vertices_per_line, vertices_per_line, 3), dtype=float)
-        # The position in 3D space of each point in the chunk. For example [3.0, 0.763, 2.0] for the point (x, y)
-        self.triangles = np.zeros(shape=(2* (vertices_per_line - 1) ** 2, 3, 2), dtype=np.uint8)
-        # The 3 points of the chunk that build each triangle. For example: [[3, 0], [4, 0], [4, 1]] for the indexes of each vertex
-        self.colors = np.zeros(shape=(2 * (vertices_per_line - 1) ** 2, 2), dtype=np.uint8)
-        # The colors of each triangle. For example colors[i] is the color for triangles[i]
+        self.vertices = np.zeros(shape=(vertices_per_line ** 2, 3), dtype=float)
+        self.triangles = np.zeros(shape=(2 * (vertices_per_line - 1) ** 2, 3), dtype=np.uint16)
+        self.colors = np.zeros(shape=(2 * (vertices_per_line - 1) ** 2, 3), dtype=np.uint8)
+        
+        if progress_bar:
+            tqdm_progress_bar = tqdm(total=(CHUNK_SIZE + 1) ** 2, desc=f"Changing details of chunk {tuple(self.coord)}", leave=False)
+        
+        index: int = 0
         triangle_index: int = 0
         for x in range(vertices_per_line):
             for y in range(vertices_per_line):
                 # Vertices
                 if y % 2 == 0:
-                    self.vertices[x, y] = np.array((self.coord.x * CHUNK_SIZE + x, self.height_data[x, y], self.coord.y * CHUNK_SIZE + y), dtype=float) * scale
+                    self.vertices[index, :] = (self.coord[0] * CHUNK_SIZE + x, self.height_data[x, y], self.coord[1] * CHUNK_SIZE + y)
                 else:
-                    self.vertices[x, y] = np.array((self.coord.x * CHUNK_SIZE + x + 0.5, self.height_data[x, y], self.coord.y * CHUNK_SIZE + y), dtype=float) * scale
+                    self.vertices[index, :] = (self.coord[0] * CHUNK_SIZE + x + 0.5, self.height_data[x, y], self.coord[1] * CHUNK_SIZE + y)
 
                 if x < CHUNK_SIZE and y < CHUNK_SIZE:
                     # Triangles
                     if y % 2 == 0:
-                        self.triangles[triangle_index, :] = ((x, y), (x + 1, y), (x, y + 1))
-                        self.triangles[triangle_index + 1, :] = ((x + 1, y + 1), (x, y + 1), (x + 1, y))
+                        self.triangles[triangle_index, :] = (index, index + 1, index + vertices_per_line)
+                        self.triangles[triangle_index + 1, :] = (index + 1, index + vertices_per_line + 1, index + vertices_per_line)
                     else:
-                        self.triangles[triangle_index, :] = ((x + 1, y + 1), (x, y), (x + 1, y))
-                        self.triangles[triangle_index + 1, :] = ((x, y), (x + 1, y + 1), (x, y + 1))
+                        self.triangles[triangle_index, :] = (index, index + vertices_per_line + 1, index + vertices_per_line)
+                        self.triangles[triangle_index + 1, :] = (index + 1, index + vertices_per_line + 1, index)
+                    
                     # Colors
-                    self.colors[triangle_index] = (x * simplification_increment, y * simplification_increment)
-                    self.colors[triangle_index + 1] = (x * simplification_increment, (y + 1) * simplification_increment)
+                    self.colors[triangle_index, :] = self.color_data[x * simplification_increment, y * simplification_increment]
+                    self.colors[triangle_index + 1, :] = self.color_data[x * simplification_increment, (y + 1) * simplification_increment]
                     triangle_index += 2
-
-        print(f"{triangle_index}/{6 * (vertices_per_line - 1) ** 2} triangles done")
+                
+                index += 1
+                if progress_bar:
+                    tqdm_progress_bar.update(1)
 
 
 def generate_chunk(x_chunk: int, y_chunk: int, height_arrangement: HeightParams, color_arrangement: ColorParams,
@@ -103,13 +129,16 @@ def generate_chunk(x_chunk: int, y_chunk: int, height_arrangement: HeightParams,
                    scale: float = 1.0,
                    octaves: int = 1,
                    persistence: float = 0.5,
-                   lacunarity: float = 2.0) -> ChunkTerrain:
+                   lacunarity: float = 2.0,
+                   progress_bar: bool = True) -> ChunkTerrain:
     height_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.float16)
     color_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1, 3), dtype=np.uint8)
 
     if seed is None:
         raise ValueError("The seed can't be None")
 
+    if progress_bar:
+        tqdm_progress_bar = tqdm(total=(CHUNK_SIZE + 1) ** 2, desc=f"Generating chunk {(x_chunk, y_chunk)}", leave=False)
     for x in range(CHUNK_SIZE + 1):
         for y in range(CHUNK_SIZE + 1):
             sample_x, sample_y = (x_chunk * CHUNK_SIZE + x) / scale, (y_chunk * CHUNK_SIZE + y) / scale
@@ -118,38 +147,14 @@ def generate_chunk(x_chunk: int, y_chunk: int, height_arrangement: HeightParams,
             noise_value = max(0, min(1, (perlin_value / max(0.5, (0.42 / octaves + 0.44)) + 1) / 2))
 
             height_data[x, y] = height_arrangement.height_from_noise(noise_value)
-            color = color_arrangement.get_color_from_noise(noise_value)
-            for i in range(3):
-                color_data[x, y, i] = color[i]
+            color_data[x, y, :] = color_arrangement.get_color_from_noise(noise_value)
+            if progress_bar:
+                tqdm_progress_bar.update(1)
 
     return ChunkTerrain(x_chunk, y_chunk, height_data, color_data)
 
 def get_chunk_size(chunk: ChunkTerrain):
-    return sum(get_total_size(ele) for ele in (chunk.triangles, chunk.colors, chunk.color_data, chunk.height_data, chunk.vertices, chunk.coord))
-
-def get_total_size(obj, seen=None):
-    """Recursively find the total size of an object and its contents."""
-    if seen is None:
-        seen = set()
-
-    size = sys.getsizeof(obj)
-    obj_id = id(obj)
-    if obj_id in seen:
-        return 0
-    seen.add(obj_id)
-
-    # If it's a numpy array, use nbytes instead of sys.getsizeof()
-    if isinstance(obj, np.ndarray):
-        return obj.nbytes
-
-    # If it's a custom object, calculate the size of its attributes
-    if hasattr(obj, '__dict__'):
-        size += sum(get_total_size(v, seen) for v in obj.__dict__.values())
-
-    # If it's an iterable (but not a string or bytes), calculate the size of elements
-    elif isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)):
-        size += sum(get_total_size(i, seen) for i in obj)
-    return size
+    return sum(chunk.__getattribute__(attribute).nbytes for attribute in chunk.__slots__)
 
 # Function to format the size
 def format_size(size_bytes):
@@ -174,10 +179,9 @@ def display_chunk(screen, chunk: ChunkTerrain):
         raise ValueError("The chunk needs to be loaded")
 
     for i in range(len(chunk.triangles)):
-        triangle_positions = [chunk.vertices[x, y] for x, y in chunk.triangles[i]]
-        m, n = chunk.colors[i]
-        triangle_color = chunk.color_data[m, n]
-        display_triangle(*triangle_positions, triangle_color)
+        triangle_vertices = [chunk.vertices[vertex_index] for vertex_index in chunk.triangles[i]]
+        triangle_color = chunk.colors[i]
+        display_triangle(*triangle_vertices, triangle_color)
 
 
 if __name__ == "__main__":
