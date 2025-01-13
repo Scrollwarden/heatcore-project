@@ -1,7 +1,9 @@
 import numpy as np
 import moderngl as mgl
 import pywavefront
+import os
 
+FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 class VBO:
     def __init__(self, ctx):
@@ -85,7 +87,7 @@ class CatVBO(BaseVBO):
         self.attribs = ['in_texcoord_0', 'in_normal', 'in_position']
 
     def get_vertex_data(self):
-        objs = pywavefront.Wavefront('objects/cat/20430_Cat_v1_NEW.obj', cache=True, parse=True)
+        objs = pywavefront.Wavefront(f'{FILE_PATH}/objects/cat/20430_Cat_v1_NEW.obj', cache=True, parse=True)
         obj = objs.materials.popitem()[1]
         vertex_data = obj.vertices
         vertex_data = np.array(vertex_data, dtype='f4')
