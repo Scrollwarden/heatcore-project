@@ -11,7 +11,7 @@ from generators import GameSaver
 LINE_WIDTH = 3
 SCREEN_WIDTH = pyautogui.size().width
 SCREEN_HEIGHT = pyautogui.size().height
-NUM_MODEL = 10
+NUM_MODEL = 9
 MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/model{NUM_MODEL}.h5")
 
 # Colors
@@ -106,7 +106,7 @@ class Camera:
         return 1 if -math.pi/2 <= self.latitude <= math.pi / 2 else -1
 
     def update_camera_from_mouse(self, delta_x: float, delta_y: float,
-                                 speed_horizontal: float=0.025, speed_vertical: float=0.025) -> None:
+                                 speed_horizontal: float=0.025*0.25, speed_vertical: float=0.025*0.25) -> None:
         """Bouge la caméra en fonction du déplacement de la souris
 
         Args:
@@ -948,7 +948,7 @@ def go_position_initial(nb_frame : int = 120) :
     longitude_finale = 2 * math.pi / 3
     latitude_finale = math.pi / 6
     if longitude_actuelle > math.pi + longitude_finale :
-        step_x = (longitude_finale + 2*math.pi - longitude_actuelle) / nb_frame
+        step_x = (longitude_finale + 2 * math.pi - longitude_actuelle) / nb_frame
     else :
         step_x = (longitude_finale - longitude_actuelle) / nb_frame
     step_y = (latitude_finale - latitude_actuelle) / nb_frame
