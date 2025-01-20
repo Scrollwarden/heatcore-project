@@ -6,9 +6,16 @@ from concurrent.futures import ProcessPoolExecutor
 from random import randint, choice, gauss
 from cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones, savez, load
-from time import time
 import os
 from datetime import datetime
+
+def random_cube() :
+    while (n_pions := round(gauss(8, 4))) < 0:
+        pass
+    cube = Cube()
+    for _ in range(n_pions) :
+        cube.set_pion((randint(0, 5), randint(0, 2), randint(0, 2)), choice((-1, 1)))
+    return cube
 
 
 class GeneratorWinState:
@@ -37,6 +44,27 @@ class GeneratorWinState:
             self._win_on_line(face, times, joueur),
             self._win_on_column(face, times, joueur),
             self._win_on_diagonal(face, times, joueur)
+    
+    def evaluate(self, situation : Cube) :
+        return situation.terminal_state()[1]
+
+    def generate_end_states(self, n=1) :
+        self.liste_win_state = []
+        self.liste_eval = []
+        limit = (n % 6) * 6
+        for i in range(n):
+            joueur = (1, -1)[(i // 6) % 2]
+            face = i % 6 if i < limit else randint(0, 5)
+            situation_type = randint(0, 7)
+            situation = random_cube()
+            if situation_type < 3 :
+                self.add_line_win(face, situation, joueur)
+            elif situation_type < 6 :
+                self.add_col_win(face, situation, joueur)
+            else:
+                self.add_diag_win(face, situation, joueur)
+            self.liste_win_state.append(situation.get_flatten_state())
+            self.liste_eval.append(self.evaluate(situation))
 
     def generate_random_states(self, n=1, joueur=1):
         """
@@ -69,6 +97,18 @@ class GeneratorWinState:
         for _ in range(n):
             i = randint(0, len(self.liste_win_state)-1)
             yield self.liste_win_state[i]
+    
+    def add_line_win(self, face : int, situation : Cube, joueur : int = -1) :
+        line = randint(0, 2)
+        situation.set_ligne(face, line, array([joueur]*3))
+    
+    def add_col_win(self, face : int, situation : Cube, joueur : int = -1) :
+        col = randint(0, 2)
+        situation.set_colonne(face, col, array([joueur]*3))
+    
+    def add_diag_win(self, face : int, situation : Cube, joueur : int = -1) :
+        num = randint(0, 1)
+        situation.set_diagonale(face, num, array([joueur]*3))
 
     def _win_on_line(self, face : int, times : int = 1, joueur : int = 1) :
         """
@@ -217,6 +257,22 @@ class Partie:
         actions_possibles = self.cube.actions_possibles(self.coup_interdit)
         return action in actions_possibles
     
+    def known_step(self, situation, action : int) :
+        """Joue une étape de la partie avec la situation donnée.
+        
+        Params
+        -------
+            situation : L'état du cube
+            action (int) : L'action désirée
+        """
+        
+        self.cube.set_flatten_state(situation)
+        self.joueur *= -1
+        if action < 18 :
+            self.coup_interdit = (action + 9) % 18
+        else :
+            self.coup_interdit = -1
+    
     @check_type(True, int, bool, bool)
     def step(self, action : int, force : bool = False, on_scratch : bool = False) :
         """Joue une étape de la partie.
@@ -281,16 +337,16 @@ class Partie:
     
     def eval_states(self) :
         self.rewards = zeros((len(self.states), 1))
-        if self.gagnant == 1 : # Le joueur 1 a gagné
+        if self.gagnant >= 1 : # Le joueur 1 a gagné
             for i in range(0, len(self.states), 2) :
-                self.rewards[i, 0] = 1/(1<<(len(self.states)-i)//2)
+                self.rewards[i, 0] = self.gagnant/(1<<(len(self.states)-i)//2)
             for i in range(1, len(self.states), 2) :
-                self.rewards[i, 0] = -1/(1<<(len(self.states)-i-1)//2)
-        elif self.gagnant == -1 : # Le joueur -1 (ou 2) a gagné
+                self.rewards[i, 0] = -self.gagnant/(1<<(len(self.states)-i-1)//2)
+        elif self.gagnant <= -1 : # Le joueur -1 (ou 2) a gagné
             for i in range(1, len(self.states), 2) :
-                self.rewards[i, 0] = 1/(1<<(len(self.states)-i)//2)
+                self.rewards[i, 0] = -self.gagnant/(1<<(len(self.states)-i)//2)
             for i in range(0, len(self.states), 2) :
-                self.rewards[i, 0] = -1/(1<<(len(self.states)-i-1)//2)
+                self.rewards[i, 0] = self.gagnant/(1<<(len(self.states)-i-1)//2)
         else : # Egalite
             pass
     
@@ -358,6 +414,23 @@ class StateGenerator :
         self.proportions = 0.5
         self.gagnants = {0 : 0, 1 : 0, -1 : 0}
         self.proportions = 0.5
+
+    def generator_perfection(self, batch_size : int) :
+        """Génère des situations gagnées par l'équipe 1"""
+        gen = GeneratorWinState()
+        while True :
+            partie = Partie(True)
+            self.gagnants[partie.gagnant] = self.gagnants.get(partie.gagnant, 0) + 1
+            states, rewards = partie.get_data()
+            rewards = rewards.flatten()
+            if (nb_overflow_data := states.shape[0] - batch_size) > 0 :
+                states = states[nb_overflow_data:]
+                rewards = rewards[nb_overflow_data:]
+            elif (manque := batch_size - states.shape[0]) > 0 :
+                gen.generate_end_states(manque)
+                states = append(states, array(gen.liste_win_state), 0)
+                rewards = append(rewards, array(gen.liste_eval))
+            yield states, rewards
 
     def generator_datas(self, batch_size : int) :
         """Génère des situations gagnées par l'équipe 1"""

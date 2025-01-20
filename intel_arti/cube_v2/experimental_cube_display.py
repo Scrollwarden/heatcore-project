@@ -12,7 +12,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 NUM_MODEL = 10
-MODEL_PATH = os.path.abspath(f"models/model{NUM_MODEL}.h5")
+MODEL_PATH = os.path.abspath(f"models/generation0/model{NUM_MODEL}.h5")
 
 
 

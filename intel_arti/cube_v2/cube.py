@@ -189,6 +189,9 @@ class Surface :
             self.grille = deepcopy(state)
         else :
             self.grille = state
+                
+    def set_flatten_state(self, state : ndarray) -> None :
+        self.grille = state.reshape((6, 3, 3))
     
     def check_pos(self, pos : tuple[int, int, int]) -> None:
         """Vérifie que la position passée en argument est valide
@@ -605,7 +608,7 @@ class Cube(Surface) :
         self.set_pion((face, 2, 1), (droite, gauche)[reverse])
     
     @check_type(True, ndarray)
-    def etat_suppose_terminal(self, state : ndarray) :
+    def etat_suppose_terminal_old(self, state : ndarray) :
         """Renvoie si la partie est finie et si oui, qui a gagné dans l'état donné.
         
         Param
@@ -638,6 +641,40 @@ class Cube(Surface) :
                 somme += state[face, 0, 2]
         return end or full, int(somme // abs(somme)) if somme != 0 else 0
     
+    @check_type(True, ndarray)
+    def etat_suppose_terminal(self, state : ndarray) :
+        """Renvoie si la partie est finie et si oui, qui a gagné dans l'état donné.
+        
+        Param
+        -------
+            state (ndarray) : L'état d'une partie. Doit être de la forme (6, 3, 3)
+
+        Returns
+        --------
+            bool : Si la partie est finie
+            int : Qui a gagné 
+        """
+        somme = 0
+        end = False
+        full = True
+        for face in range(6) :
+            for i in range(3) :
+                if state[face, i, 0] == state[face, i, 1] == state[face, i, 2] != 0 :
+                    end = True
+                    somme += state[face, i, 0]
+                if state[face, 0, i] == state[face, 1, i] == state[face, 2, i] != 0 :
+                    end = True
+                    somme += state[face, 0, i]
+                if full :
+                    full = all(state[face, i])
+            if state[face, 0, 0] == state[face, 1, 1] == state[face, 2, 2] != 0 :
+                end = True
+                somme += state[face, 0, 0]
+            if state[face, 0, 2] == state[face, 1, 1] == state[face, 2, 0] != 0 :
+                end = True
+                somme += state[face, 0, 2]
+        return end or full, int(somme)
+
     def terminal_state(self) -> tuple[bool, int] :
         """Renvoie si la partie est finie et si oui, qui a gagné.
 
