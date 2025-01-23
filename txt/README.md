@@ -1,5 +1,4 @@
-#     HeatCore
-# ================
+# HeatCore
 
 ## SOMMAIRE
 

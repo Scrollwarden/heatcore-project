@@ -11,8 +11,9 @@ from generators import GameSaver
 LINE_WIDTH = 3
 SCREEN_WIDTH = pyautogui.size().width
 SCREEN_HEIGHT = pyautogui.size().height
-NUM_MODEL = 10
-MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/model{NUM_MODEL}.h5")
+NUM_MODEL = 1
+GENERATION = 1
+MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/generation{GENERATION}/model{NUM_MODEL}.h5")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -106,7 +107,7 @@ class Camera:
         return 1 if -math.pi/2 <= self.latitude <= math.pi / 2 else -1
 
     def update_camera_from_mouse(self, delta_x: float, delta_y: float,
-                                 speed_horizontal: float=0.025, speed_vertical: float=0.025) -> None:
+                                 speed_horizontal: float=0.025*0.25, speed_vertical: float=0.025*0.25) -> None:
         """Bouge la caméra en fonction du déplacement de la souris
 
         Args:
@@ -632,7 +633,6 @@ class CubeUI:
         * renderer (Renderer): l'objet Renderer utilisé pour afficher le cube
         * side_length (float): la longueur d'un côté du cube"""
         self.cube = cube
-        self.num = 0
         self.events_listener = EventsListener()
         self.renderer = renderer
         self.button_side_length = side_length / 3
@@ -674,14 +674,14 @@ class CubeUI:
             liste_boutons.extend(self.top_face[i])
         self.conseil = Conseil(liste_boutons)
 
-    def reset_info(self, renderer: Renderer):
+    def reset_info(self):
         """Met à jour les informations de rendu pour toutes les parties de l'interface utilisateur.
 
         Params:
         * renderer (Renderer): l'objet Renderer utilisé pour recalculer les coordonnées d'affichage"""
         for sub in self.top_face:
             for button in sub:
-                button.reset_info(renderer)
+                button.reset_info(self.renderer)
         for face in self.faces:
             face.reset_info()
 
@@ -950,14 +950,14 @@ def cinematique_debut_cube(screen: SurfaceType, clock,
             camera.latitude = math.pi / 6
             camera.reset_position()
             renderer.reset()
-            cube_ui.reset_info(renderer)
+            cube_ui.reset_info()
             break
 
         camera.longitude = frame_speed(pourcentage_time)
         camera.distance = frame_distance(pourcentage_time)
         camera.reset_position()
         renderer.reset()
-        cube_ui.reset_info(renderer)
+        cube_ui.reset_info()
 
         screen.fill(BLACK)
         cube_ui.draw(screen, Vector2(pygame.mouse.get_pos()), False)
@@ -978,7 +978,7 @@ def go_position_initial(nb_frame : int = 120) :
     longitude_finale = 2 * math.pi / 3
     latitude_finale = math.pi / 6
     if longitude_actuelle > math.pi + longitude_finale :
-        step_x = (longitude_finale + 2*math.pi - longitude_actuelle) / nb_frame
+        step_x = (longitude_finale + 2 * math.pi - longitude_actuelle) / nb_frame
     else :
         step_x = (longitude_finale - longitude_actuelle) / nb_frame
     step_y = (latitude_finale - latitude_actuelle) / nb_frame
@@ -991,7 +991,7 @@ def go_position_initial(nb_frame : int = 120) :
             cube_ui.renderer.camera.longitude = longitude_finale
             cube_ui.renderer.camera.latitude = latitude_finale
         renderer.reset()
-        cube_ui.reset_info(renderer)
+        cube_ui.reset_info()
         # Fill the screen with black
         screen.fill(BLACK)
 
@@ -1003,7 +1003,7 @@ def go_position_initial(nb_frame : int = 120) :
         clock.tick(60)
     camera.reset_position()
     renderer.reset()
-    cube_ui.reset_info(renderer)
+    cube_ui.reset_info()
 
 def give_advise(agent : Agent, cube : Cube) :
     """fonction du bouton 'conseil' qui affiche les conseils de l'IA au joueur"""
@@ -1115,7 +1115,7 @@ if __name__ == "__main__":
                     camera.longitude = 0
                     camera.latitude = 0
                     renderer.reset()
-                    cube_ui.reset_info(renderer)
+                    cube_ui.reset_info()
                 elif event.key == pygame.K_c :
                     cube_ui.cube.aleatoire()
                 elif event.key == pygame.K_RIGHT:
@@ -1149,7 +1149,7 @@ if __name__ == "__main__":
 
             camera.update_camera_from_mouse(delta_x, delta_y)
             renderer.reset()
-            cube_ui.reset_info(renderer)
+            cube_ui.reset_info()
         else:
             prev_mouse_x, prev_mouse_y = mouse_pos
         change = False

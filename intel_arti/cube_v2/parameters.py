@@ -44,7 +44,9 @@ INFOS_ALL_MODELS = {
     9: ('27-11-2024', 'epoch 1000 (+)'),
     10: ('10-12-2024', 'nb neurones 800 (+) | Winstate used False'),
     11: ('16-12-2024', 'Winstate used True\ncurrently BEST'),
-    12: ('16-12-2024', 'Inverted WinState team True')
+    12: ('16-12-2024', 'Inverted WinState team True'),
+    13: ('13-01-2025', 'Identique à modèle 12 (erreur)'),
+    14: ('18-01-2025', 'MultipleWinAndLoss activated')
 }
 
 def date_model(NUM_MODEL):
