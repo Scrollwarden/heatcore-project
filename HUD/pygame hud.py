@@ -1,104 +1,59 @@
 import pygame
 import sys
+from hud_elements import create_compass, create_heatcore_bar
 
+# Initialize Pygame
 pygame.init()
 
+# Screen dimensions
 width, height = 800, 600
 screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("HUD Example")
 
-class CompassBar:
-    def __init__(self, screen, x, y, length, color=(255, 255, 255), thickness=5):
-        self.screen = screen
-        self.x = x
-        self.y = y
-        self.length = length
-        self.color = color
-        self.thickness = thickness
+# Colors
+gray = (100, 100, 100)
 
-    def draw(self):
-        start_pos = (self.x - self.length // 2, self.y)
-        end_pos = (self.x + self.length // 2, self.y)
-        pygame.draw.line(self.screen, self.color, start_pos, end_pos, self.thickness)
+# Initialize HUD elements
+draw_compass = create_compass(screen)
+heatcore_bar = create_heatcore_bar(screen)
 
-class CompassMarker:
-    def __init__(self, screen, x, y, yaw, color=(255, 255, 255), size=10, thickness=5):
-        self.screen = screen
-        self.x = x
-        self.y = y
-        self.yaw = yaw
-        self.color = color
-        self.size = size
-        self.thickness = thickness
+# Variables
+yaw = 0  # Initial yaw angle
+heatcore_count = 0  # Initial heatcore count
+space_pressed = False  # Tracks if the space key is currently pressed
 
-    def draw(self):
-        start_pos = (self.x, self.y - self.size // 2)
-        end_pos = (self.x, self.y + self.size // 2)
-        pygame.draw.line(self.screen, self.color, start_pos, end_pos, self.thickness)
-
-    def set_position(self, x):
-        self.x = x
-
-class ImageLoader:
-    def __init__(self, screen, image_path, marker):
-        self.screen = screen
-        self.image = pygame.image.load(image_path)
-        self.marker = marker
-        self.offset_y = 20
-
-    def draw(self):
-        image_x = self.marker.x - self.image.get_width() // 2
-        image_y = self.marker.y + self.offset_y
-        self.screen.blit(self.image, (image_x, image_y))
-
-compass_bar = CompassBar(screen, width // 2, 20, 600)
-
-markers = [
-    {
-        "marker": CompassMarker(screen, width // 2, 20, yaw=0, thickness=8),
-        "image_loader": ImageLoader(screen, "north_image.png", None)
-    },
-    {
-        "marker": CompassMarker(screen, width // 2, 20, yaw=180, thickness=8),
-        "image_loader": ImageLoader(screen, "custom_image.png", None)
-    },
-    {
-        "marker": CompassMarker(screen, width // 2, 20, yaw=54, thickness=8),
-        "image_loader": ImageLoader(screen, "custom_image.png", None)
-    }
-]
-
-for item in markers:
-    item["image_loader"].marker = item["marker"]
-
-yaw = 0
-
+# Main loop
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and not space_pressed:
+                heatcore_count = (heatcore_count + 1) % 4  # Increment heatcore_count by 1
+                heatcore_bar.set_heatcore_count(heatcore_count)
+                space_pressed = True  # Mark space as pressed
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_SPACE:
+                space_pressed = False  # Reset space pressed state
 
+    # Handle yaw adjustment with Q and D keys
     keys = pygame.key.get_pressed()
     if keys[pygame.K_q]:
         yaw = (yaw - 0.1) % 360
     if keys[pygame.K_d]:
         yaw = (yaw + 0.1) % 360
 
-    screen.fill((100, 100, 100))
+    # Fill the screen with gray
+    screen.fill(gray)
 
-    compass_bar.draw()
+    # Draw HUD elements
+    draw_compass(yaw)
+    heatcore_bar.draw()
 
-    for item in markers:
-        marker = item["marker"]
-        image_loader = item["image_loader"]
-
-        if abs((yaw - marker.yaw + 180) % 360 - 180) <= 90:
-            marker_position = (width // 2) + ((yaw - marker.yaw + 180) % 360 - 180) / 90 * (compass_bar.length // 2)
-            marker.set_position(marker_position)
-            marker.draw()
-            image_loader.draw()
-
+    # Update the display
     pygame.display.flip()
 
+# Quit Pygame
 pygame.quit()
 sys.exit()
