@@ -18,7 +18,7 @@ class GraphicsEngine:
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
         pg.display.set_mode(self.window_size, flags=pg.OPENGL | pg.DOUBLEBUF)
 
-        #pg.event.set_grab(True)
+        pg.event.set_grab(True)
         pg.mouse.set_visible(False)
 
         self.context = mgl.create_context()
@@ -26,7 +26,12 @@ class GraphicsEngine:
         self.light = Light()
         self.camera = Camera(self)
         self.scene = Scene(self)
-        print("everything is setup up correctly")
+        print("Graphics engine initialized successfully")
+    
+    def create_shared_context(self):
+        context = mgl.create_context(standalone=True, share=True) # Here is the error !!!
+        context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
+        return context
 
     def check_events(self):
         for event in pg.event.get():
@@ -54,6 +59,10 @@ class GraphicsEngine:
             elapsed_time = time.time() - start_time
 
             print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}ms")
+            
+            # Recenter the mouse
+            screen_width, screen_height = pg.display.get_surface().get_size()
+            # pg.mouse.set_pos(screen_width // 2, screen_height // 2)
 
 def format_fps(delta_time, fps):
     current_fps = 1000 / delta_time

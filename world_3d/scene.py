@@ -1,9 +1,9 @@
-from chunk import generate_chunk, HeightParams, ColorParams, PointsHeightParams, CHUNK_SIZE
-from model import ChunkModel, Cube
-from tqdm import tqdm
+from chunk import generate_chunk, PointsHeightParams, ColorParams
+from model import ChunkModel
 import queue
 import threading
-
+import moderngl as mgl
+import pygame as pg
 
 
 class Scene:
@@ -20,7 +20,7 @@ class Scene:
         self.result_queue = queue.Queue()
         self.threads = []
         self.threads_limit = 2
-        self.semaphore = threading.Semaphore(self.threads_limit)  # Limit to 8 threads
+        self.semaphore = threading.Semaphore(self.threads_limit)
 
         self.chunks = {}
         self.objects = {}
@@ -30,12 +30,20 @@ class Scene:
     def update_worker(self, coord):
         """Worker function for generating chunks."""
         try:
+            # Create and bind a shared OpenGL context for this thread
+            thread_context = self.app.create_shared_context()
+
+            # Generate chunk data
             chunk = generate_chunk(
                 coord[0], coord[1], self.height_params, self.color_params,
                 seed=self.seed, scale=35.0, octaves=5, progress_bar=False
             )
             chunk.update_detail(0, progress_bar=False)
-            chunk_model = ChunkModel(self.app, chunk)
+
+            # Create ChunkModel using the thread-specific context
+            chunk_model = ChunkModel(self.app, chunk, thread_context)
+
+            # Pass the result back to the main thread
             self.result_queue.put((coord, chunk, chunk_model))
         except Exception as e:
             print(f"Error in worker for chunk {coord}: {e}")
@@ -48,7 +56,7 @@ class Scene:
             if len(self.threads) < self.threads_limit:
                 t = threading.Thread(
                     target=self.update_worker,
-                    args=(coord, )
+                    args=(coord,)
                 )
                 t.start()
                 self.threads.append(t)
@@ -61,13 +69,14 @@ class Scene:
         while not self.result_queue.empty():
             coord, chunk, chunk_model = self.result_queue.get()
             self.chunks[coord] = chunk
-            self.objects[coord] = chunk
+            self.objects[coord] = chunk_model
 
     def update(self):
         """Update chunks and load new ones."""
         # Remove far chunks
         keys_to_remove = [(i, j) for (i, j) in self.chunks.keys()
-                          if (self.x - i) ** 2 + (self.y - j) ** 2 > (2 * self.radius) ** 2]
+                          if (self.app.camera.position.x - i) ** 2 +
+                             (self.app.camera.position.z - j) ** 2 > (2 * self.radius) ** 2]
         for key in keys_to_remove:
             del self.chunks[key]
 
@@ -85,9 +94,11 @@ class Scene:
         self.update_chunks()
 
     def render(self):
+        """Render all objects."""
         self.update()
-        for object in self.objects.values():
-            object.render()
+        for obj in self.objects.values():
+            obj.vao.render()  # Render in the main thread
 
     def destroy(self):
-        [object.destroy() for object in self.objects.values()]
+        """Clean up resources."""
+        [obj.destroy() for obj in self.objects.values()]

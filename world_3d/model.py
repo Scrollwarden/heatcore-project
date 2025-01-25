@@ -83,19 +83,18 @@ class Cube:
 
 
 class ChunkModel:
-    def __init__(self, app, chunk):
+    def __init__(self, app, chunk, thread_context=None):
         self.app = app
-        self.context = app.context
+        self.context = thread_context or app.context
 
         self.coord_scale = 5
-
         self.shader_program = self.get_shader_program('default')
         self.vbo = self.get_vbo(chunk)
         self.vao = self.get_vao()
         self.m_model = glm.mat4()
 
         self.on_init()
-        self.vao.render()
+        self.vao.render()  # Render in the thread-specific context
 
     def update(self):
         self.shader_program['m_view'].write(self.app.camera.view_matrix)
