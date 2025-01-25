@@ -144,8 +144,8 @@ def create_compass(screen):
     return draw_compass
 
 def create_heatcore_bar(screen):
-    x = 50
     height = 200
-    y = screen.get_height() - (height + 50)
     width = 10
+    x = screen.get_width() - (width + 50)
+    y = screen.get_height() - (height + 50)
     return HeatcoreBar(screen, x, y, width, height)
