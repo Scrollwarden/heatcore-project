@@ -26,7 +26,7 @@ class GraphicsEngine:
         self.light = Light()
         self.camera = Camera(self)
         self.scene = Scene(self)
-        print("everything is setup up correctly")
+        print("Graphics engine initialized successfully")
 
     def check_events(self):
         for event in pg.event.get():
@@ -52,11 +52,11 @@ class GraphicsEngine:
             self.render()
             self.delta_time = self.clock.tick(60)
             elapsed_time = time.time() - start_time
-
-            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}ms")
+            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
+            print(self.camera.position)
 
 def format_fps(delta_time, fps):
-    current_fps = 1000 / delta_time
+    current_fps = 1 / delta_time
     diff_percentage = (current_fps - fps) / fps
     if diff_percentage >= -0.1:
         color_code = "\033[32m"  # Green

@@ -7,7 +7,7 @@ import pygame
 import time
 from tqdm import tqdm
 
-CHUNK_SIZE: int = 16
+CHUNK_SIZE: int = 32
 SCALE = 60
 TWO_ROOT3 = math.sqrt(3) / 2
 
