@@ -27,11 +27,6 @@ class GraphicsEngine:
         self.camera = Camera(self)
         self.scene = Scene(self)
         print("Graphics engine initialized successfully")
-    
-    def create_shared_context(self):
-        context = mgl.create_context(standalone=True, share=True) # Here is the error !!!
-        context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
-        return context
 
     def check_events(self):
         for event in pg.event.get():
@@ -58,14 +53,12 @@ class GraphicsEngine:
             self.delta_time = self.clock.tick(60)
             elapsed_time = time.time() - start_time
 
-            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}ms")
-            
-            # Recenter the mouse
-            screen_width, screen_height = pg.display.get_surface().get_size()
-            # pg.mouse.set_pos(screen_width // 2, screen_height // 2)
+            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
+            print(self.camera.position)
 
 def format_fps(delta_time, fps):
-    current_fps = 1000 / delta_time
+    """delta time in seconds"""
+    current_fps = 1 / delta_time
     diff_percentage = (current_fps - fps) / fps
     if diff_percentage >= -0.1:
         color_code = "\033[32m"  # Green
