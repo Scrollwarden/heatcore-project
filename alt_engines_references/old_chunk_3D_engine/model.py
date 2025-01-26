@@ -83,29 +83,24 @@ class Cube:
 
 
 class ChunkModel:
-    def __init__(self, app, chunk):
+    def __init__(self, app, chunk, thread_context=None):
         self.app = app
-        self.context = app.context
-        self.chunk_coord = chunk.coord
+        self.context = thread_context or app.context
 
         self.coord_scale = 5
-        self.vertex_data = self.get_vertex_data(chunk)
-        self.m_model = glm.mat4()
-        self.shader_program = None
-        self.vbo = None
-        self.vao = None
-
-    def init_context(self):
         self.shader_program = self.get_shader_program('default')
-        self.vbo = self.get_vbo()
+        self.vbo = self.get_vbo(chunk)
         self.vao = self.get_vao()
-        self.init_shader_program()
+        self.m_model = glm.mat4()
+
+        self.on_init()
+        self.vao.render()  # Render in the thread-specific context
 
     def update(self):
         self.shader_program['m_view'].write(self.app.camera.view_matrix)
         self.shader_program['camPos'].write(self.app.camera.position)
 
-    def init_shader_program(self):
+    def on_init(self):
         # light
         self.shader_program['light.position'].write(self.app.light.position)
         self.shader_program['light.Ia'].write(self.app.light.Ia)
@@ -119,6 +114,11 @@ class ChunkModel:
     def reset_data(self, chunk):
         self.vbo = self.get_vbo(chunk)
         self.vao = self.get_vao()
+
+    def get_vao(self):
+        vao = self.context.vertex_array(self.shader_program,
+                                        [(self.vbo, '3f 3f 3f', 'in_position', 'in_normal', 'in_color')])
+        return vao
 
     def get_vertex_data(self, chunk):
         num_triangles = len(chunk.triangles)
@@ -141,15 +141,10 @@ class ChunkModel:
 
         return vertex_data
 
-    def get_vbo(self):
-        vbo = self.context.buffer(self.vertex_data)
+    def get_vbo(self, chunk):
+        vertex_data = self.get_vertex_data(chunk)
+        vbo = self.context.buffer(vertex_data)
         return vbo
-
-    def get_vao(self):
-        vao = self.context.vertex_array(self.shader_program,
-                                        [(self.vbo, '3f 3f 3f', 'in_position', 'in_normal', 'in_color')],
-                                        skip_errors=True)
-        return vao
 
     def get_shader_program(self, shader_name):
         with open(f"{ABS_PATH}/shaders/{shader_name}.vert") as file:
@@ -162,13 +157,16 @@ class ChunkModel:
         return program
 
     def render(self):
+        #start_time = time.time()
         self.update()
+        #middle_time = time.time()
         self.vao.render()
+        #end_time = time.time()
+        #print(f"Updating took: {middle_time - start_time:.3f}s")
+        #print(f"VAO rendering took: {end_time - middle_time:.3f}s")
+        #print(f"Total: {end_time - start_time:.3f}s")
 
     def destroy(self):
         self.vbo.release()
         self.shader_program.release()
         self.vao.release()
-
-    def __repr__(self):
-        return f"ChunkModel<{self.chunk_coord}>"
