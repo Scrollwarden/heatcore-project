@@ -1,14 +1,13 @@
 import numpy as np
 import math
 import noise
-
 import pygame
-
 import time
-from tqdm import tqdm
 
 CHUNK_SIZE: int = 16
+LG2_CS: int = int(math.log2(CHUNK_SIZE))
 SCALE = 900 / CHUNK_SIZE
+
 
 class HeightParams:
     __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
@@ -30,6 +29,7 @@ class HeightParams:
         else:
             return self.y1 * self.scale
 
+
 class PointsHeightParams:
     __slots__ = ['points', 'denom_list']
 
@@ -43,6 +43,7 @@ class PointsHeightParams:
             index += 1
         h = (noise_value - self.points[index + 1][0]) * self.denom_list[index]
         return h * self.points[index][1] + (1 - h) * self.points[index + 1][1]
+
 
 class ColorParams:
     __slots__ = ['heights_limit', 'colors']
@@ -70,127 +71,159 @@ class ColorParams:
     def get_color_from_id(self, id: int) -> tuple[int, int, int]:
         return self.colors[id]
 
+class PerlinGenerator:
+    def __init__(self, height_params: HeightParams | PointsHeightParams, color_params: ColorParams,
+                 seed: int = 0, scale: float = 1.0, octaves: int = 1,
+                 persistence: float = 0.5, lacunarity: float = 2.0):
+        self.height_params = height_params
+        self.color_params = color_params
+        self.seed = seed
+        self.scale = scale
+        self.octaves = octaves
+        self.persistence = persistence
+        self.lacunarity = lacunarity
+
+    def noise_value(self, x: float, y: float) -> float:
+        perlin_value = noise.pnoise2(x / self.scale, y / self.scale, octaves=self.octaves, persistence=self.persistence,
+                                     lacunarity=self.lacunarity, base=self.seed)
+
+        # normalized value (not perfect but experimentally correct)
+        noise_value = (perlin_value / max(0.5, (0.42 / self.octaves + 0.44)) + 1) / 2
+        return np.clip(noise_value, 0, 1) # just to be sure
+
 class ChunkTerrain:
-    """Class for a chunk, contains all the necessary information to render it or update its details.
-    
-    | Attribute      | Shape                               | Description                                    |
-    |----------------|-------------------------------------|------------------------------------------------|
-    | `coord`        | `(2, )`                             | Coordinate of the coordinate system of chunks. |
-    | `height_data`  | `(chunk_size + 1, chunk_size + 1)`  | Grid of height values for each point.          |
-    | `id_data`      | `(chunk_size + 1, chunk_size + 1)`  | Grid of id value for each point.               |
-    | `vertices`     | `(num_vertices, 3)`                 | List of unique 3D vertex positions.            |
-    | `triangles`    | `(num_triangles, 3)`                | Indices of vertices forming each triangle.     |
-    | `triangle_ids` | `(num_triangles, )`                 | List the id of each triangle.                  |
-    | `detail`       | No shape, it's just an integer/None | Current detail of the chunk.                   |
+    """Represents a terrain chunk, containing information about its vertices and associated data.
+
+    This class generates vertex positions and assigns IDs based on the requested level of detail.
+    It does not handle rendering or maintain a mesh representation.
+
+    | Attribute      | Description                                    | Shape/Data type                    |
+    | -------------- | ---------------------------------------------- | ---------------------------------- |
+    | `scale`        | By how much do we scale the vertices.          | float                              |
+    | `noise`        | Used for perlin generation of noise.           | PerlinGenerator                    |
+    | `coord`        | Coordinate of the coordinate system of chunks. | `(2, )`                            |
+    | `vertices`     | List of all vertices of the chunk.             | `(chunk_size + 1, chunk_size + 1)` |
+    | `id_data`      | Id of each point in the chunk.                 | `(chunk_size + 1, chunk_size + 1)` |
+    | `detail`       | The maximum detail generated.                  | float                              |
     """
-    __slots__ = ['coord', 'height_data', 'id_data', 'vertices', 'triangles', 'triangle_ids', 'detail', ]
+    __slots__ = ['noise', 'scale', 'coord', 'id_data', 'vertices', 'detail', ]
 
-    def __init__(self, x_chunk: int, y_chunk: int, height_data, id_data) -> None:
-        self.coord = np.array([x_chunk, y_chunk], dtype=np.int32)
-        self.height_data = height_data
-        self.id_data = id_data
-        self.vertices = None
-        self.triangles = None
-        self.triangle_ids = None
-        self.detail: None | int = None
+    def __init__(self, perlin_generator: PerlinGenerator, x_chunk: int, y_chunk: int, scale: float = 1.0) -> None:
+        """Initializes a new ChunkTerrain instance, generating placeholders for vertex and ID data.
 
-    def update_detail(self, new_level_of_detail: int, progress_bar: bool = False) -> None:
-        """Change the level of detail of a chunk depending on the distance and adjust triangles to be isosceles
-        
         Args:
-            new_level_of_detail (int): the detail of the chunk, 0 for best detail and math.log2(CHUNK_SIZE) - 1 for worst detail.
-            progress_bar (bool): add in a progress bar or not to display progress. Defaults to False
-
-        Raises:
-            ValueError: Whenever the level of detail is not between 0 and math.log2(CHUNK_SIZE) - 1.
+            perlin_generator (PerlinGenerator): The Perlin noise generator for terrain generation.
+            x_chunk (int): The X-coordinate of the chunk in the grid.
+            y_chunk (int): The Y-coordinate of the chunk in the grid.
         """
+        self.noise = perlin_generator
+        self.scale = scale
+        self.coord = np.array([x_chunk, y_chunk], dtype=np.int32)
+        self.vertices = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1, 3), dtype=np.float32)
+        self.id_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.uint8)
+        self.detail: float | None = None
 
-        if not (type(new_level_of_detail) is int and 0 <= new_level_of_detail <= math.log2(CHUNK_SIZE)):
-            raise ValueError(f"The level of detail ({new_level_of_detail}) is not correct,"
-                             f"it should be an integer between 0 and {int(math.log2(CHUNK_SIZE))}")
+    def generate_detail(self, new_level_of_detail: float | int):
+        """Generates vertex positions and IDs for the specified level of detail.
 
-        simplification_increment: int = 2 ** new_level_of_detail
-        vertices_per_line: int = CHUNK_SIZE // simplification_increment + 1
+        This method populates vertex data and IDs based on Perlin noise values at the requested resolution.
+        Higher levels of detail result in fewer vertices being processed.
 
-        types = [type for i, type in enumerate((np.uint8, np.uint16, np.uint32, np.uint64))
-                 if 4 << i >= np.log2(vertices_per_line)]
-        triangles_dtype = types[0]
+        Args:
+            new_level_of_detail (float | int): The target level of detail, where a higher value reduces resolution.
+        """
+        if new_level_of_detail > (self.detail or float('inf')):
+            return
 
-        self.vertices = np.zeros(shape=(vertices_per_line ** 2, 3), dtype=float)
-        self.triangles = np.zeros(shape=(2 * (vertices_per_line - 1) ** 2, 3), dtype=triangles_dtype)
-        self.triangle_ids = np.zeros(shape=(2 * (vertices_per_line - 1) ** 2,), dtype=np.uint8)
-        
-        if progress_bar:
-            tqdm_progress_bar = tqdm(total=(CHUNK_SIZE + 1) ** 2, desc=f"Changing details of chunk {tuple(self.coord)}", leave=False)
-        
-        index: int = 0
-        triangle_index: int = 0
-        for x in range(vertices_per_line):
-            for y in range(vertices_per_line):
-                # Vertices
-                offset = 0.0
-                self.vertices[index, :] = (self.coord[0] * CHUNK_SIZE + (x + offset) * simplification_increment,
-                                           self.height_data[x, y],
-                                           self.coord[1] * CHUNK_SIZE + y)
-
-                if x < vertices_per_line - 1 and y < vertices_per_line - 1:
-                    # Triangles
-                    if y % 2 == 0:
-                        self.triangles[triangle_index, :] = (index, index + 1, index + vertices_per_line)
-                        self.triangles[triangle_index + 1, :] = (index + vertices_per_line + 1, index + vertices_per_line, index + 1)
-                    else:
-                        self.triangles[triangle_index, :] = (index + vertices_per_line, index, index + vertices_per_line + 1)
-                        self.triangles[triangle_index + 1, :] = (index + 1, index + vertices_per_line + 1, index)
-
-                    # Colors taken from the highest point in the triangle
-                    for k in range(2):
-                        triangle = self.triangles[triangle_index + k]
-                        points = [tuple(k * simplification_increment for k in divmod(ind, vertices_per_line)) for ind in triangle]
-                        self.triangle_ids[triangle_index + k] = max(self.id_data[j, i] for j, i in points)
-                    triangle_index += 2
-                
-                index += 1
-                if progress_bar:
-                    tqdm_progress_bar.update(1)
+        step = 2 ** int(new_level_of_detail * LG2_CS)
+        for x in range(0, CHUNK_SIZE + 1, step):
+            for y in range(0, CHUNK_SIZE + 1, step):
+                if self.id_data[x, y] != 0:
+                    continue
+                sample_x, sample_y = (self.coord * CHUNK_SIZE) + [x, y]
+                noise_value = self.noise.noise_value(sample_x, sample_y)
+                height_value = self.noise.height_params.height_from_noise(noise_value)
+                self.vertices[x, y] = [sample_x, height_value, sample_y]
+                self.vertices[x, y] *= self.scale
+                self.id_data[x, y] = self.noise.color_params.get_id_from_noise(noise_value)
 
         self.detail = new_level_of_detail
 
+    def get_chunk_size(self):
+        """Computes the memory size of the chunk's data.
+
+        Returns:
+            int: Total memory size of the chunk's attributes in bytes.
+        """
+        return sum(self.__getattribute__(attribute).nbytes for attribute in self.__slots__
+                   if type(self.__getattribute__(attribute)) is np.ndarray)
+
     def __repr__(self) -> str:
+        """Provides a string representation of the ChunkTerrain instance.
+
+        Returns:
+            str: A string containing the chunk's coordinates and detail level.
+        """
         return f"ChunkTerrain<coord={self.coord}, detail={self.detail}>"
 
-def generate_chunk(x_chunk: int, y_chunk: int,
-                   height_arrangement: HeightParams | PointsHeightParams,
-                   color_arrangement: ColorParams,
-                   seed: int = 0,
-                   scale: float = 1.0,
-                   octaves: int = 1,
-                   persistence: float = 0.5,
-                   lacunarity: float = 2.0,
-                   progress_bar: bool = False) -> ChunkTerrain:
-    height_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.float16)
-    id_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.uint8)
+class ChunkMesh:
+    """Chunk mesh that can update its details
 
-    if progress_bar:
-        tqdm_progress_bar = tqdm(total=(CHUNK_SIZE + 1) ** 2, desc=f"Generating chunk {(x_chunk, y_chunk)}", leave=False)
-    for x in range(CHUNK_SIZE + 1):
-        for y in range(CHUNK_SIZE + 1):
-            sample_x, sample_y = (x_chunk * CHUNK_SIZE + x) / scale, (y_chunk * CHUNK_SIZE + y) / scale
-            perlin_value = noise.pnoise2(sample_x, sample_y, octaves=octaves, persistence=persistence,
-                                         lacunarity=lacunarity, base=seed)
+    """
+    DTYPE = np.dtype([
+        ('position', np.float32, (3,)),  # 3 floats for vertex position (x, y, z)
+        ('normal', np.float32, (3,)),  # 3 floats for face normal (nx, ny, nz)
+        ('id', np.uint8)  # 1 unsigned int for triangle ID
+    ])
 
-            # normalized value (not perfect but experimentally correct)
-            noise_value = max(0, min(1, (perlin_value / max(0.5, (0.42 / octaves + 0.44)) + 1) / 2))
+    def __init__(self, chunk):
+        self.chunk = chunk
 
-            height_data[x, y] = height_arrangement.height_from_noise(noise_value)
-            id_data[x, y] = color_arrangement.get_id_from_noise(noise_value)
-            if progress_bar:
-                tqdm_progress_bar.update(1)
+        self.vertex_data = None
+        self.detail = None
 
-    return ChunkTerrain(x_chunk, y_chunk, height_data, id_data)
+    def update_detail(self, new_level_of_detail):
+        if not (type(new_level_of_detail) in (float, int) and 0 <= new_level_of_detail <= 1):
+            raise ValueError(f"The level of detail ({new_level_of_detail}) is not correct,"
+                             "it should be an float between 0 and 1")
 
-def get_chunk_size(chunk: ChunkTerrain):
-    return sum(chunk.__getattribute__(attribute).nbytes for attribute in chunk.__slots__
-               if type(chunk.__getattribute__(attribute)) not in (str, bool, int, float))
+        if new_level_of_detail > self.chunk.detail:
+            self.chunk.update_detail(new_level_of_detail)
+
+        step = 1 << int(LG2_CS * new_level_of_detail)
+        self.vertex_data = np.zeros(6 * (CHUNK_SIZE // step) ** 2, dtype=self.DTYPE)
+
+        index = 0
+        for x in range(0, CHUNK_SIZE + 1, step):
+            for y in range(0, CHUNK_SIZE + 1, step):
+                if x == CHUNK_SIZE or y == CHUNK_SIZE:
+                    continue
+
+                # Triangles
+                if (x // step * y // step) % 2 == 0:
+                    triangles = (((x, y), (x + step, y), (x, y + step)),
+                                 ((x + step, y + step), (x, y + step), (x + step, y)))
+                else:
+                    triangles = (((x, y + step), (x, y), (x + step, y + step)),
+                                 ((x + step, y), (x + step, y + step), (x, y)))
+
+                # ID taken from the highest point in the triangle
+                for k, triangle in enumerate(triangles):
+                    vertices = [self.chunk.vertices[i, j] for i, j in triangle]
+                    normal = np.cross(vertices[2] - vertices[1], vertices[2] - vertices[0])
+                    normal *= 1 / np.linalg.norm(normal)
+                    face_id = max([self.chunk.id_data[i, j] for i, j in triangle])
+                    for l in range(3):
+                        self.vertex_data[index + 3 * k + l] = (vertices[l], normal, face_id)
+                index += 6
+
+        self.detail = new_level_of_detail
+
+    def get_byte_size(self):
+        return self.vertex_data.nbytes + self.chunk.get_chunk_size()
+
+    def __repr__(self):
+        return f"ChunkMesh<{self.chunk}{", NotLoaded" if self.vertex_data is None else ""}>"
 
 # Function to format the size
 def format_size(size_bytes):
@@ -202,45 +235,55 @@ def format_size(size_bytes):
     else:
         return f"{size_bytes / 1024 ** 2:.1f}Mo"
 
-def display_chunk(screen, chunk: ChunkTerrain, color_params: ColorParams, scale, offset_x=0, offset_y=0):
-    """Display a chunk on the screen with optional offsets for positioning."""
-    def display_triangle(a, b, c, color):
-        """Display a single triangle on the screen."""
-        pygame.draw.polygon(screen, color, [
-            ((a[0] + offset_x) * scale, (a[2] + offset_y) * scale),
-            ((b[0] + offset_x) * scale, (b[2] + offset_y) * scale),
-            ((c[0] + offset_x) * scale, (c[2] + offset_y) * scale)
-        ])
 
-    if chunk.detail is None:
+def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
+    """Display a chunk on the screen with optional offsets for positioning."""
+    if chunk_mesh.chunk.detail is None:
         raise ValueError("The chunk needs to be loaded")
 
-    for i in range(len(chunk.triangles)):
-        triangle_vertices = [chunk.vertices[vertex_index] for vertex_index in chunk.triangles[i]]
-        triangle_color = color_params.get_color_from_id(chunk.triangle_ids[i])
-        display_triangle(*triangle_vertices, triangle_color)
+    length = len(chunk_mesh.vertex_data) // 3
+    for i in range(length):
+        data = chunk_mesh.vertex_data[i * 3: i * 3 + 3]
+        normal = data[0][1]
+        face_id = data[0][2]
+        color = chunk_mesh.chunk.noise.color_params.get_color_from_id(face_id)
 
-def generate_chunks(radius):
-    chunks = {}
-    start_time = time.time()
-    for x in range(-radius, radius + 1):
-        for y in range(-radius, radius + 1):
-            chunk = generate_chunk(x, y, height_param, color_param, 2, 75, 5, progress_bar=False)
-            chunk.update_detail(0)
-            chunks[(x, y)] = chunk
-
-    render_time = time.time() - start_time
-    print(f"All chunks generated in: \033[;4m{render_time:.5f}s\033[0m")
-    print(f"Space taken by chunks: {format_size(sum(get_chunk_size(chunk) for chunk in chunks.values()))}")
-    return chunks
+        a, b, c = [tuple(int(axis * scale) for axis in ele[0]) for ele in data]
+        pygame.draw.polygon(screen, color, [
+            (a[0], a[2]),
+            (b[0], b[2]),
+            (c[0], c[2])
+        ])
 
 if __name__ == "__main__":
     height_param = HeightParams()
     color_param = ColorParams()
-    radius = 3
-    scale = SCALE / radius
+    perlin_noise = PerlinGenerator(height_param, color_param, seed=2, scale=30.0, octaves=5, persistence=0.5, lacunarity=2.0)
 
-    chunks = generate_chunks(radius)
+    chunk = ChunkTerrain(perlin_noise, 0, 0)
+
+    sst = time.time()
+    chunk.generate_detail(0.3)
+    mmt = time.time()
+    chunk_mesh = ChunkMesh(chunk)
+    chunk_mesh.update_detail(0.3)
+    eet = time.time()
+
+    st = time.time()
+    chunk.generate_detail(0)
+    mt = time.time()
+    chunk_mesh = ChunkMesh(chunk)
+    chunk_mesh.update_detail(0)
+    et = time.time()
+    print(f"Time taken generating: {mmt - sst:.5f}s")
+    print(f"Time taken meshing: {eet - mmt:.5f}s")
+    print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
+    print()
+    print(f"Time taken generating all data: {mt - st:.5f}s")
+    print(f"Time taken meshing to max detail: {et - mt:.5f}s")
+    print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
+    print()
+    print(f"Total time: {et - sst:.5f}s")
 
     pygame.init()
     screen = pygame.display.set_mode((CHUNK_SIZE * SCALE, CHUNK_SIZE * SCALE))
@@ -253,29 +296,11 @@ if __name__ == "__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN:
-                last_params = (detail, scale)
-                if event.key == pygame.K_UP:
-                    detail = max(0, detail - 1)
-                elif event.key == pygame.K_DOWN:
-                    detail = min(int(math.log2(CHUNK_SIZE)), detail + 1)
-                elif event.key == pygame.K_z:  # Increase grid radius
-                    radius += 1
-                    chunks = generate_chunks(radius)
-                elif event.key == pygame.K_s:  # Decrease grid radius
-                    radius = max(1, radius - 1)
-                    chunks = generate_chunks(radius)
-
-                scale = SCALE / radius
-                if last_params != (detail, scale):
-                    for chunk in chunks.values():
-                        chunk.update_detail(detail)
 
         screen.fill((0, 0, 0))
 
         # Display all chunks
-        for (cx, cy), chunk in chunks.items():
-            display_chunk(screen, chunk, color_param, scale)
+        display_chunk(screen, chunk_mesh, SCALE)
 
         pygame.display.flip()
         clock.tick(60)

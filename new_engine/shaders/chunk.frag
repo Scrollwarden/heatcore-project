@@ -5,6 +5,7 @@ layout (location = 0) out vec4 fragColor;
 in vec3 normal;
 in vec3 fragPos;
 in vec3 inColor;
+in float fragRealHeight;
 
 struct Light {
     vec3 position;
@@ -25,7 +26,7 @@ void main() {
     vec3 color;
 
     // Water surface effects
-    if (fragPos.y < 0) {
+    if (fragRealHeight < 0) {
         // Simulate water with a blue tint and reflection
         vec3 reflectDirection = reflect(-viewDirection, Normal);
         vec3 refractDirection = refract(-viewDirection, Normal, 1.0 / 1.33); // Approximate refraction for water
