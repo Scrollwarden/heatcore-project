@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from light import Light
 from scene import Scene
-from hud_elements import UI1, UI2, UI2_1, DEFAULT_CONTROLS  # Import UI classes and the default key bindings
+from hud_elements import UI1, UI2, UI2_1, DEFAULT_CONTROLS
 
 # --------------------------------------------------------------------- #
 # Deco FPS format
@@ -104,31 +104,25 @@ class GraphicsEngine:
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
         pg.display.set_mode(self.window_size, flags=pg.OPENGL | pg.DOUBLEBUF)
 
-        # Start with the mouse hidden (for world movement)
         pg.mouse.set_visible(False)
 
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
 
         self.light = Light()
-        # IMPORTANT: Ensure your Camera update method consults self.engine.controls!
         self.camera = Camera(self)
         self.scene = Scene(self)
         self.logs = Logs()
 
-        # Create a Pygame Surface for UI drawing (2D overlay).
         self.ui_surface = pg.Surface(self.window_size, pg.SRCALPHA)
 
-        # Create UI elements.
-        self.ui1 = UI1(self.ui_surface)     # In-game HUD
-        self.ui2 = UI2(self.ui_surface)     # Main futuristic menu
-        self.ui2_1 = UI2_1(self.ui_surface)   # Control settings submenu
+        self.ui1 = UI1(self.ui_surface)
+        self.ui2 = UI2(self.ui_surface)
+        self.ui2_1 = UI2_1(self.ui_surface)
 
-        # Create a ModernGL texture to hold the UI surface data.
         self.ui_texture = self.context.texture(self.window_size, 4)
         self.ui_texture.filter = (mgl.LINEAR, mgl.LINEAR)
 
-        # Create a simple program + quad to render the UI texture.
         self.prog = self.context.program(
             vertex_shader="""
             #version 330
@@ -165,47 +159,36 @@ class GraphicsEngine:
             self.prog, self.vbo, 'in_pos', 'in_uv'
         )
 
-        # Import default controls from the UI module.
         self.controls = DEFAULT_CONTROLS.copy()
 
         print("Graphics engine initialized successfully")
 
-    # ------------------------------------------------------------ #
-    # Main Loop Methods
-    # ------------------------------------------------------------ #
+
     def check_events(self):
         for event in pg.event.get():
-            # Global quit events.
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 self.scene.destroy()
                 pg.quit()
                 self.logs.display_windows()
                 sys.exit()
 
-            # If the control settings submenu (UI2-1) is active, forward events to it.
             if self.ui2_1.active:
                 self.ui2_1.handle_event(event)
                 continue
-            # Else if the main menu (UI2) is active, forward events to it.
             elif self.ui2.active:
                 self.ui2.handle_event(event)
                 continue
             else:
-                # When no menu is active, check if the Toggle Menu key (from current bindings) was pressed.
                 if event.type == pg.KEYDOWN and event.key == self.controls["Toggle Menu"]:
                     self.ui2.active = True
                     pg.mouse.set_visible(True)
 
-            # (Other game events can be processed here if needed.)
 
-        # Menu switching:
-        # If UI2 requested the control settings submenu, switch to UI2-1.
         if self.ui2.controls_requested:
             self.ui2.controls_requested = False
             self.ui2_1.active = True
             pg.mouse.set_visible(True)
 
-        # If no menu is active, ensure the mouse is hidden.
         if not self.ui2.active and not self.ui2_1.active:
             pg.mouse.set_visible(False)
 
@@ -213,12 +196,10 @@ class GraphicsEngine:
         self.time = pg.time.get_ticks() * 0.001
 
     def render(self):
-        # --- Clear the 3D scene ---
         self.context.clear(color=(0.08, 0.16, 0.18, 1.0))
         self.scene.render()
 
-        # --- Draw UI elements onto the Pygame surface ---
-        self.ui_surface.fill((0, 0, 0, 0))  # Clear with full transparency
+        self.ui_surface.fill((0, 0, 0, 0))
 
         if self.ui2_1.active:
             self.ui2_1.draw()
@@ -227,12 +208,11 @@ class GraphicsEngine:
         else:
             self.ui1.draw(self.camera.yaw)
 
-        # --- Update the UI texture and render it ---
         ui_texture_data = pg.image.tostring(self.ui_surface, "RGBA", True)
         self.ui_texture.write(ui_texture_data)
 
-        self.context.disable(mgl.DEPTH_TEST)    # Render UI on top
-        self.context.enable(mgl.BLEND)          # Enable alpha blending
+        self.context.disable(mgl.DEPTH_TEST)
+        self.context.enable(mgl.BLEND)
         self.context.blend_func = (mgl.SRC_ALPHA, mgl.ONE_MINUS_SRC_ALPHA)
 
         self.ui_texture.use(location=0)
@@ -250,15 +230,12 @@ class GraphicsEngine:
             self.get_time()
             self.check_events()
 
-            # Only update camera (and world movement) if no menu is active.
             if not (self.ui2.active or self.ui2_1.active):
-                self.camera.update()  # Make sure your Camera uses self.engine.controls for movement
+                self.camera.update()
 
-            # Update shader programs if needed.
             for shader_program in self.scene.shader_programs.values():
                 shader_program.update()
 
-            # Update control mappings from UI2-1 so new bindings take effect.
             if not self.ui2_1.active:
                 self.controls = self.ui2_1.bindings
 
