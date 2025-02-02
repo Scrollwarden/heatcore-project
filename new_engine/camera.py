@@ -1,5 +1,6 @@
 import glm
 import pygame as pg
+import hud_elements as k
 
 FOV = 50
 NEAR = 0.1
@@ -61,17 +62,17 @@ class Camera:
     def move(self):
         velocity = SPEED * self.app.delta_time
         keys = pg.key.get_pressed()
-        if keys[pg.K_z]:
+        if keys[k.DEFAULT_CONTROLS["Forward"]]:
             self.position += self.movement_forward * velocity
-        if keys[pg.K_s]:
+        if keys[k.DEFAULT_CONTROLS["Backward"]]:
             self.position -= self.movement_forward * velocity
-        if keys[pg.K_d]:
+        if keys[k.DEFAULT_CONTROLS["Strafe Right"]]:
             self.position += self.movement_right * velocity
-        if keys[pg.K_q]:
+        if keys[k.DEFAULT_CONTROLS["Strafe Left"]]:
             self.position -= self.movement_right * velocity
-        if keys[pg.K_a]:
+        if keys[k.DEFAULT_CONTROLS["Up"]]:
             self.position += self.movement_up * velocity
-        if keys[pg.K_e]:
+        if keys[k.DEFAULT_CONTROLS["Down"]]:
             self.position -= self.movement_up * velocity
 
     def get_view_matrix(self):

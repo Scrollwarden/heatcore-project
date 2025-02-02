@@ -5,79 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="Ajoute une possibilité de reset">
-      <change afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/chunk.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/scene.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/camera.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/light.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/meshes/base_mesh.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/meshes/chunk_mesh.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/shader_program.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/shaders/chunk.frag" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_engine/shaders/chunk.vert" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/heatcore-project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/heatcore-project.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.idea/3d Engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.idea/3d Engine.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/chunk_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/chunk_class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/light.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/light.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/objects/cat/20430_Cat_v1_NEW.mtl" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/objects/cat/20430_Cat_v1_NEW.mtl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/objects/cat/20430_Cat_v1_NEW.obj" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/objects/cat/20430_Cat_v1_NEW.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/objects/cat/20430_Cat_v1_NEW.obj.bin" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/objects/cat/20430_Cat_v1_NEW.obj.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/objects/cat/20430_Cat_v1_NEW.obj.json" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/objects/cat/20430_Cat_v1_NEW.obj.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/objects/cat/20430_cat_diff_v1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/objects/cat/20430_cat_diff_v1.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/scene.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/scene_renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/scene_renderer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shader_program.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shader_program.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/advanced_skybox.frag" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/advanced_skybox.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/advanced_skybox.vert" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/advanced_skybox.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/default.frag" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/default.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/default.vert" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/default.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/shadow_map.frag" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/shadow_map.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/shadow_map.vert" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/shadow_map.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/skybox.frag" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/skybox.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/shaders/skybox.vert" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/shaders/skybox.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/texture.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/texture.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/img.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/img.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/img_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/img_1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/img_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/img_2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/back.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/back.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/bottom.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/bottom.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/cubemap.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/cubemap.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/front.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/front.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/left.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/left.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/right.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/right.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox/top.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox/top.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/back.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/back.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/bottom.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/bottom.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/front.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/front.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/left.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/left.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/right.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/right.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/skybox.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/skybox.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/skybox1/top.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/skybox1/top.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/textures/test.png" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/textures/test.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/vao.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/vao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/3d Engine/vbo.py" beforeDir="false" afterPath="$PROJECT_DIR$/3D_engine_tutorial_reference/vbo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/chunk.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/chunk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/light.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/light.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/multiproccessing tests/implementation_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/multiproccessing tests/implementation_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/multiproccessing tests/pool_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/multiproccessing tests/pool_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/multiproccessing tests/queue_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/multiproccessing tests/queue_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/multiproccessing tests/workers_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/multiproccessing tests/workers_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/scene.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/shaders/default.frag" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/shaders/default.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/shaders/default.vert" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/shaders/default.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/world_3d/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/alt_engines_references/old_chunk_3D_engine/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HUD/hud_elements.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/hud_elements.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HUD/pygame hud.py" beforeDir="false" afterPath="$PROJECT_DIR$/HUD/pygame hud.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,61 +25,134 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Astralle&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Scrollwarden/heatcore-project.git&quot;,
+    &quot;accountId&quot;: &quot;fcd8465b-41de-4d06-af59-f92c028d777a&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="2pdG36PR1yJU6goqysmRuNDo9YK" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.Chunk_Generator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_class.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_mesh.executor&quot;: &quot;Run&quot;,
-    &quot;Python.cube_ui.executor&quot;: &quot;Run&quot;,
-    &quot;Python.implementation_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.light.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptest2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptest3.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptestimplementation.executor&quot;: &quot;Run&quot;,
-    &quot;Python.multi_processing_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scene.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.world_3d_preview.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/cosmo/Documents/github/heatcore-project/new_engine&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Chunk_Generator.executor": "Run",
+    "Python.chunk.executor": "Run",
+    "Python.chunk_class.executor": "Run",
+    "Python.cube_ui.executor": "Run",
+    "Python.hud_elements.executor": "Run",
+    "Python.implementation_test.executor": "Run",
+    "Python.light.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.mptest2.executor": "Run",
+    "Python.mptest3.executor": "Run",
+    "Python.mptestimplementation.executor": "Run",
+    "Python.multi_processing_test.executor": "Run",
+    "Python.scene.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.world_3d_preview.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "ToolWindow.Plots.ShowToolbar": "false",
+    "git-widget-placeholder": "Gaspard-UI",
+    "last_opened_file_path": "/Users/cosmo/Documents/github/heatcore-project/world_3d/chunk_like",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/new_engine" />
-      <recent name="$PROJECT_DIR$/vowel_tutorial" />
       <recent name="$PROJECT_DIR$/world_3d/chunk_like" />
       <recent name="$PROJECT_DIR$/world_3d/3D engine" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/alt_engines_references" />
-      <recent name="$PROJECT_DIR$/new_engine" />
-      <recent name="$PROJECT_DIR$/vowel_tutorial/shaders" />
-      <recent name="$PROJECT_DIR$/vowel_tutorial/meshes" />
-      <recent name="$PROJECT_DIR$/vowel_tutorial" />
+      <recent name="C:\Users\gaspa\Desktop\Principale\Lycée\NSI terminale\heatcore-project\new_engine" />
+      <recent name="$PROJECT_DIR$/world_3d/multiproccessing tests" />
+      <recent name="$PROJECT_DIR$/world_3d" />
     </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="hud_elements" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="heatcore-project" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/new_engine" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/new_engine/hud_elements.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="heatcore-project" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/new_engine" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/new_engine/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main" />
+        <item itemvalue="Python.hud_elements" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-884f5ed5d46b-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.22855.92" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23339.19" />
+        <option value="bundled-python-sdk-0029f7779945-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23339.19" />
       </set>
     </attachedChunks>
   </component>
@@ -158,6 +164,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1733088340335</updated>
+      <workItem from="1738066048593" duration="583000" />
+      <workItem from="1738222366366" duration="720000" />
+      <workItem from="1738262045395" duration="6684000" />
+      <workItem from="1738332569437" duration="1555000" />
+      <workItem from="1738502094960" duration="7446000" />
     </task>
     <task id="LOCAL-00001" summary="Ajoute une possibilité de reset">
       <option name="closed" value="true" />
@@ -170,8 +181,26 @@
     <option name="localTasksCounter" value="2" />
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Ajoute une possibilité de reset" />
     <option name="LAST_COMMIT_MESSAGE" value="Ajoute une possibilité de reset" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/heatcore_project$main.coverage" NAME="main Coverage Results" MODIFIED="1738516050949" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
+    <SUITE FILE_PATH="coverage/heatcore_project$hud_elements.coverage" NAME="hud_elements Coverage Results" MODIFIED="1738515851432" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
   </component>
 </project>

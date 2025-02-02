@@ -1,6 +1,6 @@
 import pygame
 import sys
-from hud_elements import create_compass, create_heatcore_bar
+from new_engine.hud_elements import create_compass, create_heatcore_bar
 
 """This file is purely for HUD testing purposes"""
 """It is not to be refferenced anywhere and will be deleted later on"""

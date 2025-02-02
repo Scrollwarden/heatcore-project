@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4">
   <component name="PyDocumentationSettings">
-    <option name="format" value="GOOGLE" />
-    <option name="myDocStringFormat" value="Google" />
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+  <component name="TemplatesService">
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/intel_arti/backup_and_useless/frontweb/templates" />
+      </list>
+    </option>
   </component>
 </module>
