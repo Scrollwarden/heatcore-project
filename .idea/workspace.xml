@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="tout plein d'ajout sur l'ui qui maintenant marche">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/hud_elements.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/hud_elements.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,36 +50,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Chunk_Generator.executor": "Run",
-    "Python.chunk.executor": "Run",
-    "Python.chunk_class.executor": "Run",
-    "Python.cube_ui.executor": "Run",
-    "Python.hud_elements.executor": "Run",
-    "Python.implementation_test.executor": "Run",
-    "Python.light.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.mptest2.executor": "Run",
-    "Python.mptest3.executor": "Run",
-    "Python.mptestimplementation.executor": "Run",
-    "Python.multi_processing_test.executor": "Run",
-    "Python.scene.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.world_3d_preview.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "ToolWindow.Plots.ShowToolbar": "false",
-    "git-widget-placeholder": "Gaspard-UI",
-    "last_opened_file_path": "/Users/cosmo/Documents/github/heatcore-project/world_3d/chunk_like",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Chunk_Generator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.chunk.executor&quot;: &quot;Run&quot;,
+    &quot;Python.chunk_class.executor&quot;: &quot;Run&quot;,
+    &quot;Python.cube_ui.executor&quot;: &quot;Run&quot;,
+    &quot;Python.hud_elements.executor&quot;: &quot;Run&quot;,
+    &quot;Python.implementation_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.light.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mptest2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mptest3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mptestimplementation.executor&quot;: &quot;Run&quot;,
+    &quot;Python.multi_processing_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scene.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.world_3d_preview.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;ToolWindow.Plots.ShowToolbar&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Gaspard-UI&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/cosmo/Documents/github/heatcore-project/world_3d/chunk_like&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/world_3d/chunk_like" />
@@ -89,7 +91,30 @@
       <recent name="$PROJECT_DIR$/world_3d" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.cube_ui">
+    <configuration name="cube_ui" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="heatcore-project" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/intel_arti/cube_v2" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/intel_arti/cube_v2/cube_ui.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="hud_elements" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="heatcore-project" />
       <option name="ENV_FILES" value="" />
@@ -138,6 +163,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.cube_ui" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.hud_elements" />
       </list>
@@ -164,6 +190,8 @@
       <workItem from="1738262045395" duration="6684000" />
       <workItem from="1738332569437" duration="1555000" />
       <workItem from="1738502094960" duration="7899000" />
+      <workItem from="1738584610099" duration="86000" />
+      <workItem from="1738591798689" duration="1030000" />
     </task>
     <task id="LOCAL-00001" summary="Ajoute une possibilité de reset">
       <option name="closed" value="true" />
@@ -204,7 +232,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="tout plein d'ajout sur l'ui qui maintenant marche" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/heatcore_project$main.coverage" NAME="main Coverage Results" MODIFIED="1738516050949" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
+    <SUITE FILE_PATH="coverage/heatcore_project$main.coverage" NAME="main Coverage Results" MODIFIED="1738592832571" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
     <SUITE FILE_PATH="coverage/heatcore_project$hud_elements.coverage" NAME="hud_elements Coverage Results" MODIFIED="1738515851432" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
   </component>
 </project>

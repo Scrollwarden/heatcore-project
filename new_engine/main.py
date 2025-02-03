@@ -166,7 +166,7 @@ class GraphicsEngine:
 
     def check_events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
+            if event.type == pg.QUIT:
                 self.scene.destroy()
                 pg.quit()
                 self.logs.display_windows()
@@ -241,10 +241,10 @@ class GraphicsEngine:
 
             self.render()
 
-            self.delta_time = self.clock.tick(60)
+            self.delta_time = self.clock.tick(200)
             elapsed_time = time.time() - start_time
 
-            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
+            print(f"FPS: {format_fps(elapsed_time, 200)}, Frame Time: {elapsed_time:.3f}s")
 
             num_loaded = len(self.scene.chunks)
             num_loading = len(self.scene.chunks_loading)

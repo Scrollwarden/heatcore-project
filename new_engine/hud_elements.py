@@ -6,9 +6,9 @@ DEFAULT_CONTROLS = {
     "Forward": pg.K_z,
     "Strafe Right": pg.K_d,
     "Backward": pg.K_s,
-    "Up": pg.K_a,
-    "Down": pg.K_e,
-    "Toggle Menu": pg.K_k
+    "Up": pg.K_SPACE,
+    "Down": pg.K_LSHIFT,
+    "Toggle Menu": pg.K_ESCAPE
 }
 
 class CompassBar:
