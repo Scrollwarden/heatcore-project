@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="PARCQUE LOU NE SAIT PAS CODER">
+    <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="UI3 et UI3-1 added&#10;reformated buttons&#10;updated code factoring&#10;demain je vais taper les regles du cube">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intel_arti/cube_v2/cube_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/intel_arti/cube_v2/cube_ui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/hud_elements.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/hud_elements.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -92,7 +91,7 @@
       <recent name="$PROJECT_DIR$/world_3d" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.cube_ui">
+  <component name="RunManager" selected="Python.main">
     <configuration name="cube_ui" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="heatcore-project" />
       <option name="ENV_FILES" value="" />
@@ -164,8 +163,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.cube_ui" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.cube_ui" />
         <item itemvalue="Python.hud_elements" />
       </list>
     </recent_temporary>
@@ -194,7 +193,7 @@
       <workItem from="1738584610099" duration="86000" />
       <workItem from="1738591798689" duration="2131000" />
       <workItem from="1738594060879" duration="528000" />
-      <workItem from="1738600821980" duration="2861000" />
+      <workItem from="1738600821980" duration="5372000" />
     </task>
     <task id="LOCAL-00001" summary="Ajoute une possibilité de reset">
       <option name="closed" value="true" />
@@ -228,7 +227,15 @@
       <option name="project" value="LOCAL" />
       <updated>1738594080551</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="UI3 et UI3-1 added&#10;reformated buttons&#10;updated code factoring&#10;demain je vais taper les regles du cube">
+      <option name="closed" value="true" />
+      <created>1738611841306</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1738611841306</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -250,11 +257,12 @@
     <MESSAGE value="tout plein d'ajout sur l'ui qui maintenant marche" />
     <MESSAGE value="Hud small update and keybinds rebinded" />
     <MESSAGE value="PARCQUE LOU NE SAIT PAS CODER" />
-    <option name="LAST_COMMIT_MESSAGE" value="PARCQUE LOU NE SAIT PAS CODER" />
+    <MESSAGE value="UI3 et UI3-1 added&#10;reformated buttons&#10;updated code factoring&#10;demain je vais taper les regles du cube" />
+    <option name="LAST_COMMIT_MESSAGE" value="UI3 et UI3-1 added&#10;reformated buttons&#10;updated code factoring&#10;demain je vais taper les regles du cube" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/heatcore_project$cube_ui.coverage" NAME="cube_ui Coverage Results" MODIFIED="1738611424904" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/intel_arti/cube_v2" />
-    <SUITE FILE_PATH="coverage/heatcore_project$main.coverage" NAME="main Coverage Results" MODIFIED="1738609901197" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
+    <SUITE FILE_PATH="coverage/heatcore_project$cube_ui.coverage" NAME="cube_ui Coverage Results" MODIFIED="1738616965850" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/intel_arti/cube_v2" />
+    <SUITE FILE_PATH="coverage/heatcore_project$main.coverage" NAME="main Coverage Results" MODIFIED="1738618255646" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
     <SUITE FILE_PATH="coverage/heatcore_project$hud_elements.coverage" NAME="hud_elements Coverage Results" MODIFIED="1738515851432" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/new_engine" />
   </component>
 </project>

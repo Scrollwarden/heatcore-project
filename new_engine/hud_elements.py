@@ -206,8 +206,8 @@ class UI2:
         self.draw_text_with_outline("frozen worlds", self.subtitle_font, (180, 180, 255),
                                     (self.width // 2, 110), outline_color=(0, 0, 0), outline_offset=1)
 
-        self.draw_low_poly_button(self.close_button_rect, (200, 0, 0), "Close")
-        self.draw_low_poly_button(self.play_button_rect, (0, 200, 0), "Play")
+        self.draw_low_poly_button(self.close_button_rect, (200, 0, 0), "Fermer")
+        self.draw_low_poly_button(self.play_button_rect, (0, 200, 0), "Jouer")
         self.draw_low_poly_button(self.controls_button_rect, (0, 0, 200), "Controls")
 
     def handle_event(self, event):
@@ -260,7 +260,7 @@ class UI2_1:
     def draw(self):
         self.screen.blit(self.overlay, (0, 0))
 
-        title_text = self.title_font.render("Control Settings", True, (0, 255, 255))
+        title_text = self.title_font.render("Controls", True, (0, 255, 255))
         title_rect = title_text.get_rect(center=(self.width // 2, 60))
         self.screen.blit(title_text, title_rect)
 
@@ -279,7 +279,7 @@ class UI2_1:
             self.screen.blit(key_text, key_rect)
 
         pg.draw.rect(self.screen, (200, 0, 0), self.back_button_rect)
-        back_text = self.font.render("Back", True, (255, 255, 255))
+        back_text = self.font.render("Retour", True, (255, 255, 255))
         back_rect = back_text.get_rect(center=self.back_button_rect.center)
         self.screen.blit(back_text, back_rect)
 
@@ -375,23 +375,23 @@ class UI3:
         """Draw all the buttons with a simple rectangle and label."""
         # Draw Reset View button
         pg.draw.rect(self.screen, (50, 50, 50), self.reset_view_rect)
-        self._draw_text("Reset View", self.reset_view_rect)
+        self._draw_text("Re-init vue", self.reset_view_rect)
 
         # Draw Reset Game button
         pg.draw.rect(self.screen, (50, 50, 50), self.reset_game_rect)
-        self._draw_text("Reset Game", self.reset_game_rect)
+        self._draw_text("Ressayer", self.reset_game_rect)
 
         # Draw Hint button with usage count
         pg.draw.rect(self.screen, (50, 50, 50), self.hint_rect)
-        self._draw_text(f"Hint ({self.hint_uses})", self.hint_rect)
+        self._draw_text(f"Indice ({self.hint_uses})", self.hint_rect)
 
         # Draw the top-right UI3-1 button
         pg.draw.rect(self.screen, (50, 50, 50), self.ui3_1_button_rect)
-        self._draw_text("UI3-1", self.ui3_1_button_rect)
+        self._draw_text("Infos", self.ui3_1_button_rect)
 
         # Draw the close button
         pg.draw.rect(self.screen, (50, 50, 50), self.close_button_rect)
-        self._draw_text("Close", self.close_button_rect)
+        self._draw_text("Fermer", self.close_button_rect)
 
     def _draw_text(self, text, rect):
         """Helper function to draw centered text within a given rect."""
