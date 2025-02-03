@@ -304,3 +304,128 @@ class UI2_1:
                 print("Back button clicked: Returning to main menu (UI2).")
                 self.active = False
                 self.return_to_ui2 = True
+
+
+class UI3:
+    """
+    This class defines a HUD overlay containing five buttons:
+      - Three main buttons (Reset View, Reset Game, Hint) arranged at the bottom center.
+      - A top‐right button that opens a new UI page (UI3_1).
+      - A close button (placed in the top‐left) that closes UI3 and returns to UI1.
+
+    The “Hint” button has an internal counter (5 usages initially) that is displayed on the button.
+    The constructor expects callback functions for each action.
+    """
+
+    def __init__(self, screen, on_reset_view, on_reset_game, on_hint, on_close, on_open_ui3_1):
+        self.screen = screen
+        self.on_reset_view = on_reset_view
+        self.on_reset_game = on_reset_game
+        self.on_hint = on_hint
+        self.on_close = on_close
+        self.on_open_ui3_1 = on_open_ui3_1
+
+        # Hint button usage count (5 uses available)
+        self.hint_uses = 5
+
+        # Determine positions based on screen dimensions
+        screen_width, screen_height = self.screen.get_size()
+        button_width = 150
+        button_height = 50
+        gap = 20
+
+        # Calculate total width of the three main buttons and start_x so they are centered
+        total_width = 3 * button_width + 2 * gap
+        start_x = (screen_width - total_width) // 2
+        bottom_y = screen_height - button_height - 20  # 20 pixels margin from bottom
+
+        # Define the three main buttons
+        self.reset_view_rect = pg.Rect(start_x, bottom_y, button_width, button_height)
+        self.reset_game_rect = pg.Rect(start_x + button_width + gap, bottom_y, button_width, button_height)
+        self.hint_rect = pg.Rect(start_x + 2 * (button_width + gap), bottom_y, button_width, button_height)
+
+        # Define the top-right button (for opening UI3_1)
+        tr_width = 100
+        tr_height = 50
+        self.ui3_1_button_rect = pg.Rect(screen_width - tr_width - 20, 20, tr_width, tr_height)
+
+        # Define the close button (placed in the top-left)
+        cl_width = 100
+        cl_height = 50
+        self.close_button_rect = pg.Rect(20, 20, cl_width, cl_height)
+
+    def handle_event(self, event):
+        """Call the proper callback when one of the buttons is clicked."""
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_pos = event.pos
+            if self.reset_view_rect.collidepoint(mouse_pos):
+                self.on_reset_view()
+            elif self.reset_game_rect.collidepoint(mouse_pos):
+                self.on_reset_game()
+            elif self.hint_rect.collidepoint(mouse_pos):
+                if self.hint_uses > 0:
+                    self.on_hint()
+                    self.hint_uses -= 1
+            elif self.ui3_1_button_rect.collidepoint(mouse_pos):
+                self.on_open_ui3_1()
+            elif self.close_button_rect.collidepoint(mouse_pos):
+                self.on_close()
+
+    def draw(self):
+        """Draw all the buttons with a simple rectangle and label."""
+        # Draw Reset View button
+        pg.draw.rect(self.screen, (50, 50, 50), self.reset_view_rect)
+        self._draw_text("Reset View", self.reset_view_rect)
+
+        # Draw Reset Game button
+        pg.draw.rect(self.screen, (50, 50, 50), self.reset_game_rect)
+        self._draw_text("Reset Game", self.reset_game_rect)
+
+        # Draw Hint button with usage count
+        pg.draw.rect(self.screen, (50, 50, 50), self.hint_rect)
+        self._draw_text(f"Hint ({self.hint_uses})", self.hint_rect)
+
+        # Draw the top-right UI3-1 button
+        pg.draw.rect(self.screen, (50, 50, 50), self.ui3_1_button_rect)
+        self._draw_text("UI3-1", self.ui3_1_button_rect)
+
+        # Draw the close button
+        pg.draw.rect(self.screen, (50, 50, 50), self.close_button_rect)
+        self._draw_text("Close", self.close_button_rect)
+
+    def _draw_text(self, text, rect):
+        """Helper function to draw centered text within a given rect."""
+        font = pg.font.Font(None, 24)
+        text_surf = font.render(text, True, (255, 255, 255))
+        text_rect = text_surf.get_rect(center=rect.center)
+        self.screen.blit(text_surf, text_rect)
+
+
+class UI3_1:
+    """
+    This class defines a new UI page that is initially a blank page with a 'Next' button.
+    Clicking the next button should call a callback (to link to another UI page).
+    """
+
+    def __init__(self, screen, on_next):
+        self.screen = screen
+        self.on_next = on_next
+        screen_width, screen_height = self.screen.get_size()
+        self.next_button_rect = pg.Rect((screen_width - 150) // 2, screen_height - 70, 150, 50)
+        self.active = True
+
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if self.next_button_rect.collidepoint(event.pos):
+                self.on_next()
+                self.active = False
+
+    def draw(self):
+        # Draw a blank background (for example, black)
+        self.screen.fill((0, 0, 0))
+        # Draw the "Next" button
+        pg.draw.rect(self.screen, (100, 100, 100), self.next_button_rect)
+        font = pg.font.Font(None, 24)
+        text_surf = font.render("Next", True, (255, 255, 255))
+        text_rect = text_surf.get_rect(center=self.next_button_rect.center)
+        self.screen.blit(text_surf, text_rect)
