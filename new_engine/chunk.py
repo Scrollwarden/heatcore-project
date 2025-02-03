@@ -3,9 +3,8 @@ import math
 import noise
 import pygame
 import time
+from new_engine.options import CHUNK_SIZE, LG2_CS
 
-CHUNK_SIZE: int = 16
-LG2_CS: int = int(math.log2(CHUNK_SIZE))
 SCALE = 900 / CHUNK_SIZE
 
 
@@ -55,11 +54,12 @@ class ColorParams:
                        (124, 162,  55), ( 89, 135,  51), # Grass
                        ( 39,  39,  39), ( 67,  57,  47), ( 74,  62,  53), ( 79,  73,  68), # Mountain
                        (255, 255, 255)] # Peak"""
-        self.heights_limit = [0.005, 0.2, 0.25, 0.3, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.85]
-        self.colors = [(50, 45, 47), (80, 60, 57), (120, 83, 65), (174, 146, 87),  # Underwater
+        self.heights_limit = [0.005, 0.25, 0.3, 0.35, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.85]
+        self.colors = [#( 21,  47,  88), ( 25,  54, 100), ( 33,  69, 120), ( 44,  87, 147), # Water
+                       ( 50,  45,  47), ( 80,  60,  57), (120,  83,  65), (174, 146,  87),  # Underwater
                        (245, 222, 154),  # Beach
-                       (124, 162, 55), (89, 135, 51),  # Grass
-                       (39, 39, 39), (67, 57, 47), (74, 62, 53), (79, 73, 68),  # Mountain
+                       (124, 162,  55), ( 89, 135,  51),  # Grass
+                       ( 39,  39,  39), ( 67,  57,  47), ( 74,  62,  53), ( 79,  73,  68),  # Mountain
                        (255, 255, 255)]  # Peak
 
     def get_id_from_noise(self, height: float) -> int:

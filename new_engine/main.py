@@ -1,11 +1,12 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
-from camera import Camera
-from light import Light
-from scene import Scene
+from new_engine.camera import Camera
+from new_engine.light import Light
+from new_engine.scene import Scene
+from new_engine.logs import Logs
 
-from logs import Logs
+from new_engine.options import FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
 
 class GraphicsEngine:
@@ -21,7 +22,7 @@ class GraphicsEngine:
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
         pg.display.set_mode(self.window_size, flags=pg.OPENGL | pg.DOUBLEBUF)
 
-        #pg.event.set_grab(True)
+        pg.event.set_grab(True)
         pg.mouse.set_visible(False)
 
         self.context = mgl.create_context()
@@ -37,12 +38,12 @@ class GraphicsEngine:
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key in (pg.K_p, pg.K_ESCAPE)):
                 self.scene.destroy()
                 pg.quit()
-                self.logs.save("log_data")
+                self.logs.save("new_engine/log_data")
                 self.logs.display_single_window()
                 sys.exit()
 
     def render(self):
-        self.context.clear(color=(0.08, 0.16, 0.18))
+        self.context.clear(color=BACKGROUND_COLOR)
         self.scene.render()
         pg.display.flip()
 
@@ -51,26 +52,29 @@ class GraphicsEngine:
 
     def run(self):
         while True:
-            start_time = time.time()
+            start_time = time.perf_counter()  # High-resolution timer
 
             self.get_time()
             self.check_events()
             self.camera.update()
+            print(self.scene.shader_programs.keys())
             for shader_program in self.scene.shader_programs.values():
                 shader_program.update()
             self.render()
-            self.delta_time = self.clock.tick(60)
+            self.delta_time = self.clock.tick(FPS)
 
-            elapsed_time = time.time() - start_time
-            print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
+            elapsed_time = time.perf_counter() - start_time
             num_loaded = len(self.scene.chunk_meshes)
             num_loading = len(self.scene.chunks_loading)
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
+            
+            print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
+            # print(f"Player position: {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
             print()
 
-def format_fps(delta_time, fps):
+def format_fps(delta_time):
     current_fps = 1 / delta_time
-    diff_percentage = (current_fps - fps) / fps
+    diff_percentage = (current_fps - FPS) / FPS
     if diff_percentage >= -0.1:
         color_code = "\033[32m"  # Green
     elif diff_percentage >= -0.2:

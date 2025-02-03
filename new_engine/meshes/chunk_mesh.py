@@ -1,13 +1,13 @@
 import numpy as np
 from new_engine.meshes.base_mesh import BaseMesh
 from new_engine.chunk import ChunkTerrain, CHUNK_SIZE, LG2_CS
+from new_engine.options import MAX_FALL_DISTANCE, CHUNK_SHADER
 import glm
 
 class ChunkMesh(BaseMesh):
     """Chunk mesh that can update its details
 
     """
-    MAX_FALL_DISTANCE = -25.0
 
     DTYPE = np.dtype([
         ('position', np.float32, (3,)),  # 3 floats for vertex position (x, y, z)
@@ -20,7 +20,7 @@ class ChunkMesh(BaseMesh):
         self.app = app
         self.chunk = chunk
         self.context = self.app.context
-        self.shader_program = self.app.scene.shader_programs['chunk'].get_program()
+        self.shader_program = self.app.scene.shader_programs[CHUNK_SHADER].get_program()
 
         self.vbo_format = '3f 3f 1u1'
         self.attrs = ('in_position', 'in_normal', 'in_id')
@@ -65,8 +65,8 @@ class ChunkMesh(BaseMesh):
 
         self.detail = new_level_of_detail
 
-    def update_model_matrix(self, factor):
-        fall_amount = (factor ** 2) * self.MAX_FALL_DISTANCE
+    def update_model_matrix(self, chunk_distance):
+        fall_amount = (chunk_distance) ** 2 * MAX_FALL_DISTANCE * 0.01
         #tilt_angle = factor * glm.pi / 6
 
         translation = glm.translate(glm.mat4(1.0), glm.vec3(0, fall_amount, 0))

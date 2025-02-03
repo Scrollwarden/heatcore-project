@@ -1,14 +1,9 @@
 import glm
 import pygame as pg
-
-FOV = 50
-NEAR = 0.1
-FAR = 1000
-SPEED = 0.007
-SENSITIVITY = 0.05
+from new_engine.options import FOV, NEAR, FAR, SPEED, SENSITIVITY
 
 class Camera:
-    def __init__(self, app, position=(0, 5, 0), yaw=-90, pitch=0):
+    def __init__(self, app, position=(0.1, 0.07, 0.1), yaw=0, pitch=-20):
         self.app = app
         self.aspect_ratio = app.window_size[0] / app.window_size[1]
         self.position = glm.vec3(position)
@@ -32,8 +27,8 @@ class Camera:
         self.pitch -= mouse_dy * SENSITIVITY
         self.pitch = max(-89, min(89, self.pitch))
         # Recenter the mouse
-        screen_width, screen_height = pg.display.get_surface().get_size()
-        pg.mouse.set_pos(screen_width // 2, screen_height // 2)
+        #screen_width, screen_height = pg.display.get_surface().get_size()
+        #pg.mouse.set_pos(screen_width // 2, screen_height // 2)
 
     def update_camera_vectors(self):
         yaw, pitch = glm.radians(self.yaw), glm.radians(self.pitch)
@@ -46,11 +41,8 @@ class Camera:
         self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
         self.up = glm.normalize(glm.cross(self.right, self.forward))
 
-        self.movement_forward.x = glm.cos(yaw)
-        self.movement_forward.y = 0
-        self.movement_forward.z = glm.sin(yaw)
-        self.movement_forward = glm.normalize(self.movement_forward)
-        self.movement_right = glm.normalize(glm.cross(self.movement_forward, glm.vec3(0, 1, 0)))
+        self.movement_forward = glm.vec3(glm.cos(yaw), 0, glm.sin(yaw))
+        self.movement_right = glm.vec3(-glm.sin(yaw), 0, glm.cos(yaw))
 
     def update(self):
         self.move()

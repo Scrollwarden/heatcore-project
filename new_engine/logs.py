@@ -114,5 +114,5 @@ class Logs:
 
 if __name__ == '__main__':
     logs = Logs()
-    logs.load("log_data")
+    logs.load("new_engine/log_data")
     logs.display_single_window()

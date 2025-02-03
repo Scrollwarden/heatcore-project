@@ -1,5 +1,6 @@
 import glm
 import numpy as np
+import struct
 
 import os
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,7 @@ class ShaderProgram:
     def update(self):
         self.program['m_view'].write(self.app.camera.view_matrix)
         self.program['camPos'].write(self.app.camera.position)
+        self.program['time'].write(struct.pack('f', self.app.time))
 
     def get_program(self):
         return self.program
