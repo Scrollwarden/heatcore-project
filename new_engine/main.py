@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from light import Light
 from scene import Scene
-from hud_elements import UI1, UI2, UI2_1, DEFAULT_CONTROLS
+from hud_elements import UI1, UI2, UI2_1, UI3, DEFAULT_CONTROLS
 
 # --------------------------------------------------------------------- #
 # Deco FPS format
@@ -119,6 +119,7 @@ class GraphicsEngine:
         self.ui1 = UI1(self.ui_surface)
         self.ui2 = UI2(self.ui_surface)
         self.ui2_1 = UI2_1(self.ui_surface)
+        self.ui3 = None  # <-- NEW: No UI3 active initially.
 
         self.ui_texture = self.context.texture(self.window_size, 4)
         self.ui_texture.filter = (mgl.LINEAR, mgl.LINEAR)
@@ -163,7 +164,6 @@ class GraphicsEngine:
 
         print("Graphics engine initialized successfully")
 
-
     def check_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -172,6 +172,12 @@ class GraphicsEngine:
                 self.logs.display_windows()
                 sys.exit()
 
+            # If UI3 is active, handle its events exclusively.
+            if self.ui3 is not None:
+                self.ui3.handle_event(event)
+                continue
+
+            # Otherwise, if UI2_1 or UI2 are active, forward events there.
             if self.ui2_1.active:
                 self.ui2_1.handle_event(event)
                 continue
@@ -179,17 +185,24 @@ class GraphicsEngine:
                 self.ui2.handle_event(event)
                 continue
             else:
-                if event.type == pg.KEYDOWN and event.key == self.controls["Toggle Menu"]:
+                # Check for key L to launch UI3:
+                if event.type == pg.KEYDOWN and event.key == pg.K_l:
+                    # Create a UI3 instance (make sure UI3 is imported in hud_elements)
+                    from hud_elements import UI3  # Import here if not already imported.
+                    self.ui3 = UI3(self.ui_surface)
+                    pg.mouse.set_visible(True)
+                # Also, check for the Toggle Menu key (e.g. Escape) to trigger UI2.
+                elif event.type == pg.KEYDOWN and event.key == self.controls["Toggle Menu"]:
                     self.ui2.active = True
                     pg.mouse.set_visible(True)
-
 
         if self.ui2.controls_requested:
             self.ui2.controls_requested = False
             self.ui2_1.active = True
             pg.mouse.set_visible(True)
 
-        if not self.ui2.active and not self.ui2_1.active:
+        # Only hide the mouse if none of the menus are active.
+        if not self.ui2.active and not self.ui2_1.active and self.ui3 is None:
             pg.mouse.set_visible(False)
 
     def get_time(self):
@@ -201,7 +214,14 @@ class GraphicsEngine:
 
         self.ui_surface.fill((0, 0, 0, 0))
 
-        if self.ui2_1.active:
+        # Check for UI3 first.
+        if self.ui3 is not None:
+            self.ui3.draw()
+            # When UI3 signals it is done (via its exit_ui3 flag), remove it.
+            if self.ui3.exit_ui3:
+                self.ui3 = None
+                pg.mouse.set_visible(False)
+        elif self.ui2_1.active:
             self.ui2_1.draw()
         elif self.ui2.active:
             self.ui2.draw()
@@ -244,12 +264,12 @@ class GraphicsEngine:
             self.delta_time = self.clock.tick(200)
             elapsed_time = time.time() - start_time
 
-            print(f"FPS: {format_fps(elapsed_time, 200)}, Frame Time: {elapsed_time:.3f}s")
+            #print(f"FPS: {format_fps(elapsed_time, 200)}, Frame Time: {elapsed_time:.3f}s")
 
             num_loaded = len(self.scene.chunks)
             num_loading = len(self.scene.chunks_loading)
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
-            print()
+            #print()
 
 # ------------------------------------------------------------ #
 # Entry Point

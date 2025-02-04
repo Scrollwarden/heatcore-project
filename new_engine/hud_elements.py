@@ -1,5 +1,10 @@
 import sys
 import pygame as pg
+from intel_arti.cube_v2.cube import Cube
+from intel_arti.cube_v2.cube_ui import Renderer, Camera, CubeUI
+import math
+
+
 
 DEFAULT_CONTROLS = {
     "Strafe Left": pg.K_q,
@@ -308,124 +313,147 @@ class UI2_1:
 
 class UI3:
     """
-    This class defines a HUD overlay containing five buttons:
-      - Three main buttons (Reset View, Reset Game, Hint) arranged at the bottom center.
-      - A top‐right button that opens a new UI page (UI3_1).
-      - A close button (placed in the top‐left) that closes UI3 and returns to UI1.
-
-    The “Hint” button has an internal counter (5 usages initially) that is displayed on the button.
-    The constructor expects callback functions for each action.
+    UI3 creates an overlay that displays a cube game interface (similar to cube_ui)
+    along with four buttons:
+      - Reset View button: Resets the camera to its initial view.
+      - Reset Game button: Resets the cube game.
+      - Hint button: Uses a hint (with 5 available hints; remaining count is displayed).
+      - Return button: Closes UI3 and returns to UI1.
     """
 
-    def __init__(self, screen, on_reset_view, on_reset_game, on_hint, on_close, on_open_ui3_1):
-        self.screen = screen
-        self.on_reset_view = on_reset_view
-        self.on_reset_game = on_reset_game
-        self.on_hint = on_hint
-        self.on_close = on_close
-        self.on_open_ui3_1 = on_open_ui3_1
+    def __init__(self, screen):
+        self.screen = screen  # the ui_surface passed from GraphicsEngine
+        self.width, self.height = self.screen.get_size()
+        self.active = True  # UI3 is active when set to True
 
-        # Hint button usage count (5 uses available)
-        self.hint_uses = 5
+        # Define a game area (a subregion where the cube game is rendered)
+        margin = 50
+        self.game_rect = pg.Rect(margin, margin, self.width - 2 * margin, self.height - 200)
+        self.game_surface = pg.Surface((self.game_rect.width, self.game_rect.height))
 
-        # Determine positions based on screen dimensions
-        screen_width, screen_height = self.screen.get_size()
+        # Create cube game objects.
+        # (Here we set initial camera parameters similar to the cube_ui script.)
+        self.camera = Camera(latitude=math.radians(30),
+                             longitude=2 * math.pi / 3,
+                             distance=10.0)
+        # Note: We pass the game area size to the Renderer.
+        self.renderer = Renderer(self.camera, screen_data=pg.math.Vector2(self.game_rect.width, self.game_rect.height))
+        self.cube = Cube()
+        # We use a side_length proportional to the game_rect height.
+        self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
+
+        # Define buttons (positioned along the bottom of the ui surface)
         button_width = 150
         button_height = 50
-        gap = 20
+        bmargin = 20
+        self.buttons = {
+            'reset_view': pg.Rect(bmargin, self.height - button_height - bmargin, button_width, button_height),
+            'reset_game': pg.Rect(bmargin * 2 + button_width, self.height - button_height - bmargin, button_width,
+                                  button_height),
+            'hint': pg.Rect(bmargin * 3 + button_width * 2, self.height - button_height - bmargin, button_width,
+                            button_height),
+            'return': pg.Rect(self.width - button_width - bmargin, self.height - button_height - bmargin, button_width,
+                              button_height)
+        }
+        self.button_color = (0, 128, 255)
+        self.button_border_color = (255, 255, 255)
+        self.hints_remaining = 5
 
-        # Calculate total width of the three main buttons and start_x so they are centered
-        total_width = 3 * button_width + 2 * gap
-        start_x = (screen_width - total_width) // 2
-        bottom_y = screen_height - button_height - 20  # 20 pixels margin from bottom
-
-        # Define the three main buttons
-        self.reset_view_rect = pg.Rect(start_x, bottom_y, button_width, button_height)
-        self.reset_game_rect = pg.Rect(start_x + button_width + gap, bottom_y, button_width, button_height)
-        self.hint_rect = pg.Rect(start_x + 2 * (button_width + gap), bottom_y, button_width, button_height)
-
-        # Define the top-right button (for opening UI3_1)
-        tr_width = 100
-        tr_height = 50
-        self.ui3_1_button_rect = pg.Rect(screen_width - tr_width - 20, 20, tr_width, tr_height)
-
-        # Define the close button (placed in the top-left)
-        cl_width = 100
-        cl_height = 50
-        self.close_button_rect = pg.Rect(20, 20, cl_width, cl_height)
+        # Internal flag to signal exit from UI3
+        self.exit_ui3 = False
 
     def handle_event(self, event):
-        """Call the proper callback when one of the buttons is clicked."""
-        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+        """Handle events for both the cube game and the overlay buttons."""
+        if event.type == pg.MOUSEBUTTONDOWN:
             mouse_pos = event.pos
-            if self.reset_view_rect.collidepoint(mouse_pos):
-                self.on_reset_view()
-            elif self.reset_game_rect.collidepoint(mouse_pos):
-                self.on_reset_game()
-            elif self.hint_rect.collidepoint(mouse_pos):
-                if self.hint_uses > 0:
-                    self.on_hint()
-                    self.hint_uses -= 1
-            elif self.ui3_1_button_rect.collidepoint(mouse_pos):
-                self.on_open_ui3_1()
-            elif self.close_button_rect.collidepoint(mouse_pos):
-                self.on_close()
+            # Check if any button is clicked:
+            for name, rect in self.buttons.items():
+                if rect.collidepoint(mouse_pos):
+                    if name == 'reset_view':
+                        self.reset_view()
+                    elif name == 'reset_game':
+                        self.reset_game()
+                    elif name == 'hint':
+                        self.use_hint()
+                    elif name == 'return':
+                        self.exit_ui3 = True
+                    # If a button was pressed, we don’t pass the event further.
+                    return
+
+        # (Optional) Pass mouse motion events for cube rotation if the pointer is inside the game area.
+        if event.type == pg.MOUSEMOTION:
+            if self.game_rect.collidepoint(event.pos):
+                # Example: if the right mouse button is held down, update the camera.
+                if event.buttons[2]:
+                    rel = event.rel
+                    self.camera.update_camera_from_mouse(delta_x=rel[0], delta_y=rel[1])
+        # You can also handle key events if desired.
+
+    def reset_view(self):
+        """Reset the camera view to its initial parameters."""
+        self.camera.longitude = 2 * math.pi / 3
+        self.camera.latitude = math.pi / 6
+        self.camera.reset_position()
+        self.renderer.reset()
+        self.cube_ui.reset_info()
+        print("Reset view button pressed.")
+
+    def reset_game(self):
+        """Restart the cube game with a new cube."""
+        self.cube = Cube()
+        self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
+        print("Reset game button pressed.")
+
+    def use_hint(self):
+        """Consume one hint (if available) and print a message.
+           In your real game you could call an AI agent or display the suggested move.
+        """
+        if self.hints_remaining > 0:
+            print("Hint used!")
+            self.hints_remaining -= 1
+        else:
+            print("No hints remaining.")
+
+    def update(self, dt):
+        """
+        Update any dynamic elements of the cube game.
+        (For this example no explicit update is needed;
+         however, you might want to add time‐dependent animations here.)
+        """
+        # For example, you could update the cube game state:
+        # self.cube_ui.update(dt)  <-- if CubeUI provided an update() method.
+        pass
 
     def draw(self):
-        """Draw all the buttons with a simple rectangle and label."""
-        # Draw Reset View button
-        pg.draw.rect(self.screen, (50, 50, 50), self.reset_view_rect)
-        self._draw_text("Re-init vue", self.reset_view_rect)
+        """Draw the cube game interface and the overlay buttons onto the UI surface."""
+        # Clear the entire UI surface (with transparency if needed)
+        self.screen.fill((0, 0, 0, 0))
 
-        # Draw Reset Game button
-        pg.draw.rect(self.screen, (50, 50, 50), self.reset_game_rect)
-        self._draw_text("Ressayer", self.reset_game_rect)
+        # Draw a background for the cube game area
+        pg.draw.rect(self.screen, (30, 30, 30), self.game_rect)
+        # Clear the game surface and draw the cube game
+        self.game_surface.fill((0, 0, 0))
+        # Note: We pass a mouse position relative to the game area.
+        local_mouse = pg.math.Vector2(pg.mouse.get_pos()[0] - self.game_rect.x,
+                                      pg.mouse.get_pos()[1] - self.game_rect.y)
+        # The third parameter (False) indicates “no click” in this simple example.
+        self.cube_ui.draw(self.game_surface, local_mouse, False)
+        # Blit the game surface into the designated game area of the UI surface.
+        self.screen.blit(self.game_surface, self.game_rect.topleft)
 
-        # Draw Hint button with usage count
-        pg.draw.rect(self.screen, (50, 50, 50), self.hint_rect)
-        self._draw_text(f"Indice ({self.hint_uses})", self.hint_rect)
-
-        # Draw the top-right UI3-1 button
-        pg.draw.rect(self.screen, (50, 50, 50), self.ui3_1_button_rect)
-        self._draw_text("Infos", self.ui3_1_button_rect)
-
-        # Draw the close button
-        pg.draw.rect(self.screen, (50, 50, 50), self.close_button_rect)
-        self._draw_text("Fermer", self.close_button_rect)
-
-    def _draw_text(self, text, rect):
-        """Helper function to draw centered text within a given rect."""
-        font = pg.font.Font(None, 24)
-        text_surf = font.render(text, True, (255, 255, 255))
-        text_rect = text_surf.get_rect(center=rect.center)
-        self.screen.blit(text_surf, text_rect)
-
-
-class UI3_1:
-    """
-    This class defines a new UI page that is initially a blank page with a 'Next' button.
-    Clicking the next button should call a callback (to link to another UI page).
-    """
-
-    def __init__(self, screen, on_next):
-        self.screen = screen
-        self.on_next = on_next
-        screen_width, screen_height = self.screen.get_size()
-        self.next_button_rect = pg.Rect((screen_width - 150) // 2, screen_height - 70, 150, 50)
-        self.active = True
-
-    def handle_event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-            if self.next_button_rect.collidepoint(event.pos):
-                self.on_next()
-                self.active = False
-
-    def draw(self):
-        # Draw a blank background (for example, black)
-        self.screen.fill((0, 0, 0))
-        # Draw the "Next" button
-        pg.draw.rect(self.screen, (100, 100, 100), self.next_button_rect)
-        font = pg.font.Font(None, 24)
-        text_surf = font.render("Next", True, (255, 255, 255))
-        text_rect = text_surf.get_rect(center=self.next_button_rect.center)
-        self.screen.blit(text_surf, text_rect)
+        # Draw the overlay buttons
+        font = pg.font.SysFont("Arial", 20)
+        for name, rect in self.buttons.items():
+            pg.draw.rect(self.screen, self.button_color, rect)
+            pg.draw.rect(self.screen, self.button_border_color, rect, 2)
+            if name == 'reset_view':
+                text = "Reset View"
+            elif name == 'reset_game':
+                text = "Reset Game"
+            elif name == 'hint':
+                text = f"Hint ({self.hints_remaining})"
+            elif name == 'return':
+                text = "Return"
+            text_surf = font.render(text, True, (255, 255, 255))
+            text_rect = text_surf.get_rect(center=rect.center)
+            self.screen.blit(text_surf, text_rect)

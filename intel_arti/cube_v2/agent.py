@@ -4,12 +4,12 @@ from tensorflow.keras.layers import Dense # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
 import tensorflow as tf
 from random import random, randint
-from generators import StateGenerator
-from cube import Cube
+from intel_arti.cube_v2.generators import StateGenerator
+from intel_arti.cube_v2.cube import Cube
 from copy import deepcopy
 from numpy import ndarray, append
 
-from parameters import *
+from intel_arti.cube_v2.parameters import *
 
 def all_neg(liste : list) :
     for elt in liste :
