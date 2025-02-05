@@ -1,18 +1,16 @@
-import time
-import queue
-import threading
-import math
 import glm
+import numpy as np
+import threading, queue
+import struct
+import time
 
 from new_engine.chunk import ChunkTerrain, ColorParams, PointsHeightParams, PerlinGenerator
 from new_engine.meshes.chunk_mesh import ChunkMesh, CHUNK_SIZE, LG2_CS
-from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, THREADS_LIMIT, TASKS_PER_FRAME, CHUNK_SHADER
-
-from new_engine.shader_program import ShaderProgram
-from collections import deque
+from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, THREADS_LIMIT, TASKS_PER_FRAME
+from new_engine.shader_program import open_shaders
 
 
-class Scene:
+class ChunkManager:
     def __init__(self, app):
         self.radius = 6
         self.radius_squared = self.radius ** 2
@@ -23,7 +21,8 @@ class Scene:
         self.color_params = ColorParams()
         self.noise = PerlinGenerator(self.height_params, self.color_params,
                                      seed=2, scale=100 / INV_NOISE_SCALE, octaves=5)
-        self.shader_programs = {string: ShaderProgram(self.app, self.color_params, string) for string in (CHUNK_SHADER,)}
+        self.chunk_shader = open_shaders(self.app, 'chunk')
+        self.init_shader()
 
         self.result_queue = queue.Queue()
         self.threads = []
@@ -32,10 +31,24 @@ class Scene:
 
         self.chunk_meshes = {}
         self.chunks_loading = set()
-        self.chunks_to_load_queue = deque()
         self.chunks_to_load_dic = {}
         self.chunks_to_load_set = set()
         self.tasks_per_frame = TASKS_PER_FRAME
+    
+    def init_shader(self):
+        # light
+        self.chunk_shader['light.position'].write(self.app.light.position)
+        self.chunk_shader['light.Ia'].write(self.app.light.Ia)
+        self.chunk_shader['light.Id'].write(self.app.light.Id)
+        self.chunk_shader['light.Is'].write(self.app.light.Is)
+        # mvp
+        colors_256 = np.zeros((256, 3), dtype=np.float32)
+        colors_256[:len(self.color_params.colors)] = self.color_params.colors
+        colors_256 *= 1 / 255
+        self.chunk_shader['colors'].write(colors_256.tobytes())
+        self.chunk_shader['m_proj'].write(self.app.camera.m_proj)
+        self.chunk_shader['m_view'].write(self.app.camera.m_view)
+        self.chunk_shader['m_model'].write(glm.mat4())
 
     def generate_chunk_worker(self, coord, detail):
         """Worker function for generating chunks and rendering."""
@@ -43,6 +56,34 @@ class Scene:
         chunk_mesh = ChunkMesh(self.app, chunk)
         chunk_mesh.update_detail(detail)
         self.result_queue.put((coord, chunk_mesh))
+    
+    def generate_chunks(self):
+        """Update chunks and load new ones."""
+        player_position = self.app.camera.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
+        player_chunk_coord = glm.vec2(glm.floor(player_position.x), glm.floor(player_position.y))
+        keys_to_delete = [chunk_coord for chunk_coord in self.chunk_meshes.keys()
+                          if glm.length2(player_position - chunk_coord - 0.5) > self.radius_squared]
+        for key in keys_to_delete:
+            del self.chunk_meshes[key]
+
+        for i in range(-self.radius, self.radius + 1):
+            for j in range(-self.radius, self.radius + 1):
+                chunk_position = player_chunk_coord + (i, j)
+                distance_sq = glm.length2(player_position - chunk_position - 0.5)
+                if distance_sq > self.radius_squared:
+                    continue # Don't load chunks too far away
+
+                chunk_coord = tuple(chunk_position)
+                if chunk_coord in self.chunks_loading:
+                    continue # Don't reload a chunk being loaded loaded
+
+                detail = distance_sq / self.radius_squared
+                if chunk_coord in self.chunk_meshes:
+                    chunk_detail = int(LG2_CS * self.chunk_meshes[chunk_coord].detail)
+                    if chunk_detail == int(LG2_CS * detail):
+                        continue # Don't load a chunk with same detail
+                self.chunks_to_load_dic[chunk_coord] = detail
+                self.chunks_to_load_set.add(chunk_coord)
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames."""
@@ -83,37 +124,16 @@ class Scene:
 
         #print(f"Chunks loading: {self.chunks_loading}")
         #print(f"Chunks that finished loading: {temp}")
+    
+    def update_shader(self):
+        self.chunk_shader['m_view'].write(self.app.camera.view_matrix)
+        self.chunk_shader['camPos'].write(self.app.camera.position)
+        self.chunk_shader['time'].write(struct.pack('f', self.app.time))
 
     def update(self):
-        """Update chunks and load new ones."""
-        player_position = self.app.camera.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
-        player_chunk_coord = glm.vec2(math.floor(player_position.x), math.floor(player_position.y))
-        keys_to_delete = [chunk_coord for chunk_coord in self.chunk_meshes.keys()
-                          if glm.length2(player_position - chunk_coord - 0.5) > self.radius_squared]
-        for key in keys_to_delete:
-            del self.chunk_meshes[key]
-
-        for i in range(-self.radius, self.radius + 1):
-            for j in range(-self.radius, self.radius + 1):
-                chunk_position = player_chunk_coord + (i, j)
-                distance_sq = glm.length2(player_position - chunk_position - 0.5)
-                if distance_sq > self.radius_squared:
-                    continue # Don't load chunks too far away
-
-                chunk_coord = tuple(chunk_position)
-                if chunk_coord in self.chunks_loading:
-                    continue # Don't reload a chunk being loaded loaded
-
-                detail = distance_sq / self.radius_squared
-                if chunk_coord in self.chunk_meshes:
-                    chunk_detail = int(LG2_CS * self.chunk_meshes[chunk_coord].detail)
-                    if chunk_detail == int(LG2_CS * detail):
-                        continue # Don't load a chunk with same detail
-                self.chunks_to_load_dic[chunk_coord] = detail
-                self.chunks_to_load_set.add(chunk_coord)
-
-        # Handle chunk generation and update details
+        self.generate_chunks()
         self.update_chunks()
+        self.update_shader()
 
     def render(self):
         """Render all chunks within the active radius."""
@@ -125,7 +145,7 @@ class Scene:
             if chunk_mesh.detail is None:
                 continue
             distance_sq = (player_position.x - i - 0.5) ** 2 + (player_position.z - j - 0.5) ** 2
-            chunk_mesh.update_model_matrix(math.sqrt(distance_sq))
+            chunk_mesh.update_model_matrix(glm.sqrt(distance_sq))
             chunk_mesh.render()
 
     def destroy(self):
@@ -135,5 +155,5 @@ class Scene:
             t.join()
 
         [obj.destroy() for obj in self.chunk_meshes.values()]
-        [shader.destroy() for shader in self.shader_programs.values()]
+        self.chunk_shader.release()
 

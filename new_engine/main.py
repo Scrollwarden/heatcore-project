@@ -3,8 +3,9 @@ import moderngl as mgl
 import sys, time
 from new_engine.camera import Camera
 from new_engine.light import Light
-from new_engine.scene import Scene
+from new_engine.scene import ChunkManager
 from new_engine.logs import Logs
+from new_engine.meshes.ship_mesh import ShipMesh
 
 from new_engine.options import FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
@@ -29,7 +30,8 @@ class GraphicsEngine:
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         self.light = Light()
         self.camera = Camera(self)
-        self.scene = Scene(self)
+        self.scene = ChunkManager(self)
+        self.player = ShipMesh(self)
         self.logs = Logs()
         print("Graphics engine initialized successfully")
 
@@ -45,6 +47,7 @@ class GraphicsEngine:
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
         self.scene.render()
+        self.player.render()
         pg.display.flip()
 
     def get_time(self):
@@ -57,9 +60,6 @@ class GraphicsEngine:
             self.get_time()
             self.check_events()
             self.camera.update()
-            print(self.scene.shader_programs.keys())
-            for shader_program in self.scene.shader_programs.values():
-                shader_program.update()
             self.render()
             self.delta_time = self.clock.tick(FPS)
 

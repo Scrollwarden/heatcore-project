@@ -20,7 +20,7 @@ class ChunkMesh(BaseMesh):
         self.app = app
         self.chunk = chunk
         self.context = self.app.context
-        self.shader_program = self.app.scene.shader_programs[CHUNK_SHADER].get_program()
+        self.shader_program = self.app.scene.chunk_shader
 
         self.vbo_format = '3f 3f 1u1'
         self.attrs = ('in_position', 'in_normal', 'in_id')
@@ -73,9 +73,6 @@ class ChunkMesh(BaseMesh):
 
         m_model = translation
         self.shader_program['m_model'].write(m_model)
-
-    def render(self):
-        self.vao.render()
 
     def get_byte_size(self):
         return self.vertex_data.nbytes + self.chunk.get_chunk_size()

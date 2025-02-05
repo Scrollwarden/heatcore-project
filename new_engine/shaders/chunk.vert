@@ -70,7 +70,7 @@ float perlinNoise(float x, float z, float t) {
 // Main height function using only Perlin noise (with time)
 float heightValue(float x, float z) {
     float noiseValue = perlinNoise(x, z, time);
-    return 0.03 * (noiseValue - 0.5);
+    return 0.015 * (noiseValue - 0.5);
 }
 
 void main() {
@@ -99,6 +99,7 @@ void main() {
         waveNormal = inNormal;
     }
 
+    fragRealHeight = position.y;
     fragPos = vec3(m_model * vec4(position, 1.0));
     gl_Position = m_proj * m_view * m_model * vec4(position, 1.0);
     inColor = colors[in_id];

@@ -17,7 +17,6 @@ struct Light {
 };
 
 uniform Light light;
-uniform sampler2D u_texture_0;
 uniform vec3 camPos;
 
 void main() {
@@ -29,6 +28,7 @@ void main() {
     // Water surface effects
     if (fragOriginalHeight <= 0) {
         vec3 normal = waveNormal;
+        vec3 waterColor = vec3(0.0, 0.4, 0.7);
 
         // Simulate water with a blue tint and reflection
         vec3 reflectDirection = reflect(-viewDirection, normal);
@@ -36,12 +36,12 @@ void main() {
 
         vec3 reflectionColor = vec3(0.08, 0.16, 0.18) * (1 - fragOriginalHeight);
         vec3 refractionColor = inColor;
-        float fresnelFactor = pow(1.0 - max(dot(viewDirection, normal), 0.0), 3.0);
+        float fresnelFactor = pow(1.0 - max(dot(viewDirection, normal), 0.0), 2.0);
         color = mix(refractionColor, reflectionColor, fresnelFactor);
 
         // Add some blue tint to simulate underwater light absorption
-        color = mix(inColor, vec3(0.0, 0.4, 0.7), 0.7); // Adjust blue tint as needed
-        if (fragOriginalHeight >= -0.01 && abs(fragOriginalHeight - fragRealHeight) <= 0.01) {
+        color = mix(color, waterColor, 0.7); // Adjust blue tint as needed
+        if (fragOriginalHeight >= -0.04 && abs(fragOriginalHeight - fragRealHeight) <= 0.04) {
             color = mix(color, vec3(1.0, 1.0, 1.0), 0.8);
         }
     } else {
