@@ -14,7 +14,7 @@ uniform mat4 m_model;
 
 void main() {
     inNormal = normalize(mat3(transpose(inverse(m_model))) * in_normal);
-    fragPos = vec3(m_model * vec4(position, 1.0));
-    gl_Position = m_proj * m_view * m_model * vec4(position, 1.0);
+    fragPos = vec3(m_model * vec4(in_position, 1.0));
+    gl_Position = m_proj * m_view * m_model * vec4(in_position, 1.0);
     inColor = in_color;
 }

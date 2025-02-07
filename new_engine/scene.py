@@ -12,7 +12,7 @@ from new_engine.shader_program import open_shaders
 
 class ChunkManager:
     def __init__(self, app):
-        self.radius = 6
+        self.radius = 10
         self.radius_squared = self.radius ** 2
         self.app = app
 
@@ -47,7 +47,6 @@ class ChunkManager:
         colors_256 *= 1 / 255
         self.chunk_shader['colors'].write(colors_256.tobytes())
         self.chunk_shader['m_proj'].write(self.app.camera.m_proj)
-        self.chunk_shader['m_view'].write(self.app.camera.m_view)
         self.chunk_shader['m_model'].write(glm.mat4())
 
     def generate_chunk_worker(self, coord, detail):
@@ -59,7 +58,7 @@ class ChunkManager:
     
     def generate_chunks(self):
         """Update chunks and load new ones."""
-        player_position = self.app.camera.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
+        player_position = self.app.player.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
         player_chunk_coord = glm.vec2(glm.floor(player_position.x), glm.floor(player_position.y))
         keys_to_delete = [chunk_coord for chunk_coord in self.chunk_meshes.keys()
                           if glm.length2(player_position - chunk_coord - 0.5) > self.radius_squared]

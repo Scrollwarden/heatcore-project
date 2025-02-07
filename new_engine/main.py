@@ -1,27 +1,26 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
-from new_engine.camera import Camera
+from new_engine.camera import CameraAlt
 from new_engine.light import Light
 from new_engine.scene import ChunkManager
 from new_engine.logs import Logs
-from new_engine.meshes.ship_mesh import ShipMesh
+from new_engine.player import Player
 
-from new_engine.options import FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
+from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
 
 class GraphicsEngine:
-    def __init__(self, window_size: tuple[int, int] = (1600, 900)):
+    def __init__(self):
         self.time = 0
         self.delta_time = 0
-        self.window_size = window_size
 
         pg.init()
         self.clock = pg.time.Clock()
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
-        pg.display.set_mode(self.window_size, flags=pg.OPENGL | pg.DOUBLEBUF)
+        pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags=pg.OPENGL | pg.DOUBLEBUF)
 
         pg.event.set_grab(True)
         pg.mouse.set_visible(False)
@@ -29,9 +28,12 @@ class GraphicsEngine:
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         self.light = Light()
-        self.camera = Camera(self)
+        self.camera = CameraAlt()
+        self.player = Player(self)
+        self.player.mesh.init_shader()
+        self.player.mesh.init_vertex_data()
+        self.player.mesh.init_context()
         self.scene = ChunkManager(self)
-        self.player = ShipMesh(self)
         self.logs = Logs()
         print("Graphics engine initialized successfully")
 
@@ -47,7 +49,7 @@ class GraphicsEngine:
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
         self.scene.render()
-        self.player.render()
+        self.player.mesh.render()
         pg.display.flip()
 
     def get_time(self):
@@ -59,6 +61,7 @@ class GraphicsEngine:
 
             self.get_time()
             self.check_events()
+            self.player.update()
             self.camera.update()
             self.render()
             self.delta_time = self.clock.tick(FPS)

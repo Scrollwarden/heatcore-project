@@ -2,6 +2,7 @@ import numpy as np
 import glm
 from new_engine.meshes.base_mesh import BaseMesh
 from new_engine.shader_program import open_shaders
+from new_engine.options import PLAYER_SCALE
 
 SHIP_FILE_PATH = "3D data/obj/spaceship_player"
 
@@ -14,33 +15,29 @@ class ShipMesh(BaseMesh):
         super().__init__()
         self.app = app
         self.context = self.app.context
-        self.shader_program = open_shaders(self.app, 'chunk')
+        self.shader_program = open_shaders(self.app, 'ship')
 
         self.vbo_format = '3f 3f 3f'
         self.attrs = ('in_position', 'in_normal', 'in_color')
 
         self.vertex_data = None
-        self.init_shader()
-        self.init_vertex_data()
-        self.init_context()
     
     def init_shader(self):
         # light
-        self.shader_program['light.position'].write(self.app.light.position)
+        # self.shader_program['light.position'].write(self.app.light.position)
         self.shader_program['light.Ia'].write(self.app.light.Ia)
         self.shader_program['light.Id'].write(self.app.light.Id)
         self.shader_program['light.Is'].write(self.app.light.Is)
         # mvp
         self.shader_program['m_proj'].write(self.app.camera.m_proj)
-        self.shader_program['m_view'].write(self.app.camera.m_view)
-        self.shader_program['m_model'].write(glm.mat4())
     
     def init_vertex_data(self):
-        self.vertex_data = load_obj_with_colors(f"{SHIP_FILE_PATH}.obj", f"{SHIP_FILE_PATH}.mtl")
+        self.vertex_data = load_obj_with_colors(f"{SHIP_FILE_PATH}.obj", f"{SHIP_FILE_PATH}.mtl", PLAYER_SCALE)
 
     def update_shader(self):
         self.shader_program['m_view'].write(self.app.camera.view_matrix)
         self.shader_program['camPos'].write(self.app.camera.position)
+        self.shader_program['m_model'].write(self.app.player.m_model)
     
     def render(self):
         self.update_shader()
@@ -70,7 +67,7 @@ def load_mtl_colors(mtl_path):
     return materials
 
 
-def load_obj_with_colors(obj_path, mtl_path):
+def load_obj_with_colors(obj_path, mtl_path, scale = 1.0):
     """Load an .obj file and assign colors from its corresponding .mtl file."""
     vertices = []
     normals = []
@@ -131,6 +128,6 @@ def load_obj_with_colors(obj_path, mtl_path):
         
         # Append vertex data (pos, normal, color)
         for v in [v0, v1, v2]:
-            output.append(np.concatenate([v, normal, color]))
+            output.append(np.concatenate([v * scale, normal, color]))
 
     return np.array(output, dtype=np.float32)

@@ -1,6 +1,6 @@
 import glm
 import pygame as pg
-from new_engine.options import FOV, NEAR, FAR, SPEED, SENSITIVITY
+from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FOV, NEAR, FAR, SPEED, SENSITIVITY, SHIP_OFFSET
 
 class Camera:
     def __init__(self, app, position=(0.1, 0.07, 0.1), yaw=0, pitch=-20):
@@ -18,7 +18,6 @@ class Camera:
 
         self.context = app.context
         self.m_proj = self.get_projection_matrix()
-        self.m_view = self.get_view_matrix()
         self.view_matrix = self.get_view_matrix()
 
     def rotate(self):
@@ -72,3 +71,37 @@ class Camera:
     def get_projection_matrix(self):
         return glm.perspective(glm.radians(FOV), self.aspect_ratio, NEAR, FAR)
 
+
+
+import glm
+
+class CameraAlt:
+    def __init__(self):
+        self.position = glm.vec3(0, 0, 0)
+        
+        self.yaw = 0.0
+        self.pitch = 0.0
+        self.roll = 0.0
+        
+        self.forward = glm.vec3(0, 0, -1)
+        self.right = glm.vec3(1, 0, 0)
+        self.up = glm.vec3(0, 1, 0)
+        
+        self.m_proj = glm.perspective(glm.radians(FOV), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
+        self.view_matrix = glm.mat4(1.0)
+    
+    def update(self):
+        # Clamp angles
+        self.pitch = glm.clamp(self.pitch, -89.0, 89.0)
+        self.roll = glm.clamp(self.roll, -180.0, 180.0)
+        
+        rotation = glm.mat4(1.0)
+        rotation = glm.rotate(rotation, glm.radians(self.yaw), glm.vec3(0, 1, 0))
+        rotation = glm.rotate(rotation, glm.radians(self.pitch), glm.vec3(1, 0, 0))
+        rotation = glm.rotate(rotation, glm.radians(self.roll), glm.vec3(0, 0, 1))
+        
+        self.forward = glm.normalize(glm.vec3(rotation * glm.vec4(0, 0, -1, 0)))
+        self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
+        self.up = glm.normalize(glm.cross(self.right, self.forward))
+        
+        self.view_matrix = glm.lookAt(self.position, self.position + self.forward, self.up)

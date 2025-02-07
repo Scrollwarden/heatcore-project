@@ -16,6 +16,7 @@ struct Light {
 uniform Light light;
 uniform vec3 camPos;
 
+
 void main() {
     vec3 viewDirection = normalize(camPos - fragPos);
     vec3 lightDirection = normalize(light.position - fragPos);
