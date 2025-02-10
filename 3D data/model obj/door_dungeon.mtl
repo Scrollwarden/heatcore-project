@@ -1,25 +1,5 @@
 # Blender MTL File: 'door_dungeon.blend'
-# Material Count: 3
-
-newmtl AlienDarkBlueMetal
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 0.004025 0.147027 0.155927
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-
-newmtl AlienDarkMetal
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 0.008568 0.011612 0.006995
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
+# Material Count: 1
 
 newmtl AlienErodedMetal
 Ns 225.000000
