@@ -1,122 +1,42 @@
-import pywavefront
-import numpy as np
-import os
-
-DIR_PATH = os.path.dirname(os.path.abspath(__file__))
-
-
 import numpy as np
 
-def load_mtl_colors(mtl_path):
-    """Parse the .mtl file to extract material colors."""
-    materials = {}
-    current_material = None
+def in_triangle(point, triangle):
+    a, b, c = np.array([np.array([p[0], p[2]]) for p in triangle])
+    p = np.array([point[0], point[2]])
 
-    with open(mtl_path, 'r') as file:
-        for line in file:
-            parts = line.strip().split()
-            if not parts:
-                continue
+    # Compute vectors
+    v0 = c - a
+    v1 = b - a
+    v2 = p - a
 
-            if parts[0] == "newmtl":
-                current_material = parts[1]
-                materials[current_material] = {"Kd": [1.0, 1.0, 1.0]}  # Default white
+    # Compute dot products
+    dot00 = np.dot(v0, v0)
+    dot01 = np.dot(v0, v1)
+    dot02 = np.dot(v0, v2)
+    dot11 = np.dot(v1, v1)
+    dot12 = np.dot(v1, v2)
 
-            elif parts[0] == "Kd" and current_material:
-                materials[current_material]["Kd"] = list(map(float, parts[1:4]))
+    # Compute barycentric coordinates
+    denom = dot00 * dot11 - dot01 * dot01
+    if denom == 0:  # Degenerate triangle
+        return False
 
-    return materials
+    u = (dot11 * dot02 - dot01 * dot12) / denom
+    v = (dot00 * dot12 - dot01 * dot02) / denom
 
-
-def load_obj_with_colors(obj_path, mtl_path):
-    """Load an .obj file and assign colors from its corresponding .mtl file."""
-    vertices = []
-    faces = []
-    face_materials = []
-    
-    # Step 1: Load materials
-    # materials = load_mtl_colors(mtl_path)
-
-    current_material = None
-    with open(obj_path, 'r') as file:
-        for line in file:
-            parts = line.strip().split()
-            if not parts:
-                continue
-
-            if parts[0] == "v":  # Vertex position
-                vertices.append(list(map(float, parts[1:4])))
-
-            elif parts[0] == "usemtl":  # Assign material to next faces
-                current_material = parts[1]
-
-            elif parts[0] == "f":  # Face definition
-                face_indices = [int(p.split('/')[0]) - 1 for p in parts[1:]]
-                faces.append(face_indices)
-                face_materials.append(current_material)  # Store material for this face
-
-    vertices = np.array(vertices, dtype=np.float32)
-    output = []
-
-    # Step 2: Process faces
-    for i, face in enumerate(faces):
-        print(face)
-        v0, v1, v2 = vertices[face]  # Extract 3 vertices of the face
-        
-        # Compute normal using cross product
-        normal = np.cross(v1 - v0, v2 - v0)
-        normal /= np.linalg.norm(normal)  # Normalize
-        
-        # Get material color
-        material_name = face_materials[i]
-        color = [1.0, 1.0, 1.0] # materials.get(material_name, {"Kd": [1.0, 1.0, 1.0]})["Kd"]
-        
-        # Append vertex data (pos, normal, color)
-        for v in [v0, v1, v2]:
-            output.append(np.concatenate([v, normal, color]))
-
-    return np.array(output, dtype=np.float32)
+    # Check if point is inside the triangle
+    return (u >= 0) and (v >= 0) and (u + v <= 1)
 
 
-def detect_flat_triangles(obj_path):
-    """Detects and prints line numbers of flat (degenerate) triangles in an .obj file."""
-    vertices = []
-    flat_faces = []
+a = np.array([5, -3, 8])
+triangle = np.array([
+    [0, 0, 0],
+    [0, 0, 10],
+    [10, 0, 10],
+])
 
-    with open(obj_path, 'r') as file:
-        for line_num, line in enumerate(file, start=1):
-            parts = line.strip().split()
-            if not parts:
-                continue
+print(in_triangle(a, triangle))
+import math
 
-            if parts[0] == "v":  # Store vertex positions
-                vertices.append(list(map(float, parts[1:4])))
-
-            elif parts[0] == "f":  # Face definition
-                face_indices = [int(p.split('/')[0]) - 1 for p in parts[1:]]
-                if len(face_indices) != 3:
-                    continue  # Ignore non-triangular faces
-                
-                # Get triangle vertices
-                v0, v1, v2 = np.array(vertices)[face_indices]
-                
-                # Compute normal
-                normal = np.cross(v1 - v0, v2 - v0)
-                if np.linalg.norm(normal) == 0:
-                    flat_faces.append(line_num)
-
-    # Print results
-    if flat_faces:
-        print(f"Flat triangles detected on lines: {flat_faces}")
-        print(f"Total flat triangles: {len(flat_faces)}")
-    else:
-        print("No flat triangles detected.")
-    
-    return flat_faces  # Return the list if needed
-
-path = f"{DIR_PATH}/../3D data/obj/spaceship_player.obj"
-
-# Example usage:
-list_flat_triangles = detect_flat_triangles(path)
-list_flat_triangles = detect_flat_triangles(f"{DIR_PATH}/test.txt")
-list_flat_triangles = load_obj_with_colors(f"{DIR_PATH}/test.txt", "")
+x = -6.24e-8
+print(math.floor(x))  # Expected: -1

@@ -67,7 +67,6 @@ class ChunkMesh(BaseMesh):
 
     def update_model_matrix(self, chunk_distance):
         fall_amount = (chunk_distance) ** 2 * MAX_FALL_DISTANCE * 0.01
-        #tilt_angle = factor * glm.pi / 6
 
         translation = glm.translate(glm.mat4(1.0), glm.vec3(0, fall_amount, 0))
 

@@ -25,11 +25,11 @@ TASKS_PER_FRAME = 2 # How many threads can we create per frame (do not overload 
 MAX_FALL_DISTANCE = - 0.7 * HEIGHT_SCALE * CHUNK_SCALE # By how much the 10th chunk fall out in the distanceT
 
 # Player mesh
-PLAYER_SCALE = 0.1 * CHUNK_SCALE
+PLAYER_SCALE = 0.02 * CHUNK_SCALE
 
 # Camera
 FOV = 50
-NEAR = 0.1
+NEAR = 0.001
 FAR = 100
 SPEED = 0.01 * CHUNK_SCALE
 SENSITIVITY = 0.05

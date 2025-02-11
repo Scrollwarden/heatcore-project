@@ -32,7 +32,9 @@ class ShipMesh(BaseMesh):
         self.shader_program['m_proj'].write(self.app.camera.m_proj)
     
     def init_vertex_data(self):
-        self.vertex_data = load_obj_with_colors(f"{SHIP_FILE_PATH}.obj", f"{SHIP_FILE_PATH}.mtl", PLAYER_SCALE)
+        rotation = glm.rotate(glm.mat4(1.0), glm.radians(90), glm.vec3(0, 1, 0))
+        self.vertex_data = load_obj_with_colors(f"{SHIP_FILE_PATH}.obj", f"{SHIP_FILE_PATH}.mtl",
+                                                PLAYER_SCALE, rotation)
 
     def update_shader(self):
         self.shader_program['m_view'].write(self.app.camera.view_matrix)
@@ -67,7 +69,7 @@ def load_mtl_colors(mtl_path):
     return materials
 
 
-def load_obj_with_colors(obj_path, mtl_path, scale = 1.0):
+def load_obj_with_colors(obj_path, mtl_path, scale = 1.0, transform_matrix = glm.mat4(1.0)):
     """Load an .obj file and assign colors from its corresponding .mtl file."""
     vertices = []
     normals = []
@@ -125,9 +127,13 @@ def load_obj_with_colors(obj_path, mtl_path, scale = 1.0):
         # Get material color
         material_name = face_materials[i]
         color = [1.0, 1.0, 1.0] # materials.get(material_name, {"Kd": [1.0, 1.0, 1.0]})["Kd"]
-        
+
+        transformed_normal = list(glm.normalize(glm.mat3(glm.transpose(glm.inverse(transform_matrix))) * normal))
+
         # Append vertex data (pos, normal, color)
         for v in [v0, v1, v2]:
-            output.append(np.concatenate([v * scale, normal, color]))
+            vertex = v * scale
+            transformed_vertex = list(transform_matrix * vertex)
+            output.append(np.concatenate([transformed_vertex, transformed_normal, color]))
 
     return np.array(output, dtype=np.float32)

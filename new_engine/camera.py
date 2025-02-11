@@ -105,3 +105,20 @@ class CameraAlt:
         self.up = glm.normalize(glm.cross(self.right, self.forward))
         
         self.view_matrix = glm.lookAt(self.position, self.position + self.forward, self.up)
+
+class CameraFollow:
+    def __init__(self):
+        self.position = glm.vec3(0.0, 0.0, 0.0)
+
+        self.forward = glm.vec3(0, 0, -1)
+        self.right = glm.vec3(1, 0, 0)
+        self.up = glm.vec3(0, 1, 0)
+
+        self.m_proj = glm.perspective(glm.radians(FOV), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
+        self.view_matrix = glm.mat4(1.0)
+
+    def update(self):
+        self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
+        self.up = glm.normalize(glm.cross(self.right, self.forward))
+
+        self.view_matrix = glm.lookAt(self.position, self.position + self.forward, self.up)

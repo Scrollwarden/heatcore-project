@@ -1,11 +1,11 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
-from new_engine.camera import CameraAlt
+from new_engine.camera import CameraAlt, CameraFollow
 from new_engine.light import Light
 from new_engine.scene import ChunkManager
 from new_engine.logs import Logs
-from new_engine.player import Player
+from new_engine.player import Player, PlayerFollow
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
@@ -28,8 +28,8 @@ class GraphicsEngine:
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         self.light = Light()
-        self.camera = CameraAlt()
-        self.player = Player(self)
+        self.camera = CameraFollow()
+        self.player = PlayerFollow(self)
         self.player.mesh.init_shader()
         self.player.mesh.init_vertex_data()
         self.player.mesh.init_context()
@@ -43,8 +43,10 @@ class GraphicsEngine:
                 self.scene.destroy()
                 pg.quit()
                 self.logs.save("new_engine/log_data")
-                self.logs.display_single_window()
+                #self.logs.display_single_window()
                 sys.exit()
+            if event.type == pg.MOUSEWHEEL:
+                self.player.camera_zoom *= 0.97 ** event.y
 
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
@@ -63,6 +65,7 @@ class GraphicsEngine:
             self.check_events()
             self.player.update()
             self.camera.update()
+
             self.render()
             self.delta_time = self.clock.tick(FPS)
 
@@ -72,7 +75,11 @@ class GraphicsEngine:
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
-            # print(f"Player position: {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
+            print(f"Real player position: {self.player.position}")
+            print(f"Camera real position: {self.camera.position}")
+            print(f"Camera forward: {self.camera.forward}")
+            print(f"Relative position of player: {self.player.position / (CHUNK_SIZE * CHUNK_SCALE)}")
+            print(f"Camera relative position   : {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
             print()
 
 def format_fps(delta_time):

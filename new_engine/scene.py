@@ -3,16 +3,43 @@ import numpy as np
 import threading, queue
 import struct
 import time
+import math
 
 from new_engine.chunk import ChunkTerrain, ColorParams, PointsHeightParams, PerlinGenerator
 from new_engine.meshes.chunk_mesh import ChunkMesh, CHUNK_SIZE, LG2_CS
 from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
 
+def in_triangle(point, triangle):
+    a, b, c = np.array([np.array([p[0], p[2]]) for p in triangle])
+    p = np.array([point[0], point[2]])
+
+    # Compute vectors
+    v0 = c - a
+    v1 = b - a
+    v2 = p - a
+
+    # Compute dot products
+    dot00 = np.dot(v0, v0)
+    dot01 = np.dot(v0, v1)
+    dot02 = np.dot(v0, v2)
+    dot11 = np.dot(v1, v1)
+    dot12 = np.dot(v1, v2)
+
+    # Compute barycentric coordinates
+    denom = dot00 * dot11 - dot01 * dot01
+    if denom == 0:  # Degenerate triangle
+        return False
+
+    u = (dot11 * dot02 - dot01 * dot12) / denom
+    v = (dot00 * dot12 - dot01 * dot02) / denom
+
+    # Check if point is inside the triangle
+    return (u >= 0) and (v >= 0) and (u + v <= 1)
 
 class ChunkManager:
     def __init__(self, app):
-        self.radius = 10
+        self.radius = 5
         self.radius_squared = self.radius ** 2
         self.app = app
 
@@ -156,3 +183,47 @@ class ChunkManager:
         [obj.destroy() for obj in self.chunk_meshes.values()]
         self.chunk_shader.release()
 
+    def get_height(self, position):
+        chunk_position = np.array(position.xz / (CHUNK_SIZE * CHUNK_SCALE))
+        print(f"Player position relative to chunks: {chunk_position}")
+        int_pos = tuple(int(ele) for ele in chunk_position)
+        print(f"The chunk in question: {int_pos}")
+        print(f"Check for chunk loaded: {self.chunk_meshes.keys()}")
+
+        if int_pos not in self.chunk_meshes:
+            print(f"The player chunk is not loaded yet")
+            return HEIGHT_SCALE * CHUNK_SCALE
+
+        chunk_mesh = self.chunk_meshes[int_pos]
+        print(f"Chunk mesh: {chunk_mesh}")
+        print(f"The first vertex of the mesh:")
+        print(chunk_mesh.vertex_data[0])
+        print(f"The last vertex of the mesh")
+        print(chunk_mesh.vertex_data[-1])
+
+        step = 1 << int(LG2_CS * chunk_mesh.detail)
+        number_vertex_per_line = CHUNK_SIZE // step
+        scaled_pos = (chunk_position - int_pos) * number_vertex_per_line
+        scaled_pos = tuple(math.floor(ele) for ele in scaled_pos)
+        print(f"Scaled position of player in the chunk: {scaled_pos}")
+        index = int(6 * (scaled_pos[1] + number_vertex_per_line * scaled_pos[0]))
+        print(f"Actual index: {index}")
+        print(f"Gives out triangle:")
+        print(chunk_mesh.vertex_data[index: index + 3])
+        print(f"And triangle:")
+        print(chunk_mesh.vertex_data[index + 3: index + 6])
+
+        for i in range(2):
+            print(index + 3 * i, index + 3 * (i + 1))
+            data = chunk_mesh.vertex_data[index + 3 * i: index + 3 * (i + 1)]
+            print("Position and data:", position, "\n", data)
+            triangle = np.array([data[i][0] for i in range(3)])
+            print("triangle", triangle)
+            if in_triangle(position, triangle):
+                x1, y1, z1 = triangle[0]
+                a, b, c = data[0][1]
+                x, z = position[0], position[2]
+                d = - np.dot([a, b, c], [x1, y1, z1])
+                return - (d + np.dot([a, c], [x, z])) / b
+
+        return HEIGHT_SCALE * CHUNK_SCALE
