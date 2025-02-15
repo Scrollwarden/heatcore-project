@@ -2,7 +2,7 @@ import glm
 import pygame as pg
 
 from new_engine.meshes.ship_mesh import ShipMesh
-from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE
+from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, CHUNK_SIZE
 
 FORWARD_FRICTION = 0.98
 YAW_FRICTION = 0.97
@@ -13,10 +13,16 @@ FORWARD_ACCELERATION = 0.001 * CHUNK_SCALE
 BACKWARD_ACCELERATION = 0.5 * FORWARD_ACCELERATION
 ROLL_ACCELERATION = 0.001
 MAX_ROLL_SPEED = 5.0
-MAX_SPEED = 0.01 * CHUNK_SCALE
+MAX_SPEED = 0.03 * CHUNK_SCALE
 MIN_SPEED = - 0.5 * MAX_SPEED
 CAMERA_ZOOM_SCALE = 0.5
-CAMERA_SMOOTHNESS = 0.1
+CAMERA_SMOOTHNESS = 0.3
+PITCH_SMOOTHNESS = 0.02
+
+# Apply vertical velocity based on height difference
+GRAVITY = 0.05  # Controls how fast the ship falls
+BOUNCE_FORCE = 0.005  # Pushes the ship up when too low
+DAMPING = 0.9  # Damping factor to avoid oscillations
 
 def same_sign(a, b):
     return a * b >= 0
@@ -177,6 +183,7 @@ class PlayerFollow:
         self.position = glm.vec3(0.0, 1.0, 0.0)
         self.velocity = 0.0
         self.angular_velocity = 0.0
+        self.vertical_velocity = 0.0
 
         self.forward = glm.vec3(0.0, 0.0, -1.0)
         self.right = glm.vec3(1.0, 0.0, 0.0)
@@ -215,7 +222,6 @@ class PlayerFollow:
             angular_acceleration += YAW_ACCELERATION
             self.yaw_key_pressed = True
 
-        print(f"Velocity: {self.velocity}")
         self.velocity += self.smooth_accel(acceleration)
         self.angular_velocity += self.smooth_accel(angular_acceleration)
 
@@ -239,39 +245,79 @@ class PlayerFollow:
         self.camera_zoom = glm.clamp(self.camera_zoom, 0.05, 3.0)
 
     def update_vectors(self):
-        """Updates forward, right, and up vectors based on movement."""
+        """Updates forward, right, and up vectors based on movement, keeping forward parallel to terrain."""
         dt = self.app.delta_time
         rotation = glm.angleAxis(self.angular_velocity * dt, glm.vec3(0, 1, 0))
-        self.forward = glm.normalize(glm.vec3(rotation * glm.vec4(self.forward, 0)))
+        self.forward = glm.normalize(glm.vec3(rotation * glm.vec4(self.forward, 0.0)))
 
-        self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
-        self.up = glm.normalize(glm.cross(self.right, self.forward))
+        # Sample terrain height at different positions to get a smooth normal
+        vec_forward = glm.normalize(self.forward) * 0.05 * CHUNK_SCALE * CHUNK_SIZE
+        vec_right = glm.normalize(self.right) * 0.05 * CHUNK_SCALE * CHUNK_SIZE
+        h_center = self.app.scene.get_height(self.position)
+        h_forward = self.app.scene.get_height(self.position + vec_forward)
+        h_right = self.app.scene.get_height(self.position + vec_right)
+        terrain_normal = glm.normalize(glm.cross(
+            glm.vec3(vec_right.x, h_right - h_center, vec_right.z),
+            glm.vec3(vec_forward.x, h_forward - h_center, vec_forward.z)
+        ))
 
-        terrain_height = self.app.scene.get_height(self.position)
-        target_height = terrain_height + HEIGHT_SCALE * 0.05
-        self.position.y = glm.mix(self.position.y, target_height, 0.1)
+        # Adjust up vector
+        self.up = glm.normalize(glm.mix(self.up, terrain_normal, PITCH_SMOOTHNESS))
+        adjusted_forward = glm.normalize(self.forward - glm.dot(self.forward, self.up) * self.up)
+        self.forward = glm.normalize(glm.mix(self.forward, adjusted_forward, PITCH_SMOOTHNESS))
 
+        # Roll the ship
+        roll_angle = glm.clamp(- 20.0 * self.angular_velocity, -glm.radians(25), glm.radians(25))
+        roll_rotation = glm.angleAxis(roll_angle, self.forward)
+        self.up = glm.normalize(glm.vec3(roll_rotation * glm.vec4(self.up, 0.0)))
+        if self.up.y < 0.3:
+            self.up = glm.normalize(glm.vec3(self.up.x, 0.3, self.up.z))
+        self.right = glm.normalize(glm.cross(self.forward, self.up))
+
+        # Update height of ship
+        target_height = h_center + HEIGHT_SCALE * 0.01
+        #self.position.y = glm.mix(self.position.y, target_height, PITCH_SMOOTHNESS)
+        height_diff = self.position.y - target_height
+        print(f"Height diff: {height_diff}")
+        print(self.position.y, target_height)
+        if height_diff < 0.0:  # Too low, push up
+            force_amount = abs(height_diff)
+            self.vertical_velocity += BOUNCE_FORCE * (force_amount ** 3 + 3 * force_amount)
+        elif height_diff > 0.03 * HEIGHT_SCALE:  # Too high, push down
+            force_amount = abs(height_diff if height_diff > HEIGHT_SCALE * 0.4 else 0)
+            self.vertical_velocity -= GRAVITY * force_amount
+        self.vertical_velocity *= DAMPING
+        print(f"Vertical velocity: {self.vertical_velocity}") 
+
+        self.position.y += self.vertical_velocity
         self.position += self.forward * self.velocity
 
     def update_camera(self):
         """Smoothly updates the camera position to follow the player with zoom and slight delay."""
         self.camera_zoom = glm.clamp(self.camera_zoom, 0.05, 3.0)
-        self.pitch_offset = - (3.05 - self.camera_zoom) * 10
+        pitch_offset = - (3.05 - self.camera_zoom) * 10
 
+        camera_forward = glm.normalize(glm.vec3(self.forward.x, 0.0, self.forward.z))
         target_position = self.position - (glm.tan(
-            glm.radians(self.pitch_offset)) * self.up + self.forward) * self.camera_zoom * CAMERA_ZOOM_SCALE
-        print(target_position)
+            glm.radians(pitch_offset)) * self.up + camera_forward) * self.camera_zoom * CAMERA_ZOOM_SCALE
         self.camera.position = glm.mix(self.camera.position, target_position, CAMERA_SMOOTHNESS)
 
         look_at_target = glm.mix(self.camera.position + self.camera.forward, self.position, CAMERA_SMOOTHNESS)
         self.camera.forward = glm.normalize(look_at_target - self.camera.position)
 
     def update_model_matrix(self):
-        """Updates the model matrix for rendering."""
+        """Updates the model matrix for rendering with the correct orientation."""
         translation = glm.translate(glm.mat4(1.0), self.position)
-        look_at_matrix = glm.lookAt(glm.vec3(0.0), self.forward, self.up)
 
-        self.m_model = translation * look_at_matrix
+        # Construct rotation matrix using right, up, and forward vectors
+        rotation = glm.mat4(
+            glm.vec4(self.right, 0.0),  # X-axis
+            glm.vec4(self.up, 0.0),  # Y-axis
+            glm.vec4(-self.forward, 0.0),  # Z-axis (negated to fix the flipped model issue)
+            glm.vec4(0, 0, 0, 1)  # Homogeneous coordinate
+        )
+
+        self.m_model = translation * rotation
 
     def update(self):
         """Calls all update functions in order."""
@@ -281,3 +327,133 @@ class PlayerFollow:
         self.update_vectors()
         self.update_camera()
         self.update_model_matrix()
+
+class PlayerNoChangeInHeight:
+    def __init__(self, app, position = glm.vec3(0.0, 1.0, 0.0)):
+        self.app = app
+        self.camera = app.camera
+        self.camera_zoom = 0.2
+        self.position = glm.vec3(position)
+        self.velocity = 0.0
+        self.yaw = 0.0
+
+        self.forward = glm.vec3(0.0, 0.0, -1.0)
+        self.right = glm.vec3(1.0, 0.0, 0.0)
+        self.up = glm.vec3(0.0, 1.0, 0.0)
+
+        self.yaw_key_pressed = False
+        self.forward_key_pressed = False
+
+        self.m_model = glm.mat4(1.0)
+        self.mesh = ShipMesh(app)
+
+    def smooth_accel(self, input_value, factor=3.0):
+        """Applies an ease-in/ease-out acceleration curve."""
+        dt = self.app.delta_time
+        return input_value * (1 - glm.exp(-factor * dt))
+
+    def update_inputs(self):
+        """Handles key inputs and updates acceleration values."""
+        self.forward_key_pressed = False
+        self.yaw_key_pressed = False
+
+        acceleration = 0.0
+        angular_velocity = 0.0
+
+        keys = pg.key.get_pressed()
+        if keys[pg.K_z]:
+            acceleration += FORWARD_ACCELERATION
+            self.forward_key_pressed = True
+        if keys[pg.K_s]:
+            acceleration -= BACKWARD_ACCELERATION
+            self.forward_key_pressed = True
+        if keys[pg.K_d]:
+            angular_velocity -= YAW_ACCELERATION
+            self.yaw_key_pressed = True
+        if keys[pg.K_q]:
+            angular_velocity += YAW_ACCELERATION
+            self.yaw_key_pressed = True
+
+        self.velocity += self.smooth_accel(acceleration)
+        print(f"Velocity: {self.yaw}")
+        self.yaw += self.smooth_accel(angular_velocity)
+
+    def update_friction(self):
+        """Applies friction over time to gradually reduce velocity."""
+        dt = self.app.delta_time
+
+        if not self.forward_key_pressed:
+            self.velocity *= glm.exp(-FORWARD_FRICTION * dt)
+            if abs(self.velocity) < 1e-5:
+                self.velocity = 0.0
+        if not self.yaw_key_pressed:
+            self.yaw *= glm.exp(-0.002 * dt)
+            if abs(self.yaw) < 1e-5:
+                self.yaw = 0.0
+        print(f"Velocity: {self.yaw}")
+
+    def clamp_velocities(self):
+        """Clamps velocity and angular velocity to defined limits."""
+        self.velocity = glm.clamp(self.velocity, 0.0, MAX_SPEED)
+        self.yaw = glm.clamp(self.yaw, -MAX_YAW_SPEED, MAX_YAW_SPEED)
+        print(f"yaw: {self.yaw}")
+        self.camera_zoom = glm.clamp(self.camera_zoom, 0.05, 3.0)
+
+    def update_vectors(self):
+        dt = self.app.delta_time
+
+        # Rotate forward vector for yaw
+        rotation = glm.angleAxis(self.yaw * dt, glm.vec3(0, 1, 0))
+        self.forward = glm.normalize(glm.vec3(rotation * glm.vec4(self.forward, 0.0)))
+
+        # Roll the ship with yaw
+        roll_angle = glm.clamp(- 200 * self.yaw, -glm.radians(60), glm.radians(60))
+        roll_rotation = glm.angleAxis(roll_angle, self.forward)
+        self.up = glm.normalize(glm.vec3(roll_rotation * glm.vec4(0.0, 1.0, 0.0, 0.0)))
+        self.right = glm.normalize(glm.cross(self.forward, self.up))
+
+        # Update position
+        self.position += self.forward * self.velocity
+        print(f"yaw: {self.yaw}")
+
+    def update_camera(self):
+        """Smoothly updates the camera position to follow the player with zoom and slight delay."""
+        self.camera_zoom = glm.clamp(self.camera_zoom, 0.05, 2.0)
+        pitch_offset = glm.radians((self.camera_zoom - 2.05) * 10)
+        camera_displacement = glm.tan(pitch_offset) * self.up + self.forward
+        target_position = self.position - camera_displacement * self.camera_zoom * CAMERA_ZOOM_SCALE
+        if self.yaw_key_pressed and not self.forward_key_pressed:
+            self.camera.position = glm.mix(self.camera.position, target_position, 0.01)
+        else:
+            self.camera.position = glm.mix(self.camera.position, target_position, 0.04)
+
+        look_at_target = glm.mix(self.camera.position + self.camera.forward, self.position, CAMERA_SMOOTHNESS)
+        self.camera.forward = glm.normalize(look_at_target - self.camera.position)
+
+    def update_model_matrix(self):
+        """Updates the model matrix for rendering with the correct orientation."""
+        translation = glm.translate(glm.mat4(1.0), self.position)
+
+        # Construct rotation matrix using right, up, and forward vectors
+        rotation = glm.mat4(
+            glm.vec4(self.right, 0.0),  # X-axis
+            glm.vec4(self.up, 0.0),  # Y-axis
+            glm.vec4(- self.forward, 0.0),  # Z-axis (negated to fix the flipped model issue)
+            glm.vec4(0, 0, 0, 1)  # Homogeneous coordinate
+        )
+
+        self.m_model = translation * rotation
+
+    def update(self):
+        self.update_inputs()
+        self.update_friction()
+        self.clamp_velocities()
+        self.update_vectors()
+        self.update_camera()
+        self.update_model_matrix()
+        print(f"Player forward: {self.forward}")
+        print(f"Player right: {self.right}")
+        print(f"Player up: {self.up}")
+
+    def render(self):
+        self.mesh.render()

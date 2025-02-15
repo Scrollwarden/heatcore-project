@@ -5,7 +5,7 @@ from new_engine.camera import CameraAlt, CameraFollow
 from new_engine.light import Light
 from new_engine.scene import ChunkManager
 from new_engine.logs import Logs
-from new_engine.player import Player, PlayerFollow
+from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
@@ -29,7 +29,7 @@ class GraphicsEngine:
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         self.light = Light()
         self.camera = CameraFollow()
-        self.player = PlayerFollow(self)
+        self.player = PlayerNoChangeInHeight(self)
         self.player.mesh.init_shader()
         self.player.mesh.init_vertex_data()
         self.player.mesh.init_context()
@@ -58,6 +58,7 @@ class GraphicsEngine:
         self.time = pg.time.get_ticks() * 0.001
 
     def run(self):
+        debug = False
         while True:
             start_time = time.perf_counter()  # High-resolution timer
 
@@ -75,11 +76,12 @@ class GraphicsEngine:
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
-            print(f"Real player position: {self.player.position}")
-            print(f"Camera real position: {self.camera.position}")
-            print(f"Camera forward: {self.camera.forward}")
-            print(f"Relative position of player: {self.player.position / (CHUNK_SIZE * CHUNK_SCALE)}")
-            print(f"Camera relative position   : {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
+            if debug:
+                print(f"Real player position: {self.player.position}")
+                print(f"Camera real position: {self.camera.position}")
+                print(f"Camera forward: {self.camera.forward}")
+                print(f"Relative position of player: {self.player.position / (CHUNK_SIZE * CHUNK_SCALE)}")
+                print(f"Camera relative position   : {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
             print()
 
 def format_fps(delta_time):

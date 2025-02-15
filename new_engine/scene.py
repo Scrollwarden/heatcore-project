@@ -183,47 +183,58 @@ class ChunkManager:
         [obj.destroy() for obj in self.chunk_meshes.values()]
         self.chunk_shader.release()
 
-    def get_height(self, position):
+    def get_height(self, position, debug = False, return_normal = False):
         chunk_position = np.array(position.xz / (CHUNK_SIZE * CHUNK_SCALE))
-        print(f"Player position relative to chunks: {chunk_position}")
-        int_pos = tuple(int(ele) for ele in chunk_position)
-        print(f"The chunk in question: {int_pos}")
-        print(f"Check for chunk loaded: {self.chunk_meshes.keys()}")
+        int_pos = tuple(glm.floor(ele) for ele in chunk_position)
+        if debug:
+            print(f"Player position relative to chunks: {chunk_position}")
+            print(f"The chunk in question: {int_pos}")
+            print(f"Check for chunk loaded: {self.chunk_meshes.keys()}")
 
         if int_pos not in self.chunk_meshes:
             print(f"The player chunk is not loaded yet")
+            if return_normal:
+                return HEIGHT_SCALE * CHUNK_SCALE, glm.vec3(0.0, 1.0, 0.0)
             return HEIGHT_SCALE * CHUNK_SCALE
 
         chunk_mesh = self.chunk_meshes[int_pos]
-        print(f"Chunk mesh: {chunk_mesh}")
-        print(f"The first vertex of the mesh:")
-        print(chunk_mesh.vertex_data[0])
-        print(f"The last vertex of the mesh")
-        print(chunk_mesh.vertex_data[-1])
+        if debug:
+            print(f"Chunk mesh: {chunk_mesh}")
+            print(f"The first vertex of the mesh:")
+            print(chunk_mesh.vertex_data[0])
+            print(f"The last vertex of the mesh")
+            print(chunk_mesh.vertex_data[-1])
 
         step = 1 << int(LG2_CS * chunk_mesh.detail)
         number_vertex_per_line = CHUNK_SIZE // step
         scaled_pos = (chunk_position - int_pos) * number_vertex_per_line
-        scaled_pos = tuple(math.floor(ele) for ele in scaled_pos)
-        print(f"Scaled position of player in the chunk: {scaled_pos}")
+        scaled_pos = tuple(min(number_vertex_per_line - 1, math.floor(ele)) for ele in scaled_pos)
         index = int(6 * (scaled_pos[1] + number_vertex_per_line * scaled_pos[0]))
-        print(f"Actual index: {index}")
-        print(f"Gives out triangle:")
-        print(chunk_mesh.vertex_data[index: index + 3])
-        print(f"And triangle:")
-        print(chunk_mesh.vertex_data[index + 3: index + 6])
+        if debug:
+            print(f"Scaled position of player in the chunk: {scaled_pos}")
+            print(f"Actual index: {index}")
+            print(f"Gives out triangle:")
+            print(chunk_mesh.vertex_data[index: index + 3])
+            print(f"And triangle:")
+            print(chunk_mesh.vertex_data[index + 3: index + 6])
 
         for i in range(2):
-            print(index + 3 * i, index + 3 * (i + 1))
+            if debug: print(index + 3 * i, index + 3 * (i + 1))
             data = chunk_mesh.vertex_data[index + 3 * i: index + 3 * (i + 1)]
-            print("Position and data:", position, "\n", data)
+            if debug: print("Position and data:", position, "\n", data)
             triangle = np.array([data[i][0] for i in range(3)])
-            print("triangle", triangle)
-            if in_triangle(position, triangle):
-                x1, y1, z1 = triangle[0]
-                a, b, c = data[0][1]
-                x, z = position[0], position[2]
-                d = - np.dot([a, b, c], [x1, y1, z1])
-                return - (d + np.dot([a, c], [x, z])) / b
+            if debug: print("triangle", triangle)
+            if not in_triangle(position, triangle):
+                continue
+            x1, y1, z1 = triangle[0]
+            a, b, c = data[0][1]
+            x, z = position[0], position[2]
+            d = - np.dot([a, b, c], [x1, y1, z1])
+            height_value = - (d + np.dot([a, c], [x, z])) / b
+            if return_normal:
+                return height_value, glm.vec3(a, b, c)
+            return height_value
 
+        if return_normal:
+            return HEIGHT_SCALE * CHUNK_SCALE, glm.vec3(0.0, 1.0, 0.0)
         return HEIGHT_SCALE * CHUNK_SCALE

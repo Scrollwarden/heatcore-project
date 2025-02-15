@@ -6,16 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="Ajoute une possibilité de reset">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/camera.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/light.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/light.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/log_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/log_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/meshes/chunk_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/meshes/chunk_mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/meshes/ship_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/meshes/ship_mesh.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/options.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/options.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/player.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/scene.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/shaders/chunk.vert" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/shaders/chunk.vert" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -50,7 +50,7 @@ float gradientNoise(float x, float z) {
 
 // Improved Perlin noise function with multiple octaves
 float perlinNoise(float x, float z, float t) {
-    float agitation = 0.01;
+    float agitation = 1.0;
     float total = 0.0;
     float frequency = 1.5;
     float amplitude = 2.0;
@@ -59,7 +59,7 @@ float perlinNoise(float x, float z, float t) {
 
     for (int i = 0; i < octaves; i++) {
         // Add time as a third dimension to simulate evolving waves
-        total += gradientNoise(x * frequency + agitation * sin(t) * t, z * frequency + agitation * cos(t) * t) * amplitude;
+        total += gradientNoise(x * frequency + agitation * sin(t), z * frequency + agitation * cos(t)) * amplitude;
         frequency *= 2.0;
         amplitude *= persistence;
     }
