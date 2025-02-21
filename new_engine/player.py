@@ -1,5 +1,6 @@
 import glm
 import pygame as pg
+import numpy as np
 
 from new_engine.meshes.ship_mesh import ShipMesh
 from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, CHUNK_SIZE
@@ -447,6 +448,175 @@ class PlayerNoChangeInHeight:
     def update(self):
         self.update_inputs()
         self.update_friction()
+        self.clamp_velocities()
+        self.update_vectors()
+        self.update_camera()
+        self.update_model_matrix()
+        print(f"Player forward: {self.forward}")
+        print(f"Player right: {self.right}")
+        print(f"Player up: {self.up}")
+
+    def render(self):
+        self.mesh.render()
+
+
+class SatisfyingPlayer:
+    def __init__(self, app, position=glm.vec3(0.0, 1.0, 0.0)):
+        self.app = app
+        self.camera = app.camera
+        self.camera_zoom = 0.2  # Zoom factor for third-person view
+        self.position = glm.vec3(position)
+        
+        # Movement physics
+        self.velocity = glm.vec3(0.0)  # Linear velocity
+        self.angular_velocity = glm.vec3(0.0)  # Angular velocity (yaw, pitch, roll)
+        
+        # Orientation
+        self.rotations = np.array([0.0, 0.0, 0.0], dtype=np.float64)  # [pitch, yaw, roll]
+        self.forward = glm.vec3(0, 0, -1)
+        self.up = glm.vec3(0, 1, 0)
+        self.right = glm.cross(self.forward, self.up)
+        
+        # Movement parameters
+        self.max_speed = 10.0  # Max linear speed
+        self.max_turn_speed = 1.0  # Max angular speed
+        self.acceleration = 5.0  # Thrust force
+        self.rotation_acceleration = 2.0  # Turning force
+        self.friction = 0.95  # Damping factor for velocity
+        self.angular_friction = 0.9  # Damping for rotations
+        
+        # Camera controls
+        self.yaw_key_pressed = False
+        self.forward_key_pressed = False
+        self.camera_orbit_angle = glm.vec2(0.0, 0.0)  # (yaw, pitch)
+        
+        # Model matrix
+        self.m_model = glm.mat4(1.0)
+        self.mesh = ShipMesh(app)
+
+    def handle_inputs(self):
+        keys = pg.key.get_pressed()
+        input_direction = glm.vec3(0.0)
+        
+        # Thrust controls
+        if keys[pg.K_w]:  # Forward
+            input_direction += self.forward
+        if keys[pg.K_s]:  # Backward
+            input_direction -= self.forward
+        if keys[pg.K_a]:  # Strafe left
+            input_direction -= self.right
+        if keys[pg.K_d]:  # Strafe right
+            input_direction += self.right
+        if keys[pg.K_q]:  # Move down
+            input_direction -= self.up
+        if keys[pg.K_e]:  # Move up
+            input_direction += self.up
+
+        # Normalize input direction if any key is pressed
+        if glm.length(input_direction) > 0:
+            input_direction = glm.normalize(input_direction)
+            self.velocity += input_direction * self.acceleration * self.app.delta_time
+        else:
+            # Apply friction only if no input is in the direction of velocity
+            if glm.length(self.velocity) > 0:
+                direction = glm.normalize(self.velocity)
+                if glm.dot(direction, input_direction) <= 0:
+                    self.velocity *= self.friction
+
+        # Rotation controls
+        angular_input = glm.vec3(0.0)
+        if keys[pg.K_LEFT]:  # Yaw left
+            angular_input.y += 1.0
+        if keys[pg.K_RIGHT]:  # Yaw right
+            angular_input.y -= 1.0
+        if keys[pg.K_UP]:  # Pitch up
+            angular_input.x += 1.0
+        if keys[pg.K_DOWN]:  # Pitch down
+            angular_input.x -= 1.0
+        if keys[pg.K_z]:  # Roll left
+            angular_input.z += 1.0
+        if keys[pg.K_x]:  # Roll right
+            angular_input.z -= 1.0
+        
+        # Apply angular velocity
+        if glm.length(angular_input) > 0:
+            angular_input = glm.normalize(angular_input)
+            self.angular_velocity += angular_input * self.rotation_acceleration * self.app.delta_time
+        else:
+            self.angular_velocity *= self.angular_friction
+    
+    def clamp_velocities(self):
+        # Clamp linear velocity
+        speed = glm.length(self.velocity)
+        if speed > self.max_speed:
+            self.velocity = glm.normalize(self.velocity) * self.max_speed
+        
+        # Clamp angular velocity
+        angular_speed = glm.length(self.angular_velocity)
+        if angular_speed > self.max_turn_speed:
+            self.angular_velocity = glm.normalize(self.angular_velocity) * self.max_turn_speed
+    
+    def update_vectors(self):
+        # Apply angular velocity to rotation
+        self.rotations += self.angular_velocity * self.app.delta_time
+        
+        # Compute new orientation using angular physics
+        yaw_matrix = glm.rotate(glm.mat4(1.0), self.rotations[1], glm.vec3(0, 1, 0))
+        pitch_matrix = glm.rotate(glm.mat4(1.0), self.rotations[0], glm.vec3(1, 0, 0))
+        roll_matrix = glm.rotate(glm.mat4(1.0), self.rotations[2], glm.vec3(0, 0, 1))
+        
+        rotation_matrix = yaw_matrix * pitch_matrix * roll_matrix
+        
+        self.forward = glm.normalize(glm.vec3(rotation_matrix * glm.vec4(0, 0, -1, 1)))
+        self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
+        self.up = glm.normalize(glm.cross(self.right, self.forward))
+        
+        # Apply velocity and gravity
+        self.position += self.velocity * self.app.delta_time
+        terrain_height = self.app.scene.get_height(self.position)
+
+        if self.position.y < terrain_height:
+            # Distance to ground
+            ground_distance = terrain_height - self.position.y
+
+            # Apply a damping effect as the ship nears the ground
+            damping_factor = max(0.1, ground_distance / 2.0)  # Scale down movement smoothly
+
+            self.position.y = terrain_height
+            self.velocity.y *= damping_factor  # Gradual stop instead of an abrupt halt
+
+    def update_camera(self):
+        # Define an offset for the third-person camera
+        camera_offset = glm.vec3(0.0, 2.0, 6.0)  # Adjust height and distance
+
+        # Compute the offset relative to the ship's orientation
+        rotated_offset = glm.vec3(
+            self.right * camera_offset.x +
+            self.up * camera_offset.y +
+            self.forward * camera_offset.z
+        )
+
+        # Target camera position
+        target_camera_pos = self.position + rotated_offset
+
+        # Smooth interpolation for camera movement (prevents jitter)
+        interpolation_factor = 0.1  # Adjust for smoothness
+        self.camera.position = glm.mix(self.camera.position, target_camera_pos, interpolation_factor)
+
+        look_at_target = glm.mix(self.camera.position + self.camera.forward, self.position, CAMERA_SMOOTHNESS)
+        self.camera.forward = glm.normalize(look_at_target - self.camera.position)
+
+    def update_model_matrix(self):
+        translation_matrix = glm.translate(glm.mat4(1.0), self.position)
+        rotation_matrix = glm.mat4(1.0)
+        rotation_matrix = glm.rotate(rotation_matrix, self.rotations.y, glm.vec3(0, 1, 0))
+        rotation_matrix = glm.rotate(rotation_matrix, self.rotations.x, glm.vec3(1, 0, 0))
+        rotation_matrix = glm.rotate(rotation_matrix, self.rotations.z, glm.vec3(0, 0, 1))
+        
+        self.m_model = translation_matrix * rotation_matrix
+
+    def update(self):
+        self.handle_inputs()
         self.clamp_velocities()
         self.update_vectors()
         self.update_camera()

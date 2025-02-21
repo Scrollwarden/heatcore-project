@@ -1,14 +1,12 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
-from new_engine.camera import CameraAlt, CameraFollow
-from new_engine.light import Light
-from new_engine.scene import ChunkManager
-from new_engine.logs import Logs
-from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer
+from camera import Camera
+from shader_program import ShaderProgram
 
-from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
-
+SCREEN_WIDTH, SCREEN_HEIGHT = 1600, 900
+BACKGROUND_COLOR = (0.05, 0.05, 0.1)
+FPS = 60
 
 class GraphicsEngine:
     def __init__(self):
@@ -27,14 +25,7 @@ class GraphicsEngine:
 
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
-        self.light = Light()
-        self.camera = CameraFollow()
-        self.player = SatisfyingPlayer(self)
-        self.player.mesh.init_shader()
-        self.player.mesh.init_vertex_data()
-        self.player.mesh.init_context()
-        self.scene = ChunkManager(self)
-        self.logs = Logs()
+        self.camera = Camera(self)
         print("Graphics engine initialized successfully")
 
     def check_events(self):
@@ -51,7 +42,6 @@ class GraphicsEngine:
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
         self.scene.render()
-        self.player.mesh.render()
         pg.display.flip()
 
     def get_time(self):
@@ -102,6 +92,24 @@ def format_fps(delta_time):
     formatted_fps = f"{current_fps:.3f}"
     return f"{color_code}{formatted_fps}{reset_code}"
 
+
+class Scene:
+    def __init__(self, app):
+        self.app = app
+        self.objects = []
+        self.shader_program = ShaderProgram(app, 'shader')
+    
+    def update(self):
+        self.shader_program.update()
+    
+    def render(self):
+        """Render all chunks within the active radius."""
+        self.update()
+        for obj in self.objects:
+            obj.render()
+
 if __name__ == '__main__':
     app = GraphicsEngine()
     app.run()
+
+

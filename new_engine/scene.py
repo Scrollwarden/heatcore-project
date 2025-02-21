@@ -39,7 +39,7 @@ def in_triangle(point, triangle):
 
 class ChunkManager:
     def __init__(self, app):
-        self.radius = 5
+        self.radius = 20
         self.radius_squared = self.radius ** 2
         self.app = app
 
