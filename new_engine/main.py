@@ -1,17 +1,19 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
+from new_engine.scene import Scene
 from new_engine.camera import CameraAlt, CameraFollow
 from new_engine.light import Light
-from new_engine.scene import ChunkManager
+from new_engine.chunk_manager import ChunkManager
 from new_engine.logs import Logs
-from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer
+from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer, FollowTerrainPlayer
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
 
 class GraphicsEngine:
     def __init__(self):
+        self.mouse_clicks = [0, 0]
         self.time = 0
         self.delta_time = 0
 
@@ -27,20 +29,23 @@ class GraphicsEngine:
 
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
+        
+        
         self.light = Light()
-        self.camera = CameraFollow()
-        self.player = SatisfyingPlayer(self)
-        self.player.mesh.init_shader()
-        self.player.mesh.init_vertex_data()
-        self.player.mesh.init_context()
-        self.scene = ChunkManager(self)
+        self.camera = CameraFollow(self)
+        
+        self.player = FollowTerrainPlayer(self)
+        
+        self.chunk_manager = ChunkManager(self)
+        self.scene = Scene(self)
+        
         self.logs = Logs()
         print("Graphics engine initialized successfully")
 
     def check_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key in (pg.K_p, pg.K_ESCAPE)):
-                self.scene.destroy()
+                self.chunk_manager.destroy()
                 pg.quit()
                 self.logs.save("new_engine/log_data")
                 #self.logs.display_single_window()
@@ -50,6 +55,7 @@ class GraphicsEngine:
 
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
+        self.chunk_manager.render()
         self.scene.render()
         self.player.mesh.render()
         pg.display.flip()
@@ -64,6 +70,7 @@ class GraphicsEngine:
 
             self.get_time()
             self.check_events()
+            
             self.player.update()
             self.camera.update()
 
@@ -71,8 +78,8 @@ class GraphicsEngine:
             self.delta_time = self.clock.tick(FPS)
 
             elapsed_time = time.perf_counter() - start_time
-            num_loaded = len(self.scene.chunk_meshes)
-            num_loading = len(self.scene.chunks_loading)
+            num_loaded = len(self.chunk_manager.chunk_meshes)
+            num_loading = len(self.chunk_manager.chunks_loading)
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")

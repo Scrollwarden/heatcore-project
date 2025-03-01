@@ -11,7 +11,7 @@ CHUNK_SHADER = 'chunk'
 
 # Chunk
 CHUNK_SIZE = 16 # How long is the side of each chunk
-LG2_CS = int(math.log2(CHUNK_SIZE)) # Log2 of the Chunk size in int (useful for detail)
+LG2_CS = math.floor(math.log2(CHUNK_SIZE)) # Log2 of the Chunk size in int (useful for detail)
 
 # Scene
 CHUNK_SCALE = 0.1 # By how much we scale every axis
@@ -28,7 +28,8 @@ MAX_FALL_DISTANCE = - 0.7 * HEIGHT_SCALE * CHUNK_SCALE # By how much the 10th ch
 PLAYER_SCALE = 0.02 * CHUNK_SCALE
 
 # Camera
-FOV = 50
+FOV = 70
+ZOOMED_FOV = 30
 NEAR = 0.001
 FAR = 100
 SPEED = 0.01 * CHUNK_SCALE

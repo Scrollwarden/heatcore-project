@@ -1,8 +1,9 @@
 import pygame as pg
 import moderngl as mgl
 import sys, time
-from camera import Camera
+from camera import Camera, Light
 from shader_program import ShaderProgram
+from obj_base_mesh import DefaultObjMesh
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1600, 900
 BACKGROUND_COLOR = (0.05, 0.05, 0.1)
@@ -12,6 +13,7 @@ class GraphicsEngine:
     def __init__(self):
         self.time = 0
         self.delta_time = 0
+        self.window_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
         pg.init()
         self.clock = pg.time.Clock()
@@ -26,6 +28,8 @@ class GraphicsEngine:
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         self.camera = Camera(self)
+        self.light = Light()
+        self.scene = Scene(self)
         print("Graphics engine initialized successfully")
 
     def check_events(self):
@@ -54,25 +58,14 @@ class GraphicsEngine:
 
             self.get_time()
             self.check_events()
-            self.player.update()
             self.camera.update()
 
             self.render()
             self.delta_time = self.clock.tick(FPS)
 
             elapsed_time = time.perf_counter() - start_time
-            num_loaded = len(self.scene.chunk_meshes)
-            num_loading = len(self.scene.chunks_loading)
-            self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
-            if debug:
-                print(f"Real player position: {self.player.position}")
-                print(f"Camera real position: {self.camera.position}")
-                print(f"Camera forward: {self.camera.forward}")
-                print(f"Relative position of player: {self.player.position / (CHUNK_SIZE * CHUNK_SCALE)}")
-                print(f"Camera relative position   : {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
-            print()
 
 def format_fps(delta_time):
     current_fps = 1 / delta_time
@@ -97,16 +90,23 @@ class Scene:
     def __init__(self, app):
         self.app = app
         self.objects = []
-        self.shader_program = ShaderProgram(app, 'shader')
+        self.load()
+    
+    def load(self):
+        self.objects.append(DefaultObjMesh(self.app, 'starting_base'))
     
     def update(self):
-        self.shader_program.update()
+        for obj in self.objects:
+            obj.render()
     
     def render(self):
         """Render all chunks within the active radius."""
         self.update()
         for obj in self.objects:
             obj.render()
+    
+    def destroy(self):
+        [obj.destroy() for obj in self.objects]
 
 if __name__ == '__main__':
     app = GraphicsEngine()

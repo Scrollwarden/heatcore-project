@@ -1,16 +1,18 @@
 import numpy as np
+from scipy.spatial import Delaunay
 import math
 import noise
 import pygame
 import time
 import bisect
 from scipy.interpolate import CubicSpline
-# CHUNK_SIZE = 64
-# LG2_CS = math.floor(math.log2(CHUNK_SIZE))
-from new_engine.options import CHUNK_SIZE, LG2_CS
+CHUNK_SIZE = 16
+LG2_CS = math.floor(math.log2(CHUNK_SIZE))
+# from new_engine.options import CHUNK_SIZE, LG2_CS
 
-SCALE = 900 / CHUNK_SIZE
-
+SIDE_LENGTH = 4
+SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
+JITTER_STRENGHT = 0.3
 
 class HeightParams:
     __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
@@ -169,6 +171,11 @@ class ChunkTerrain:
         self.vertices = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1, 3), dtype=np.float32)
         self.id_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.uint8)
         self.detail: float | None = None
+    
+    def get_deterministic_rng(self, coord, step):
+        """Returns a consistent jitter displacement based on coordinates and seed.
+        Could take unecessary time."""
+        return np.random.default_rng(abs(hash((*coord, 0x30997A84C, self.noise.seed))))
 
     def generate_detail(self, new_level_of_detail: float | int):
         """Generates vertex positions and IDs for the specified level of detail.
@@ -181,13 +188,24 @@ class ChunkTerrain:
         """
         if new_level_of_detail > (self.detail or float('inf')):
             return
+        
+        default_rng = np.random.default_rng(abs(hash((*self.coord, 0xF1A308E2, self.noise.seed))))
 
         step = 2 ** int(new_level_of_detail * LG2_CS)
         for x in range(0, CHUNK_SIZE + 1, step):
             for y in range(0, CHUNK_SIZE + 1, step):
-                if self.id_data[x, y] != 0:
+                if self.id_data[x, y] != 0:  # Already generated
                     continue
-                sample_x, sample_y = (self.coord * CHUNK_SIZE) + [x, y]
+                
+                # Correctly assign RNG based on position
+                if y in (0, CHUNK_SIZE) or x in (0, CHUNK_SIZE):
+                    rng = self.get_deterministic_rng(self.coord * CHUNK_SIZE + [x, y], step)
+                else:
+                    rng = default_rng
+                jitter_x = rng.uniform(-JITTER_STRENGHT * step, JITTER_STRENGHT * step)
+                jitter_y = rng.uniform(-JITTER_STRENGHT * step, JITTER_STRENGHT * step)
+                
+                sample_x, sample_y = (self.coord * CHUNK_SIZE) + [x + jitter_x, y + jitter_y]
                 noise_value = self.noise.noise_value(sample_x, sample_y)
                 height_value = self.noise.height_params.height_from_noise(noise_value)
                 self.vertices[x, y] = [sample_x, height_value, sample_y]
@@ -214,9 +232,7 @@ class ChunkTerrain:
         return f"ChunkTerrain<coord={self.coord}, detail={self.detail}>"
 
 class ChunkMesh:
-    """Chunk mesh that can update its details
-
-    """
+    """Chunk mesh that can update its details"""
     DTYPE = np.dtype([
         ('position', np.float32, (3,)),  # 3 floats for vertex position (x, y, z)
         ('normal', np.float32, (3,)),  # 3 floats for face normal (nx, ny, nz)
@@ -272,6 +288,71 @@ class ChunkMesh:
     def __repr__(self):
         return f"ChunkMesh<{self.chunk}{", NotLoaded" if self.vertex_data is None else ""}>"
 
+class DelaunayChunkMesh:
+    """Chunk mesh that can update its details using Delaunay triangulation"""
+    DTYPE = np.dtype([
+        ('position', np.float32, (3,)),  # 3 floats for vertex position (x, y, z)
+        ('normal', np.float32, (3,)),  # 3 floats for face normal (nx, ny, nz)
+        ('id', np.uint8)  # 1 unsigned int for triangle ID
+    ])
+
+    def __init__(self, chunk):
+        self.chunk = chunk
+        self.vertex_data = None
+        self.detail = None
+
+    def update_detail(self, new_level_of_detail):
+        if not (type(new_level_of_detail) in (float, int) and 0 <= new_level_of_detail <= 1):
+            raise ValueError(f"The level of detail ({new_level_of_detail}) is not correct,"
+                             "it should be an float between 0 and 1")
+
+        if new_level_of_detail > self.chunk.detail:
+            self.chunk.update_detail(new_level_of_detail)
+
+        step = 1 << int(LG2_CS * new_level_of_detail)
+        
+        # Generate grid of points
+        points = []
+        for x in range(0, CHUNK_SIZE + 1, step):
+            for y in range(0, CHUNK_SIZE + 1, step):
+                points.append((x, y))
+
+        points = np.array(points)
+
+        # Compute the Delaunay triangulation
+        delaunay = Delaunay(points)
+
+        # Create vertex data
+        self.vertex_data = np.zeros(3 * len(delaunay.simplices), dtype=self.DTYPE)
+        
+        index = 0
+        for simplex in delaunay.simplices:
+            # Extract the triangle vertices (in 2D coordinates)
+            vertices = [self.chunk.vertices[pt[0], pt[1]] for pt in points[simplex]]
+            
+            # Compute the normal of the triangle (in 3D space, assuming Z = 0)
+            normal = np.cross(vertices[1] - vertices[0], vertices[2] - vertices[0])
+            normal *= 1 / np.linalg.norm(normal)
+            
+            # Get the face ID
+            face_id = max([self.chunk.id_data[pt[0], pt[1]] for pt in points[simplex]])
+            
+            # Store the vertices, normals, and face IDs for each triangle
+            for i in range(3):
+                self.vertex_data[index + i] = (vertices[i], normal, face_id)
+            
+            index += 3
+
+        self.detail = new_level_of_detail
+
+    def get_byte_size(self):
+        return self.vertex_data.nbytes + self.chunk.get_chunk_size()
+
+    def __repr__(self):
+        return f"ChunkMesh<{self.chunk}{', NotLoaded' if self.vertex_data is None else ''}>"
+
+
+
 # Function to format the size
 def format_size(size_bytes):
     """Formats size in bytes into a human-readable string."""
@@ -294,6 +375,7 @@ def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
         normal = data[0][1]
         face_id = data[0][2]
         color = chunk_mesh.chunk.noise.color_params.get_color_from_id(face_id)
+        # color = [min(value + (sum(chunk_mesh.chunk.coord) % 2) * 30, 255) for value in color]
 
         a, b, c = [tuple(int(axis * scale) for axis in ele[0]) for ele in data]
         pygame.draw.polygon(screen, color, [
@@ -302,38 +384,55 @@ def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
             (c[0], c[2])
         ])
 
+def generate_chunk(x_chunk, y_chunk, noise):
+    chunk_terrain = ChunkTerrain(noise, x_chunk, y_chunk)
+    chunk_terrain.generate_detail(0)
+    chunk_mesh = DelaunayChunkMesh(chunk_terrain)
+    chunk_mesh.update_detail(0)
+    return chunk_mesh
+
 if __name__ == "__main__":
     height_param = HeightParams()
     color_param = ColorParams()
-    perlin_noise = PerlinGenerator(height_param, color_param, seed=1, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
+    perlin_noise = PerlinGenerator(height_param, color_param, seed=2, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
 
-    chunk = ChunkTerrain(perlin_noise, 0, 0)
+    # chunk = ChunkTerrain(perlin_noise, 0, 0)
 
-    sst = time.time()
-    chunk.generate_detail(0.3)
-    mmt = time.time()
-    chunk_mesh = ChunkMesh(chunk)
-    chunk_mesh.update_detail(0.3)
-    eet = time.time()
+    # sst = time.time()
+    # chunk.generate_detail(0.3)
+    # mmt = time.time()
+    # chunk_mesh = ChunkMesh(chunk)
+    # chunk_mesh.update_detail(0.3)
+    # eet = time.time()
 
+    # st = time.time()
+    # chunk.generate_detail(0)
+    # mt = time.time()
+    # chunk_mesh = ChunkMesh(chunk)
+    # chunk_mesh.update_detail(0)
+    # et = time.time()
+    # print(f"Time taken generating: {mmt - sst:.5f}s")
+    # print(f"Time taken meshing: {eet - mmt:.5f}s")
+    # print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
+    # print()
+    # print(f"Time taken generating all data: {mt - st:.5f}s")
+    # print(f"Time taken meshing to max detail: {et - mt:.5f}s")
+    # print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
+    # print()
+    # print(f"Total time: {et - sst:.5f}s")
+    
     st = time.time()
-    chunk.generate_detail(0)
-    mt = time.time()
-    chunk_mesh = ChunkMesh(chunk)
-    chunk_mesh.update_detail(0)
+    chunk_meshes = []
+    for x in range(SIDE_LENGTH):
+        for y in range(SIDE_LENGTH):
+            chunk_mesh = generate_chunk(x, y, perlin_noise)
+            chunk_meshes.append(chunk_mesh)
     et = time.time()
-    print(f"Time taken generating: {mmt - sst:.5f}s")
-    print(f"Time taken meshing: {eet - mmt:.5f}s")
-    print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
-    print()
-    print(f"Time taken generating all data: {mt - st:.5f}s")
-    print(f"Time taken meshing to max detail: {et - mt:.5f}s")
-    print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
-    print()
-    print(f"Total time: {et - sst:.5f}s")
+    print(f"Size of chunks: {format_size(sum(chunk_mesh.get_byte_size() for chunk_mesh in chunk_meshes))}")
+    print(f"Total time: {et-st:.5f}s")
 
     pygame.init()
-    screen = pygame.display.set_mode((CHUNK_SIZE * SCALE, CHUNK_SIZE * SCALE))
+    screen = pygame.display.set_mode((900, 900))
     clock = pygame.time.Clock()
 
     detail = 0
@@ -347,7 +446,8 @@ if __name__ == "__main__":
         screen.fill((0, 0, 0))
 
         # Display all chunks
-        display_chunk(screen, chunk_mesh, SCALE)
+        for chunk_mesh in chunk_meshes:
+            display_chunk(screen, chunk_mesh, SCALE)
 
         pygame.display.flip()
         clock.tick(60)

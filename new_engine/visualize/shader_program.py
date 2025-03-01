@@ -1,5 +1,4 @@
 import glm
-import numpy as np
 import os
 
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +22,8 @@ class ShaderProgram:
         self.program['light.Id'].write(self.app.light.Id)
         self.program['light.Is'].write(self.app.light.Is)
         # mvp
-        self.program['m_proj'].write(self.app.camera.m_proj)
-        self.program['m_view'].write(self.app.camera.m_view)
+        self.program['m_proj'].write(self.app.camera.get_projection_matrix())
+        self.program['m_view'].write(self.app.camera.get_view_matrix())
         self.program['m_model'].write(glm.mat4())
 
     def update(self):

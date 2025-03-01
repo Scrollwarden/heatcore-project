@@ -1,6 +1,7 @@
 import glm
+import math
 import pygame as pg
-from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FOV, NEAR, FAR, SPEED, SENSITIVITY, SHIP_OFFSET
+from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FOV, ZOOMED_FOV, NEAR, FAR, SPEED, SENSITIVITY, SHIP_OFFSET
 
 class Camera:
     def __init__(self, app, position=(0.1, 0.07, 0.1), yaw=0, pitch=-20):
@@ -72,9 +73,6 @@ class Camera:
         return glm.perspective(glm.radians(FOV), self.aspect_ratio, NEAR, FAR)
 
 
-
-import glm
-
 class CameraAlt:
     def __init__(self):
         self.position = glm.vec3(0, 0, 0)
@@ -106,19 +104,73 @@ class CameraAlt:
         
         self.view_matrix = glm.lookAt(self.position, self.position + self.forward, self.up)
 
-class CameraFollow:
-    def __init__(self):
-        self.position = glm.vec3(0.0, 0.0, 0.0)
 
-        self.forward = glm.vec3(0, 0, -1)
+def sigmoid_function(x, a):
+    """Can be used for clamp
+    Smooth odd function (f(-x) = -f(x)) that has a derivative of 1 at 0 (f'(0) = 1)
+    when x -> infty then f(x, a) -> a and f(-x, a) -> -a (parity of f)"""
+    q = glm.exp(- 2 * x / a)
+    denom = 2 / (1 + q)
+    return a * (denom - 1)
+
+
+MOUSE_SENSITIVITY = 0.1
+
+class CameraFollow:
+    def __init__(self, app):
+        self.app = app
+        self.position = glm.vec3(0.0, 3.0, 0.0)
+        self.fov = FOV
+        self.right_click = False
+        self.last_mouse_position = pg.mouse.get_pos()
+
+        self.forward = glm.vec3(0, -1.0, -1)
         self.right = glm.vec3(1, 0, 0)
         self.up = glm.vec3(0, 1, 0)
 
-        self.m_proj = glm.perspective(glm.radians(FOV), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
+        self.yaw = 0.0
+        self.pitch = 0.0
+        self.max_yaw = 90.0
+        self.max_pitch = 60.0
+
         self.view_matrix = glm.mat4(1.0)
+        self.m_proj = None
+        self.update_perspective()
+    
+    def update_perspective(self):
+        fov_target = ZOOMED_FOV if self.right_click else FOV
+        self.fov = glm.mix(self.fov, fov_target, 0.8)
+        self.m_proj = glm.perspective(glm.radians(self.fov), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
+
+    def update_mouse_look(self):
+        mouse_pos = pg.mouse.get_pos()
+        dx, dy = [mouse_pos[i] - self.last_mouse_position[i] for i in range(2)]
+        self.last_mouse_position = mouse_pos
+        
+        sensitivity = (0.1 if self.right_click else 1.0) * MOUSE_SENSITIVITY
+        
+        self.yaw = glm.clamp(self.yaw - dx * sensitivity, - self.max_yaw, self.max_yaw)
+        self.pitch = glm.clamp(self.pitch - dy * sensitivity, - self.max_pitch, self.max_pitch)
+        
+        forward_pitch = glm.asin(self.forward.y)
+        actual_pitch_rad = glm.clamp(glm.radians(self.pitch) + forward_pitch, -glm.radians(89), glm.radians(89))
+        self.pitch = glm.degrees(actual_pitch_rad - forward_pitch)
 
     def update(self):
+        self.update_perspective()
+        self.update_mouse_look()
+        
+        self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
+        self.up = glm.normalize(glm.cross(self.right, self.forward))
+        
+        yaw_rad = glm.radians(self.yaw)
+        pitch_rad = glm.radians(self.pitch)
+        rotated_forward = glm.rotate(glm.mat4(1.0), pitch_rad, self.right) * glm.vec4(self.forward, 1.0)
+        rotated_forward = glm.rotate(glm.mat4(1.0), yaw_rad, self.up) * rotated_forward
+        self.forward = glm.vec3(rotated_forward)
+        
         self.right = glm.normalize(glm.cross(self.forward, glm.vec3(0, 1, 0)))
         self.up = glm.normalize(glm.cross(self.right, self.forward))
 
-        self.view_matrix = glm.lookAt(self.position, self.position + self.forward, self.up)
+        self.view_matrix = glm.lookAt(self.position, self.position + self.forward + 0.1 * self.up, self.up)
+

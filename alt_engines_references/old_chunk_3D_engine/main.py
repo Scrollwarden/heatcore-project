@@ -54,7 +54,6 @@ class GraphicsEngine:
             elapsed_time = time.time() - start_time
 
             print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
-            print(self.camera.position)
 
 def format_fps(delta_time, fps):
     """delta time in seconds"""

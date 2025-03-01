@@ -7,21 +7,14 @@ class BaseMesh:
         self.vertex_data = None
         self.vbo = None
         self.vao = None
-    
-    def init_shader(self): ...
 
     def init_context(self):
         self.vbo = self.context.buffer(self.vertex_data)
         self.vao = self.context.vertex_array(
             self.shader_program, [(self.vbo, self.vbo_format, *self.attrs)], skip_errors=True
         )
-    
-    def init_vertex_data(self): ...
-
-    def update(self): ...
 
     def render(self):
-        self.update()
         self.vao.render()
 
     def destroy(self):
