@@ -121,6 +121,7 @@ def main():
         delta_time = clock.tick(60)
         elapsed_time = pg.time.get_ticks() - start_time
         print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time}ms")
+        print(game.chunks.keys())
 
 
 if __name__ == "__main__":
