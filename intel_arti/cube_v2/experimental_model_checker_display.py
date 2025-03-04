@@ -10,8 +10,9 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500
 ZOOM = 3
 # Model constants
-NUM_MODEL = 14
-MODEL_PATH = f"models\\generation0\\model{NUM_MODEL}.h5"
+NUM_MODEL = 16
+VERSION = 500
+MODEL_PATH = "models\\generation0\\model{}_{}.h5"
 # linux (depuis la racine de Matthew) : "cube_v2/models/model{NUM_MODEL}.h5"
 # window (depuis la racine de Lou) : "models\\model{NUM_MODEL}.h5"
 NOMBRE_NEURONES = 800
@@ -22,7 +23,7 @@ GREY = (200, 200, 200)
 WHITE = (255, 255, 255)
 
 agent = Agent(True)
-agent.model = load_model(MODEL_PATH)
+agent.model = load_model(MODEL_PATH.format(NUM_MODEL, VERSION))
 model_weights, bias = agent.model.layers[0].get_weights()
 output_weights, out_bias = agent.model.layers[1].get_weights()
 num_neurone = 0
@@ -128,6 +129,23 @@ if __name__ == "__main__":
                 elif event.key == pygame.K_LEFT :
                     num_neurone = (num_neurone-1) % NOMBRE_NEURONES
                     neurone_weights = model_weights[:, num_neurone]
+                elif event.key == pygame.K_UP :
+                    VERSION += 500
+                    if VERSION > 10000:
+                        VERSION = 500
+                    agent.model = load_model(MODEL_PATH.format(NUM_MODEL, VERSION))
+                    model_weights, bias = agent.model.layers[0].get_weights()
+                    output_weights, out_bias = agent.model.layers[1].get_weights()
+                    neurone_weights = model_weights[:, num_neurone]
+                elif event.key == pygame.K_DOWN :
+                    VERSION -= 500
+                    if VERSION == 0:
+                        VERSION = 10000
+                    agent.model = load_model(MODEL_PATH.format(NUM_MODEL, VERSION))
+                    model_weights, bias = agent.model.layers[0].get_weights()
+                    output_weights, out_bias = agent.model.layers[1].get_weights()
+                    neurone_weights = model_weights[:, num_neurone]    
+
 
         # Fill the screen with black
         screen.fill(BLACK)
@@ -139,10 +157,12 @@ if __name__ == "__main__":
         screen.blit(text_changes_model, (10, 60))
         text_num_neurone = font_for_text.render(f"Neurone {num_neurone}", True, WHITE)
         text_biais_neurone = font_for_infos.render(f"Biais : {str(bias[num_neurone])[:10]}", True, WHITE)
-        text_wieght_neurone = font_for_infos.render(f"Poids de sortie : {str(output_weights[num_neurone][0])[:10]}", True, WHITE)
+        text_weight_neurone = font_for_infos.render(f"Poids de sortie : {str(output_weights[num_neurone][0])[:10]}", True, WHITE)
+        text_version = font_for_text.render(f"Version {VERSION}", True, WHITE)
         screen.blit(text_num_neurone, (10, 100))
         screen.blit(text_biais_neurone, (10, 130))
-        screen.blit(text_wieght_neurone, (10, 150))
+        screen.blit(text_weight_neurone, (10, 150))
+        screen.blit(text_version, (10, 170))
         # Update the display
         pygame.display.flip()
         

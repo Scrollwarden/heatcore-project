@@ -2,9 +2,18 @@ from typing import Any
 from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Concatenate # type: ignore
 from tensorflow.keras import Input, Model # type: ignore
+from tensorflow.keras.models import load_model #type: ignore
 import tensorflow as tf
-from morpion import PartieIAvsH, Morpion, DataMorpion, PartiesIAvsIA, GenDataMorpion
+from morpion import PartieIAvsH, Morpion, DataMorpion, PartiesIAvsIA, GenDataMorpion, choisir2
 from numpy import reshape
+from copy import deepcopy
+from time import time
+
+def find(liste, ele) :
+    for i in range(len(liste)) :
+        if liste[i] == ele :
+            return i
+    return -1
 
 class Choices :
     def __init__(self) :
@@ -166,18 +175,98 @@ def jouer_contre_ia() :
             print(partie.jeu)
         print(partie.jeu.terminal_state())
         partie.recommencer()
+
+
+def minmax(morpion : Morpion) :
+    joueur = morpion.joueur
+    actions = morpion.sorted_actions_possibles()
+    values = []
+    done = []
+    index_change = 0
+    for i, action in enumerate(actions) :
+        scratch = deepcopy(morpion)
+        scratch.jouer(action)
+        if (gagnant := scratch.quick_terminal_state())[0] :
+            if gagnant[1] == joueur :
+                return gagnant[1]
+            values.append(gagnant[1])
+        elif (index := find(done, scratch.plateau)) != -1 :
+            values.append(values[index_change + index//8])
+            """elif (sit := scratch.plateau) in done :
+            values.append(values[done.index(sit)//8])"""
+        else :
+            values.append(minmax(scratch))
+        if i != len(actions) - 1 and action != 4:
+            if action % 2 == 0 :
+                if actions[i+1] % 2 == 0 :
+                    done.extend(scratch.symetries())
+                else :
+                    done = []
+                    index_change = i + 1
+            else :
+                done.extend(scratch.symetries())
+        else :
+            index_change = 1
         
+    if joueur == 1 :
+        return max(values)
+    else :
+        return min(values)
+
+def choisir(morpion : Morpion) :
+    joueur = morpion.joueur
+    actions = morpion.sorted_actions_possibles()
+    values = []
+    done = []
+    index_change = 0
+    for i, action in enumerate(actions) :
+        scratch = deepcopy(morpion)
+        scratch.jouer(action)
+        if (gagnant := scratch.quick_terminal_state())[0] :
+            values.append(val := gagnant[1])
+        elif (index := find(done, scratch.plateau)) != -1 :
+            values.append(values[index_change + index//8])
+            """elif (sit := scratch.plateau) in done :
+            values.append(val := values[done.index(sit)//8])"""
+        else :
+            values.append(val := minmax(scratch))
+        print(action, val)
+        if i != len(actions) - 1 and action != 4:
+            if action % 2 == 0 :
+                if actions[i+1] % 2 == 0 :
+                    done.extend(scratch.symetries())
+                else :
+                    done = []
+                    index_change = i + 1
+            else :
+                done.extend(scratch.symetries())
+        else :
+            index_change = 1
+    mapper = map(lambda i : values[i], range(len(actions)))
+    if joueur == 1 :
+        return max(actions, key=lambda arg : next(mapper))
+    else :
+        return min(actions, key=lambda arg : next(mapper))
 
 if __name__ == "__main__" :
-    data = DataMorpion(15000)
-    choix = Choices()
+    """choix = Choices()
     agent = AgentMorpion(choix)
-    agent.fit(*data.get_datas())
-    agent.model.save("model_morpion100.h5")
+    agent.model = load_model(r"model_morpion200.h5")"""
     partie = PartieIAvsH()
     while True :
-        while not partie.jeu.terminal_state()[0] :
-            partie.step(agent(partie.jeu))
+        while not (gagnant := partie.jeu.quick_terminal_state())[0] :
+            if partie.ia_turn :
+                temps = time()
+                partie.step(choisir(partie.jeu))
+                print(time() - temps)
+            else :
+                temps = time()
+                choisir(partie.jeu)
+                print(time() - temps)
+                partie.step()
             print(partie.jeu)
-        print(partie.jeu.terminal_state())
+        if gagnant[1] == 0 :
+            print("Egalité !")
+        else :
+            print(f"Le joueur {("", "x", "o")[int(gagnant[1])]} a gagné", )
         partie.recommencer()

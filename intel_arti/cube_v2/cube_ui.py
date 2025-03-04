@@ -3,7 +3,7 @@ import pygame, sys, os, pyautogui
 from random import choice
 import time
 from pygame import Vector2, SurfaceType, Vector3
-from agent import Agent
+from agent import Agent, DeepThought
 from tensorflow.keras.models import load_model #type: ignore
 from cube import Cube
 from generators import GameSaver
@@ -11,8 +11,8 @@ from generators import GameSaver
 LINE_WIDTH = 3
 SCREEN_WIDTH = pyautogui.size().width
 SCREEN_HEIGHT = pyautogui.size().height
-NUM_MODEL = 1
-GENERATION = 1
+NUM_MODEL = 14
+GENERATION = 0
 MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("cube_ui.py"), f"models/generation{GENERATION}/model{NUM_MODEL}.h5")
 
 # Colors
@@ -656,20 +656,20 @@ class CubeUI:
         liste_boutons.append(self.faces[0].buttons[6])
         liste_boutons.append(self.faces[0].buttons[7])
         liste_boutons.append(self.faces[0].buttons[11])
-        liste_boutons.append(self.faces[1].buttons[3])
-        liste_boutons.append(self.faces[1].buttons[5])
+        liste_boutons.append(self.faces[1].buttons[0])
+        liste_boutons.append(self.faces[1].buttons[2])
         liste_boutons.append(self.faces[0].buttons[8])
         liste_boutons.append(self.faces[0].buttons[9])
-        liste_boutons.append(self.faces[1].buttons[4])
+        liste_boutons.append(self.faces[1].buttons[1])
         liste_boutons.append(self.faces[0].buttons[4])
         liste_boutons.append(self.faces[0].buttons[0])
         liste_boutons.append(self.faces[0].buttons[1])
         liste_boutons.append(self.faces[0].buttons[5])
-        liste_boutons.append(self.faces[1].buttons[0])
-        liste_boutons.append(self.faces[1].buttons[2])
+        liste_boutons.append(self.faces[1].buttons[3])
+        liste_boutons.append(self.faces[1].buttons[5])
         liste_boutons.append(self.faces[0].buttons[2])
         liste_boutons.append(self.faces[0].buttons[3])
-        liste_boutons.append(self.faces[1].buttons[1])
+        liste_boutons.append(self.faces[1].buttons[4])
         for i in range(3) :
             liste_boutons.extend(self.top_face[i])
         self.conseil = Conseil(liste_boutons)
@@ -1005,9 +1005,9 @@ def go_position_initial(nb_frame : int = 120) :
     renderer.reset()
     cube_ui.reset_info()
 
-def give_advise(agent : Agent, cube : Cube) :
+def give_advise(agent : DeepThought, cube : Cube) :
     """fonction du bouton 'conseil' qui affiche les conseils de l'IA au joueur"""
-    action = agent.choisir(cube, ia_player * -1, coup_interdit)
+    action = agent.choisir(cube, ia_player * -1, 5, 2, coup_interdit)
     print("Coup conseillé :", action)
     if 0 not in faces or 1 not in faces or not cube_ui.faces[1].proportion_suffisante():
         go_position_initial()
@@ -1049,11 +1049,12 @@ if __name__ == "__main__":
     mouse_click = [0, 0]
     prev_mouse_x, prev_mouse_y = pygame.mouse.get_pos()
     player = 1
-    ia_player = choice((1, -1))
+    ia_player = 1
     coup_interdit = -1
     fini = False
     agent = Agent(True)
     agent.model = load_model(MODEL_PATH)
+    deep_toughts = DeepThought(agent)
     saver = GameSaver()
 
     toolbar = create_button_area()
@@ -1065,7 +1066,7 @@ if __name__ == "__main__":
     # Création du bouton de conseil
     points = create_shape_from_pos(10)
     bouton_conseil = ToolbarButton(points, (0, 255, 0), 'Demander conseil', (255, 255, 255), 1)
-    bouton_conseil.add_action(lambda : give_advise(agent, cube))
+    bouton_conseil.add_action(lambda : give_advise(deep_toughts, cube))
 
     # Création du bouton 'restart game'
     point = create_shape_from_pos(420)
@@ -1084,7 +1085,8 @@ if __name__ == "__main__":
 
     while running :
         if not fini and player == ia_player :
-            action = agent.choisir(cube_ui.cube, player, coup_interdit)
+            action = deep_toughts.choisir(cube_ui.cube, player, 5, 2, coup_interdit)
+            #action = agent.choisir_non_deterministe2(cube_ui.cube, player, coup_interdit)
             cube_ui.cube.jouer(action, player)
             player *= -1
             if action < 18 :
@@ -1110,7 +1112,7 @@ if __name__ == "__main__":
                     cube.reset()
                     fini = False
                     player = 1
-                    ia_player = choice((1, -1))
+                    ia_player = 1
                 elif event.key == pygame.K_p :
                     camera.longitude = 0
                     camera.latitude = 0

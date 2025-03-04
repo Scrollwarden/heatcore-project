@@ -1,6 +1,7 @@
 """Generateur de la génération 1"""
 import os
 from random import choice
+from copy import deepcopy
 from numpy import ndarray, append, zeros, array
 from cube import Cube
 from agent import Agent
@@ -9,6 +10,41 @@ from tensorflow.keras.models import load_model #type: ignore
 
 
 MODEL_PATH = os.path.join(os.path.abspath(__file__).rstrip("gen_gen1.py"), "models\\generation0\\model{}.h5")
+
+class PartieIAvsRandom :
+    def __init__(self, agent : Agent):
+        self.agent = agent
+        self.joueur = 1
+        self.coup_interdit = -1
+        self.cube = Cube()
+        self.pl_ia = choice((1, -1))
+        self.states = ndarray((0, 54))
+        self.gagnant = 0
+        self.jouer()
+        self.eval_states()
+    
+    def step(self) :
+        if self.joueur == self.pl_ia :
+            situation, action = self.agent.choisir_non_det_sit(self.cube, self.joueur, self.coup_interdit)
+            self.states = append(self.states, [situation], 0)
+            self.cube.set_flatten_state(situation)
+        else :
+            action = choice(self.cube.actions_possibles(self.coup_interdit))
+            copie = deepcopy(self.cube.get_state())
+            self.cube.jouer(action, self.joueur)
+            while action < 18 and (situation := self.cube.get_state()) == copie :
+                action = choice(self.cube.actions_possibles(self.coup_interdit))
+                self.cube.jouer(action, self.joueur)
+            self.states = append(self.states, [situation], 0)
+        self.cube.set_flatten_state(situation)
+        self.joueur *= -1
+        if action < 18 :
+            self.coup_interdit = (action + 9) % 18
+        else :
+            self.coup_interdit = -1
+
+
+
 
 class PartieIAvsIA :
     def __init__(self, agent1 : Agent, agent2 : Agent) :
@@ -31,7 +67,7 @@ class PartieIAvsIA :
             agent = self.agent2
         situation, action = agent.choisir_non_det_sit(self.cube, self.joueur, self.coup_interdit)
         self.states = append(self.states, [situation], 0)
-        self.cube.set_flatten_state(situation)
+        self.cube.set_flatten_state(situation*self.joueur)
         self.joueur *= -1
         if action < 18 :
             self.coup_interdit = (action + 9) % 18
@@ -79,6 +115,15 @@ class PartieGenerator :
                 states = states[nb_overflow_data:]
                 rewards = rewards[nb_overflow_data:]
             elif (manque := batch_size - states.shape[0]) > 0 :
+                if manque > 10 :
+                    partie = PartieIAvsIA(self.agent1, self.agent2)
+                    self.gagnants[partie.gagnant] = self.gagnants.get(partie.gagnant, 0) + 1
+                    x, y = partie.get_data()
+                    states = append(states, x, 0)
+                    rewards = append(rewards, y.flatten())
+                    if (nb_overflow_data := states.shape[0] - batch_size) > 0 :
+                        states = states[nb_overflow_data:]
+                        rewards = rewards[nb_overflow_data:]
                 gen.generate_end_states(manque)
                 states = append(states, array(gen.liste_win_state), 0)
                 rewards = append(rewards, array(gen.liste_eval))
@@ -88,11 +133,17 @@ if __name__ == "__main__" :
     agent = Agent()
     agent1 = Agent(True)
     agent1.model = load_model(MODEL_PATH.format(14))
-    agent2 = Agent(True)
-    agent2.model = load_model(MODEL_PATH.format(14))
-    generators = PartieGenerator(agent1, agent2)
-    selected_gen = generators.generator_basic(55)
+    generators = PartieGenerator(agent1, agent1)
+    selected_gen = generators.generator_basic(25)
 
-    agent.fit(selected_gen, steps_per_epoch=100, epochs=10)
-    agent.model.save(r"models\generation1\model1.h5")
+    agent.fit(selected_gen, steps_per_epoch=100, epochs=500)
+    agent.model.save(r"models\generation1\model2.h5")
     print(generators.gagnants)
+    """
+    agent1 = Agent(True)
+    agent1.model = load_model(MODEL_PATH.format(14))
+    partie = PartieIAvsIA(agent1, agent1)
+    cube = Cube()
+    for ele in partie.states :
+        cube.set_flatten_state(ele)
+        print(cube)"""
