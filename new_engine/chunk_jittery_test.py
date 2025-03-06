@@ -10,9 +10,9 @@ CHUNK_SIZE = 16
 LG2_CS = math.floor(math.log2(CHUNK_SIZE))
 # from new_engine.options import CHUNK_SIZE, LG2_CS
 
-SIDE_LENGTH = 4
+SIDE_LENGTH = 2
 SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
-JITTER_STRENGHT = 0.3
+JITTER_STRENGHT = 1/3
 
 class HeightParams:
     __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
@@ -172,7 +172,7 @@ class ChunkTerrain:
         self.id_data = np.zeros(shape=(CHUNK_SIZE + 1, CHUNK_SIZE + 1), dtype=np.uint8)
         self.detail: float | None = None
     
-    def get_deterministic_rng(self, coord, step):
+    def get_deterministic_rng(self, coord):
         """Returns a consistent jitter displacement based on coordinates and seed.
         Could take unecessary time."""
         return np.random.default_rng(abs(hash((*coord, 0x30997A84C, self.noise.seed))))
@@ -199,11 +199,13 @@ class ChunkTerrain:
                 
                 # Correctly assign RNG based on position
                 if y in (0, CHUNK_SIZE) or x in (0, CHUNK_SIZE):
-                    rng = self.get_deterministic_rng(self.coord * CHUNK_SIZE + [x, y], step)
+                    rng = self.get_deterministic_rng(self.coord * CHUNK_SIZE + [x, y])
+                    rng_step = 1
                 else:
                     rng = default_rng
-                jitter_x = rng.uniform(-JITTER_STRENGHT * step, JITTER_STRENGHT * step)
-                jitter_y = rng.uniform(-JITTER_STRENGHT * step, JITTER_STRENGHT * step)
+                    rng_step = step
+                jitter_x = rng.uniform(-JITTER_STRENGHT * rng_step, JITTER_STRENGHT * rng_step)
+                jitter_y = rng.uniform(-JITTER_STRENGHT * rng_step, JITTER_STRENGHT * rng_step)
                 
                 sample_x, sample_y = (self.coord * CHUNK_SIZE) + [x + jitter_x, y + jitter_y]
                 noise_value = self.noise.noise_value(sample_x, sample_y)
@@ -377,18 +379,14 @@ def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
         color = chunk_mesh.chunk.noise.color_params.get_color_from_id(face_id)
         # color = [min(value + (sum(chunk_mesh.chunk.coord) % 2) * 30, 255) for value in color]
 
-        a, b, c = [tuple(int(axis * scale) for axis in ele[0]) for ele in data]
-        pygame.draw.polygon(screen, color, [
-            (a[0], a[2]),
-            (b[0], b[2]),
-            (c[0], c[2])
-        ])
+        a, b, c = [chunk_mesh.chunk.coord * scale + [int(ele[0][i] * scale) for i in (0, 2)] for ele in data]
+        pygame.draw.polygon(screen, color, [a, b, c])
 
-def generate_chunk(x_chunk, y_chunk, noise):
+def generate_chunk(x_chunk, y_chunk, noise, detail):
     chunk_terrain = ChunkTerrain(noise, x_chunk, y_chunk)
-    chunk_terrain.generate_detail(0)
+    chunk_terrain.generate_detail(detail)
     chunk_mesh = DelaunayChunkMesh(chunk_terrain)
-    chunk_mesh.update_detail(0)
+    chunk_mesh.update_detail(detail)
     return chunk_mesh
 
 if __name__ == "__main__":
@@ -425,7 +423,7 @@ if __name__ == "__main__":
     chunk_meshes = []
     for x in range(SIDE_LENGTH):
         for y in range(SIDE_LENGTH):
-            chunk_mesh = generate_chunk(x, y, perlin_noise)
+            chunk_mesh = generate_chunk(x, y, perlin_noise, y / SIDE_LENGTH)
             chunk_meshes.append(chunk_mesh)
     et = time.time()
     print(f"Size of chunks: {format_size(sum(chunk_mesh.get_byte_size() for chunk_mesh in chunk_meshes))}")

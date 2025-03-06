@@ -122,7 +122,6 @@ class CameraFollow:
         self.position = glm.vec3(0.0, 3.0, 0.0)
         self.fov = FOV
         self.right_click = False
-        self.last_mouse_position = pg.mouse.get_pos()
 
         self.forward = glm.vec3(0, -1.0, -1)
         self.right = glm.vec3(1, 0, 0)
@@ -130,8 +129,7 @@ class CameraFollow:
 
         self.yaw = 0.0
         self.pitch = 0.0
-        self.max_yaw = 90.0
-        self.max_pitch = 60.0
+        self.max_yaw = 120.0
 
         self.view_matrix = glm.mat4(1.0)
         self.m_proj = None
@@ -139,22 +137,21 @@ class CameraFollow:
     
     def update_perspective(self):
         fov_target = ZOOMED_FOV if self.right_click else FOV
-        self.fov = glm.mix(self.fov, fov_target, 0.8)
+        self.fov = glm.mix(self.fov, fov_target, 0.25)
         self.m_proj = glm.perspective(glm.radians(self.fov), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
 
     def update_mouse_look(self):
-        mouse_pos = pg.mouse.get_pos()
-        dx, dy = [mouse_pos[i] - self.last_mouse_position[i] for i in range(2)]
-        self.last_mouse_position = mouse_pos
+        x, y = pg.mouse.get_pos()
+        pg.mouse.set_pos((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        dx, dy = x - SCREEN_WIDTH // 2, y - SCREEN_HEIGHT // 2
         
         sensitivity = (0.1 if self.right_click else 1.0) * MOUSE_SENSITIVITY
         
         self.yaw = glm.clamp(self.yaw - dx * sensitivity, - self.max_yaw, self.max_yaw)
-        self.pitch = glm.clamp(self.pitch - dy * sensitivity, - self.max_pitch, self.max_pitch)
-        
-        forward_pitch = glm.asin(self.forward.y)
-        actual_pitch_rad = glm.clamp(glm.radians(self.pitch) + forward_pitch, -glm.radians(89), glm.radians(89))
-        self.pitch = glm.degrees(actual_pitch_rad - forward_pitch)
+        print(f"Camera pitch before clamping: {self.pitch}")
+        print(f"Camera pitch velocity: {- dy * sensitivity}")
+        self.pitch = glm.clamp(self.pitch - dy * sensitivity, - 89.0, 89.0)
+        print(f"Camera pitch: {self.pitch}")
 
     def update(self):
         self.update_perspective()

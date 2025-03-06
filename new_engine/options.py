@@ -13,10 +13,11 @@ CHUNK_SHADER = 'chunk'
 CHUNK_SIZE = 16 # How long is the side of each chunk
 LG2_CS = math.floor(math.log2(CHUNK_SIZE)) # Log2 of the Chunk size in int (useful for detail)
 
-# Scene
+# Planet
 CHUNK_SCALE = 0.1 # By how much we scale every axis
 HEIGHT_SCALE = 10.0 # By how much we scale the height
 INV_NOISE_SCALE = 4.0 # How much info we put in a chunk
+NUM_OCTAVES = 5 # Number of octaves for perlin generation
 
 THREADS_LIMIT = 12 # Maximum number of threads at the same time
 TASKS_PER_FRAME = 2 # How many threads can we create per frame (do not overload CPU)

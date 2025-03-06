@@ -148,7 +148,11 @@ class DelaunayChunkMesh(BaseMesh):
         self.detail = new_level_of_detail
 
     def update_model_matrix(self, chunk_distance):
-        fall_amount = (chunk_distance) ** 2 * MAX_FALL_DISTANCE * 0.01
+        offset = 3
+        if chunk_distance <= offset:
+            fall_amount = 0.0
+        else:
+            fall_amount = (chunk_distance - offset) ** 2 * MAX_FALL_DISTANCE / ((10 - offset) ** 2)
 
         translation = glm.translate(glm.mat4(1.0), glm.vec3(0, fall_amount, 0))
 

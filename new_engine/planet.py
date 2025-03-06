@@ -5,10 +5,15 @@ import struct
 import time
 import math
 
+from new_engine.meshes.obj_base_mesh import DefaultObjMesh, GameObjMesh
+from new_engine.objects.starting_base import StartingBase
+from new_engine.objects.heatcore import HeatCore
+
 from new_engine.chunk_jittery_test import ChunkTerrain, ColorParams, PointsHeightParams, SplineHeightParams, PerlinGenerator
 from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, CHUNK_SIZE, LG2_CS
-from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, THREADS_LIMIT, TASKS_PER_FRAME
+from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
+
 
 def in_triangle(point, triangle):
     a, b, c = np.array([np.array([p[0], p[2]]) for p in triangle])
@@ -37,7 +42,7 @@ def in_triangle(point, triangle):
     # Check if point is inside the triangle
     return (u >= 0) and (v >= 0) and (u + v <= 1)
 
-class ChunkManager:
+class Planet:
     def __init__(self, app):
         self.radius = 10
         self.radius_squared = self.radius ** 2
@@ -46,10 +51,15 @@ class ChunkManager:
         points = ((0.0, -0.2), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
         self.height_params = SplineHeightParams(points, HEIGHT_SCALE)
         self.color_params = ColorParams()
+        self.seed = 2
         self.noise = PerlinGenerator(self.height_params, self.color_params,
-                                     seed=2, scale=100 / INV_NOISE_SCALE, octaves=5)
+                                     seed=self.seed, scale=100 / INV_NOISE_SCALE, octaves=NUM_OCTAVES)
         self.chunk_shader = open_shaders(self.app, 'chunk')
         self.init_shader()
+
+        self.objects = []
+        self.num_heatcores = 3
+        self.load_objects()
 
         self.result_queue = queue.Queue()
         self.threads = []
@@ -61,6 +71,27 @@ class ChunkManager:
         self.chunks_to_load_dic = {}
         self.chunks_to_load_set = set()
         self.tasks_per_frame = TASKS_PER_FRAME
+    
+    def load_objects(self):
+        # Starting base
+        position = glm.vec3(0, 0, 0)
+        terrain_height = self.get_perlin_height(position, 2)
+        position.y = max(0, terrain_height) + 0.0 * HEIGHT_SCALE
+        starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
+        self.objects.append(starting_base)
+        
+        rng = np.random.default_rng(self.seed)
+        for i in range(self.num_heatcores):
+            radius = rng.uniform(1, 2)
+            angle = rng.uniform(0, 360)
+            position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
+            
+            terrain_height = self.get_perlin_height(position, 2)
+            position.y = max(0, terrain_height) + 0.005 * HEIGHT_SCALE
+            print(f"Heatcore {i} at position: {position}")
+            heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
+            
+            self.objects.append(heatcore)
     
     def init_shader(self):
         # light
@@ -174,6 +205,11 @@ class ChunkManager:
             distance_sq = (player_position.x - i - 0.5) ** 2 + (player_position.z - j - 0.5) ** 2
             chunk_mesh.update_model_matrix(glm.sqrt(distance_sq))
             chunk_mesh.render()
+        
+        for obj in self.objects:
+            print(type(obj))
+            print(obj.position)
+            obj.render()
 
     def destroy(self):
         """Clean up resources."""
@@ -181,67 +217,22 @@ class ChunkManager:
         for t in self.threads:
             t.join()
 
-        [obj.destroy() for obj in self.chunk_meshes.values()]
+        [mesh.destroy() for mesh in self.chunk_meshes.values()]
         self.chunk_shader.release()
-
-    def get_height(self, position, debug = False, return_normal = False):
-        chunk_position = np.array(position.xz / (CHUNK_SIZE * CHUNK_SCALE))
-        int_pos = tuple(glm.floor(ele) for ele in chunk_position)
-        if debug:
-            print(f"Player position relative to chunks: {chunk_position}")
-            print(f"The chunk in question: {int_pos}")
-            print(f"Check for chunk loaded: {self.chunk_meshes.keys()}")
-
-        if int_pos not in self.chunk_meshes:
-            print(f"The player chunk is not loaded yet")
-            if return_normal:
-                return HEIGHT_SCALE * CHUNK_SCALE, glm.vec3(0.0, 1.0, 0.0)
-            return HEIGHT_SCALE * CHUNK_SCALE
-
-        chunk_mesh = self.chunk_meshes[int_pos]
-        if debug:
-            print(f"Chunk mesh: {chunk_mesh}")
-            print(f"The first vertex of the mesh:")
-            print(chunk_mesh.vertex_data[0])
-            print(f"The last vertex of the mesh")
-            print(chunk_mesh.vertex_data[-1])
-
-        step = 1 << int(LG2_CS * chunk_mesh.detail)
-        number_vertex_per_line = CHUNK_SIZE // step
-        scaled_pos = (chunk_position - int_pos) * number_vertex_per_line
-        scaled_pos = tuple(min(number_vertex_per_line - 1, math.floor(ele)) for ele in scaled_pos)
-        index = int(6 * (scaled_pos[1] + number_vertex_per_line * scaled_pos[0]))
-        if debug:
-            print(f"Scaled position of player in the chunk: {scaled_pos}")
-            print(f"Actual index: {index}")
-            print(f"Gives out triangle:")
-            print(chunk_mesh.vertex_data[index: index + 3])
-            print(f"And triangle:")
-            print(chunk_mesh.vertex_data[index + 3: index + 6])
-
-        for i in range(2):
-            if debug: print(index + 3 * i, index + 3 * (i + 1))
-            data = chunk_mesh.vertex_data[index + 3 * i: index + 3 * (i + 1)]
-            if debug: print("Position and data:", position, "\n", data)
-            triangle = np.array([data[i][0] for i in range(3)])
-            if debug: print("triangle", triangle)
-            if not in_triangle(position, triangle):
-                continue
-            x1, y1, z1 = triangle[0]
-            a, b, c = data[0][1]
-            x, z = position[0], position[2]
-            d = - np.dot([a, b, c], [x1, y1, z1])
-            height_value = - (d + np.dot([a, c], [x, z])) / b
-            if return_normal:
-                return height_value, glm.vec3(a, b, c)
-            return height_value
-
-        if return_normal:
-            return HEIGHT_SCALE * CHUNK_SCALE, glm.vec3(0.0, 1.0, 0.0)
-        return HEIGHT_SCALE * CHUNK_SCALE
 
     def get_perlin_height(self, position: glm.vec3, octaves: int = 1):
         sample_x, sample_y = np.array(position.xz / CHUNK_SCALE)
         noise_value = self.noise.noise_value(sample_x, sample_y, octaves=octaves)
         height_value = self.noise.height_params.height_from_noise(noise_value)
         return height_value * CHUNK_SCALE
+
+    def get_normal(self, position: glm.vec3, octaves: int = 1):
+        epsilon = 0.1 * CHUNK_SCALE 
+        height_center = self.get_perlin_height(position, octaves)
+        height_x = self.get_perlin_height(position + glm.vec3(epsilon, 0, 0), octaves)
+        height_z = self.get_perlin_height(position + glm.vec3(0, 0, epsilon), octaves)
+        
+        dx = glm.vec3(epsilon, height_x - height_center, 0)
+        dz = glm.vec3(0, height_z - height_center, epsilon)
+        
+        return glm.normalize(glm.cross(dx, dz))

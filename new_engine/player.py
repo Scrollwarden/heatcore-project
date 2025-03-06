@@ -567,11 +567,11 @@ class FollowTerrainPlayer:
         if terrain_height < 0:
             terrain_height = 0
             terrain_normal = glm.vec3(0, 1, 0)
-        self.up = glm.mix(self.up, terrain_normal, 0.01)
+        self.up = glm.mix(self.up, terrain_normal, 0.02)
         self.forward.y = - glm.dot(self.forward, self.up) / self.up.y
         self.forward = glm.normalize(self.forward)
         self.position += self.forward * self.velocity
-        self.position.y = glm.mix(self.position.y, terrain_height + HOVER_HEIGHT, 0.01)
+        self.position.y = glm.mix(self.position.y, terrain_height + HOVER_HEIGHT, 0.02)
         
         if self.app.delta_time:
             roll_angle = glm.radians(self.angular_velocity * ROLL_INTENSITY / self.app.delta_time)
@@ -589,7 +589,8 @@ class FollowTerrainPlayer:
         camera_displacement = glm.tan(pitch_offset) * self.up + self.forward
         self.camera.position = self.position - camera_displacement * self.camera_zoom * CAMERA_ZOOM_SCALE
 
-        self.camera.forward = glm.normalize(self.position + 0.02 * self.up - self.camera.position)
+        self.camera.forward = self.position + 0.02 * self.up - self.camera.position
+        self.camera.forward = glm.normalize(glm.vec3(self.camera.forward.x, 0, self.camera.forward.z))
         self.camera.up = glm.vec3(0, 1, 0)
         
         mouse_clicks = pg.mouse.get_pressed()

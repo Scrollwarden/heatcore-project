@@ -1,22 +1,34 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
-from chunk_jittery_test import SplineHeightParams
+import mpmath
 
-# Define points and create the SplineHeightParams instance
-points = ((0.0, -0.3), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
-shp = SplineHeightParams(points, 1.0)
+mpmath.mp.dps = 100
 
-# Generate values between 0 and 1
-x = np.linspace(0, 1, 500)
-y = [shp.height_from_noise(k) for k in x]
+N = mpmath.mpf("12242945609572961744356466185880148497170699959845184127931125935360")
+x_vals = np.arange(0, 16)
 
-# Plot the spline
-plt.figure(figsize=(8, 5))
-plt.plot(x, y, label='Original Curve', color='blue')
-plt.scatter(*zip(*points), color='red', label='Control Points', zorder=3)
-plt.xlabel('Input Value (Noise)')
-plt.ylabel('Height')
-plt.title('Original Height Function')
-plt.legend()
-plt.grid()
-plt.show()
+
+def binary_expression(x, y):
+    term1 = mpmath.floor(y / 15)
+    y_modulo15 = y % 15
+    power_term = mpmath.power(2, -15 * x - y_modulo15)
+    mod_term = (term1 * power_term) % 2
+    floor_mod_term = math.floor(mod_term)
+    return floor_mod_term > 1/2
+
+result = []
+
+for i in range(16):
+    y = N + i
+    row = []
+    for x in x_vals:
+        row.append(binary_expression(x, y))
+    result.append(row)
+
+result = np.array(result)
+result = np.flipud(result)
+result = result[1:]
+
+plt.figure(figsize=(20, 20))
+plt.imshow(result, cmap = 'gray_r', origin = 'upper')
