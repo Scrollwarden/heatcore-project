@@ -11,7 +11,7 @@ class StartingBase:
     
     def update(self):
         self.mesh.shader_program['m_model'].write(self.m_model)
-        self.update_wild()
+        # self.update_wild()
     
     def update_wild(self):
         angle = self.app.time

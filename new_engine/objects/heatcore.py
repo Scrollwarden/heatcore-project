@@ -17,7 +17,7 @@ class HeatCore:
         
         self.m_model = glm.translate(position) * glm.rotate(angle, axis_rotation)
         self.mesh.shader_program['m_model'].write(self.m_model)
-        self.update_wild()
+        # self.update_wild()
     
     def update_wild(self):
         angle = self.app.time

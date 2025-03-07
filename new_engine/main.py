@@ -2,12 +2,8 @@ import pygame as pg
 import moderngl as mgl
 import sys, time
 from new_engine.meshes.obj_base_mesh import DefaultObjMesh, GameObjMesh
-from new_engine.scene import Scene
-from new_engine.camera import CameraAlt, CameraFollow
-from new_engine.light import Light
 from new_engine.planet import Planet
 from new_engine.logs import Logs
-from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer, FollowTerrainPlayer
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
@@ -31,14 +27,9 @@ class GraphicsEngine:
         self.context = mgl.create_context()
         self.context.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE)
         
-        self.light = Light()
-        self.camera = CameraFollow(self)
-        
-        self.player = FollowTerrainPlayer(self)
-        
         self.meshes = {}
         self.load_meshes()
-        self.chunk_manager = Planet(self)
+        self.planet = Planet(self)
         # self.scene = Scene(self)
         
         self.logs = Logs()
@@ -53,20 +44,18 @@ class GraphicsEngine:
     def check_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key in (pg.K_p, pg.K_ESCAPE)):
-                self.chunk_manager.destroy()
+                self.planet.destroy()
                 pg.quit()
                 self.logs.save("new_engine/log_data")
                 #self.logs.display_single_window()
                 sys.exit()
             if event.type == pg.MOUSEWHEEL:
-                self.player.camera_zoom *= 0.97 ** event.y
+                self.planet.player.camera_zoom *= 0.97 ** event.y
 
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
-        self.chunk_manager.render()
+        self.planet.render()
         # self.scene.render()
-        self.player.mesh.render()
-        pg.display.flip()
 
     def get_time(self):
         self.time = pg.time.get_ticks() * 0.001
@@ -80,25 +69,17 @@ class GraphicsEngine:
             self.check_events()
             for mesh in self.meshes.values():
                 mesh.update()
-            
-            self.player.update()
-            self.camera.update()
 
             self.render()
+            pg.display.flip()
             self.delta_time = self.clock.tick(FPS)
 
             elapsed_time = time.perf_counter() - start_time
-            num_loaded = len(self.chunk_manager.chunk_meshes)
-            num_loading = len(self.chunk_manager.chunks_loading)
+            num_loaded = len(self.planet.chunk_meshes)
+            num_loading = len(self.planet.chunks_loading)
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
-            if debug:
-                print(f"Real player position: {self.player.position}")
-                print(f"Camera real position: {self.camera.position}")
-                print(f"Camera forward: {self.camera.forward}")
-                print(f"Relative position of player: {self.player.position / (CHUNK_SIZE * CHUNK_SCALE)}")
-                print(f"Camera relative position   : {self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)}")
             print()
 
 def format_fps(delta_time):

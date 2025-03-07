@@ -4,6 +4,11 @@ import threading, queue
 import struct
 import time
 import math
+import pygame as pg
+
+from new_engine.light import Light
+from new_engine.camera import CameraAlt, CameraFollow
+from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer, FollowTerrainPlayer
 
 from new_engine.meshes.obj_base_mesh import DefaultObjMesh, GameObjMesh
 from new_engine.objects.starting_base import StartingBase
@@ -11,7 +16,7 @@ from new_engine.objects.heatcore import HeatCore
 
 from new_engine.chunk_jittery_test import ChunkTerrain, ColorParams, PointsHeightParams, SplineHeightParams, PerlinGenerator
 from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, CHUNK_SIZE, LG2_CS
-from new_engine.options import CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
+from new_engine.options import FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
 
 
@@ -42,11 +47,16 @@ def in_triangle(point, triangle):
     # Check if point is inside the triangle
     return (u >= 0) and (v >= 0) and (u + v <= 1)
 
+def flatten(vector: glm.vec3):
+    return glm.vec3(vector.x, 0, vector.z)
+
 class Planet:
     def __init__(self, app):
         self.radius = 10
         self.radius_squared = self.radius ** 2
         self.app = app
+        
+        self.light = Light()
 
         points = ((0.0, -0.2), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
         self.height_params = SplineHeightParams(points, HEIGHT_SCALE)
@@ -75,8 +85,8 @@ class Planet:
     def load_objects(self):
         # Starting base
         position = glm.vec3(0, 0, 0)
-        terrain_height = self.get_perlin_height(position, 2)
-        position.y = max(0, terrain_height) + 0.0 * HEIGHT_SCALE
+        position = self.avoid_cliffs(position)
+        position.y = max(0, position.y) + 0.02 * HEIGHT_SCALE
         starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
         self.objects.append(starting_base)
         
@@ -86,12 +96,13 @@ class Planet:
             angle = rng.uniform(0, 360)
             position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
             
-            terrain_height = self.get_perlin_height(position, 2)
-            position.y = max(0, terrain_height) + 0.005 * HEIGHT_SCALE
+            position = self.avoid_water(position)
+            position.y += 0.005 * HEIGHT_SCALE
             print(f"Heatcore {i} at position: {position}")
             heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
             
             self.objects.append(heatcore)
+        
     
     def init_shader(self):
         # light
@@ -144,7 +155,6 @@ class Planet:
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames."""
-        st = time.time()
         #print(f"Chunks to load: {self.chunks_to_load_dic}")
         tasks_this_frame = 0
         keys_used = []
@@ -189,6 +199,9 @@ class Planet:
         self.chunk_shader['time'].write(struct.pack('f', self.app.time))
 
     def update(self):
+        self.player.update()
+        self.camera.update()
+        
         self.generate_chunks()
         self.update_chunks()
         self.update_shader()
@@ -210,6 +223,8 @@ class Planet:
             print(type(obj))
             print(obj.position)
             obj.render()
+        
+        self.player.mesh.render()
 
     def destroy(self):
         """Clean up resources."""
@@ -226,7 +241,7 @@ class Planet:
         height_value = self.noise.height_params.height_from_noise(noise_value)
         return height_value * CHUNK_SCALE
 
-    def get_normal(self, position: glm.vec3, octaves: int = 1):
+    def get_normal(self, position: glm.vec3, octaves: int = 1, get_height: bool = False):
         epsilon = 0.1 * CHUNK_SCALE 
         height_center = self.get_perlin_height(position, octaves)
         height_x = self.get_perlin_height(position + glm.vec3(epsilon, 0, 0), octaves)
@@ -234,5 +249,54 @@ class Planet:
         
         dx = glm.vec3(epsilon, height_x - height_center, 0)
         dz = glm.vec3(0, height_z - height_center, epsilon)
+        normal = glm.normalize(glm.cross(dz, dx))
         
-        return glm.normalize(glm.cross(dx, dz))
+        if get_height:
+            return height_center, normal
+        return normal
+
+    def avoid_water(self, position: glm.vec3):
+        i = 0
+        height, terrain_normal = self.get_normal(position, 1, True)
+        while height < 0.01 * HEIGHT_SCALE:
+            position -= flatten(terrain_normal)
+            height, terrain_normal = self.get_normal(position, 1, True)
+            i += 1
+            print()
+            print(f"Iteration {i}")
+            print(f"Position {position} with height {height}")
+            print(f"Normal: {terrain_normal}")
+            print(f"While loop condition: {height} < {0.01 * HEIGHT_SCALE}")
+        print(f"Iteration of avoiding water: {i}")
+        return flatten(position) + glm.vec3(0, height, 0)
+    
+    def avoid_cliffs(self, position: glm.vec3):
+        i = 0
+        height, terrain_normal = self.get_normal(position, 1, True)
+        terrain_normal = flatten(terrain_normal)
+        while terrain_normal.y < glm.sin(glm.radians(75)):
+            position -= flatten(terrain_normal)
+            height, terrain_normal = self.get_normal(position, 1, True)
+            i += 1
+            print()
+            print(f"Iteration {i}")
+            print(f"Position {position} with height {height}")
+            print(f"Normal: {terrain_normal}")
+            print(f"While loop condition: {terrain_normal.y} < {glm.sin(glm.radians(75))}")
+        print(f"Iteration of avoiding cliff: {i}")
+        return flatten(position) + glm.vec3(0, height, 0)
+    
+    def cinematique_entree(self):
+        running = True
+        while running:
+            self.generate_chunks()
+            self.update_chunks()
+            if len(self.chunks_to_load_set) == 0 and len(self.chunks_loading) == 0:
+                running = False
+            
+            pg.display.flip()
+            self.app.clock.tick(FPS)
+        self.load_objects()
+        
+        self.player = Pl
+        pass
