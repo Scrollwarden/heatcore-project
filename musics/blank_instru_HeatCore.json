@@ -18,36 +18,52 @@
 					"type": "FM",
 					"volume": 100,
 					"eqFilter": [],
-					"preset": 72,
-					"effects": [],
-					"fadeInSeconds": 0.0263,
-					"fadeOutTicks": -3,
-					"algorithm": "1←(2 3 4)",
-					"feedbackType": "1⟲",
-					"feedbackAmplitude": 0,
+					"preset": 385,
+					"effects": [
+						"chord type",
+						"note filter",
+						"reverb"
+					],
+					"chord": "strum",
+					"noteFilter": [
+						{
+							"type": "low-pass",
+							"cutoffHz": 13454.34,
+							"linearGain": 0.25
+						}
+					],
+					"reverb": 33,
+					"fadeInSeconds": 0,
+					"fadeOutTicks": 48,
+					"algorithm": "1←3 2←4",
+					"feedbackType": "3⟲",
+					"feedbackAmplitude": 6,
 					"operators": [
 						{
 							"frequency": "1×",
 							"amplitude": 15
 						},
 						{
-							"frequency": "1×",
+							"frequency": "4×",
 							"amplitude": 6
 						},
 						{
-							"frequency": "1×",
-							"amplitude": 0
+							"frequency": "~2×",
+							"amplitude": 3
 						},
 						{
 							"frequency": "1×",
-							"amplitude": 0
+							"amplitude": 6
 						}
 					],
 					"envelopes": [
 						{
-							"target": "operatorAmplitude",
-							"envelope": "twang 2",
-							"index": 1
+							"target": "noteFilterAllFreqs",
+							"envelope": "twang 1"
+						},
+						{
+							"target": "feedbackAmplitude",
+							"envelope": "twang 2"
 						}
 					]
 				}
@@ -118,102 +134,56 @@
 			"type": "pitch",
 			"instruments": [
 				{
-					"type": "Picked String",
+					"type": "FM",
 					"volume": 80,
-					"eqFilter": [
-						{
-							"type": "high-pass",
-							"cutoffHz": 148.65,
-							"linearGain": 0.7071
-						},
-						{
-							"type": "peak",
-							"cutoffHz": 1681.79,
-							"linearGain": 4
-						},
-						{
-							"type": "low-pass",
-							"cutoffHz": 8000,
-							"linearGain": 0.1768
-						},
-						{
-							"type": "peak",
-							"cutoffHz": 3363.59,
-							"linearGain": 4
-						},
-						{
-							"type": "peak",
-							"cutoffHz": 2378.41,
-							"linearGain": 0.25
-						}
-					],
-					"preset": 128,
+					"eqFilter": [],
+					"preset": 199,
 					"effects": [
+						"chord type",
 						"note filter",
 						"reverb"
 					],
+					"chord": "strum",
 					"noteFilter": [
 						{
 							"type": "low-pass",
-							"cutoffHz": 4756.83,
-							"linearGain": 0.3536
-						},
-						{
-							"type": "high-pass",
-							"cutoffHz": 125,
-							"linearGain": 0.0884
+							"cutoffHz": 2378.41,
+							"linearGain": 0.5
 						}
 					],
-					"reverb": 67,
+					"reverb": 33,
 					"fadeInSeconds": 0,
-					"fadeOutTicks": 48,
-					"harmonics": [
-						100,
-						100,
-						86,
-						86,
-						86,
-						71,
-						71,
-						71,
-						0,
-						71,
-						71,
-						71,
-						71,
-						57,
-						57,
-						71,
-						57,
-						14,
-						57,
-						57,
-						57,
-						57,
-						57,
-						57,
-						57,
-						57,
-						29,
-						57
+					"fadeOutTicks": -3,
+					"algorithm": "(1 2 3)←4",
+					"feedbackType": "1⟲ 2⟲ 3⟲",
+					"feedbackAmplitude": 0,
+					"operators": [
+						{
+							"frequency": "1×",
+							"amplitude": 9
+						},
+						{
+							"frequency": "6×",
+							"amplitude": 9
+						},
+						{
+							"frequency": "11×",
+							"amplitude": 9
+						},
+						{
+							"frequency": "20×",
+							"amplitude": 6
+						}
 					],
-					"unison": "piano",
-					"stringSustain": 86,
 					"envelopes": [
 						{
-							"target": "noteFilterFreq",
-							"envelope": "note size",
-							"index": 0
+							"target": "noteFilterAllFreqs",
+							"envelope": "twang 1"
 						},
 						{
-							"target": "noteFilterFreq",
+							"target": "operatorAmplitude",
 							"envelope": "twang 1",
-							"index": 1
-						},
-						{
-							"target": "noteFilterFreq",
-							"envelope": "twang 1",
-							"index": 1
+							"index": 3
 						}
 					]
 				}
@@ -478,7 +448,7 @@
 				}
 			],
 			"sequence": [
-				0,
+				1,
 				0,
 				0,
 				0,
