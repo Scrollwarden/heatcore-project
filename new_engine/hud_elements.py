@@ -3,6 +3,11 @@ import pygame as pg
 from intel_arti.cube_v2.cube import Cube
 from intel_arti.cube_v2.cube_ui import Renderer, Camera, CubeUI
 import math
+import os, math
+import pygame as pg
+from tensorflow.keras.models import load_model
+from intel_arti.cube_v2.agent import Agent
+
 
 
 
@@ -312,61 +317,75 @@ class UI2_1:
 
 
 class UI3:
-    """
-    UI3 creates an overlay that displays a cube game interface (similar to cube_ui)
-    along with four buttons:
-      - Reset View button: Resets the camera to its initial view.
-      - Reset Game button: Resets the cube game.
-      - Hint button: Uses a hint (with 5 available hints; remaining count is displayed).
-      - Return button: Closes UI3 and returns to UI1.
-    """
-
     def __init__(self, screen):
-        self.screen = screen  # the ui_surface passed from GraphicsEngine
+        self.screen = screen  # The UI surface passed from the GraphicsEngine.
         self.width, self.height = self.screen.get_size()
-        self.active = True  # UI3 is active when set to True
+        self.active = True
 
-        # Define a game area (a subregion where the cube game is rendered)
-        margin = 50
-        self.game_rect = pg.Rect(margin, margin, self.width - 2 * margin, self.height - 200)
+        # Define a centered square game area (leaving space at the bottom for buttons).
+        button_area_height = 100
+        game_size = min(self.width, self.height - button_area_height)
+        self.game_rect = pg.Rect(
+            (self.width - game_size) // 2,
+            (self.height - button_area_height - game_size) // 2,
+            game_size,
+            game_size
+        )
         self.game_surface = pg.Surface((self.game_rect.width, self.game_rect.height))
 
         # Create cube game objects.
-        # (Here we set initial camera parameters similar to the cube_ui script.)
         self.camera = Camera(latitude=math.radians(30),
                              longitude=2 * math.pi / 3,
                              distance=10.0)
-        # Note: We pass the game area size to the Renderer.
         self.renderer = Renderer(self.camera, screen_data=pg.math.Vector2(self.game_rect.width, self.game_rect.height))
         self.cube = Cube()
-        # We use a side_length proportional to the game_rect height.
         self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
 
-        # Define buttons (positioned along the bottom of the ui surface)
+        # Define overlay buttons (positioned along the bottom).
         button_width = 150
         button_height = 50
         bmargin = 20
         self.buttons = {
             'reset_view': pg.Rect(bmargin, self.height - button_height - bmargin, button_width, button_height),
-            'reset_game': pg.Rect(bmargin * 2 + button_width, self.height - button_height - bmargin, button_width,
-                                  button_height),
-            'hint': pg.Rect(bmargin * 3 + button_width * 2, self.height - button_height - bmargin, button_width,
-                            button_height),
-            'return': pg.Rect(self.width - button_width - bmargin, self.height - button_height - bmargin, button_width,
-                              button_height)
+            'reset_game': pg.Rect(bmargin * 2 + button_width, self.height - button_height - bmargin, button_width, button_height),
+            'hint': pg.Rect(bmargin * 3 + button_width * 2, self.height - button_height - bmargin, button_width, button_height),
+            'return': pg.Rect(self.width - button_width - bmargin, self.height - button_height - bmargin, button_width, button_height)
         }
         self.button_color = (0, 128, 255)
         self.button_border_color = (255, 255, 255)
         self.hints_remaining = 5
 
-        # Internal flag to signal exit from UI3
+        # Flags for UI3 exit and mouse click.
         self.exit_ui3 = False
+        self.mouse_clicked = False
+
+        # --- Cube AI Integration ---
+        # Set up turn management: assume human is 1 and AI is -1.
+        self.current_player = 1  # Human player's turn initially.
+        self.ai_player = -1      # AI player.
+        self.coup_interdit = -1  # A move that is temporarily forbidden.
+        self.fini = False        # Game over flag.
+
+        # Create the AI agent and load the model.
+        self.agent = Agent(True)
+        NUM_MODEL = 1
+        GENERATION = 1
+        MODEL_PATH = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "models", f"generation{GENERATION}", f"model{NUM_MODEL}.h5"
+        )
+        try:
+            self.agent.model = load_model(MODEL_PATH)
+            print(f"Model loaded successfully from {MODEL_PATH}")
+        except FileNotFoundError as e:
+            print(f"Error: Model file not found at {MODEL_PATH}. Please verify that the file exists.")
+            self.agent.model = None  # Disable AI functionality if the model is missing.
 
     def handle_event(self, event):
         """Handle events for both the cube game and the overlay buttons."""
         if event.type == pg.MOUSEBUTTONDOWN:
             mouse_pos = event.pos
-            # Check if any button is clicked:
+            # Check if any overlay button is clicked.
             for name, rect in self.buttons.items():
                 if rect.collidepoint(mouse_pos):
                     if name == 'reset_view':
@@ -377,20 +396,20 @@ class UI3:
                         self.use_hint()
                     elif name == 'return':
                         self.exit_ui3 = True
-                    # If a button was pressed, we don’t pass the event further.
-                    return
+                    return  # Consume the event if a button was clicked.
+            # If no overlay button was clicked, check for a left-click in the game area.
+            if event.button == 1 and self.game_rect.collidepoint(mouse_pos):
+                self.mouse_clicked = True
 
-        # (Optional) Pass mouse motion events for cube rotation if the pointer is inside the game area.
         if event.type == pg.MOUSEMOTION:
             if self.game_rect.collidepoint(event.pos):
-                # Example: if the right mouse button is held down, update the camera.
+                # Update the cube camera if the right mouse button is held.
                 if event.buttons[2]:
                     rel = event.rel
                     self.camera.update_camera_from_mouse(delta_x=rel[0], delta_y=rel[1])
-        # You can also handle key events if desired.
 
     def reset_view(self):
-        """Reset the camera view to its initial parameters."""
+        """Reset the cube camera view to its initial parameters."""
         self.camera.longitude = 2 * math.pi / 3
         self.camera.latitude = math.pi / 6
         self.camera.reset_position()
@@ -402,12 +421,14 @@ class UI3:
         """Restart the cube game with a new cube."""
         self.cube = Cube()
         self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
+        # Reset turn management.
+        self.current_player = 1
+        self.coup_interdit = -1
+        self.fini = False
         print("Reset game button pressed.")
 
     def use_hint(self):
-        """Consume one hint (if available) and print a message.
-           In your real game you could call an AI agent or display the suggested move.
-        """
+        """Consume one hint (if available) and print a message."""
         if self.hints_remaining > 0:
             print("Hint used!")
             self.hints_remaining -= 1
@@ -416,32 +437,67 @@ class UI3:
 
     def update(self, dt):
         """
-        Update any dynamic elements of the cube game.
-        (For this example no explicit update is needed;
-         however, you might want to add time‐dependent animations here.)
+        Update dynamic elements of the cube game.
+        Processes human moves (via cell clicks) and, if it's the AI's turn,
+        makes the AI choose and play a move.
         """
-        # For example, you could update the cube game state:
-        # self.cube_ui.update(dt)  <-- if CubeUI provided an update() method.
-        pass
+        # ----- Process Human Move -----
+        if self.cube_ui.events_listener.button_clicked != (-1, -1):
+            i, j = self.cube_ui.events_listener.button_clicked
+            current_value = self.cube_ui.cube.get_pion((0, j, i))
+            print(f"Before placing, cell (0, {j}, {i}) value: {current_value}")
+            if current_value != 0:
+                print(f"Cell ({i}, {j}) already occupied")
+            else:
+                print(f"Placing human piece at ({i}, {j})")
+                self.cube_ui.cube.set_pion((0, j, i), self.current_player)
+            self.cube_ui.events_listener.button_clicked = (-1, -1)
+            self.cube_ui.reset_info()
+            self.current_player *= -1
+
+        # ----- Process AI Move -----
+        if self.current_player == self.ai_player and not self.fini:
+            action = self.agent.choisir(self.cube, self.current_player, self.coup_interdit)
+            if action is not None:
+                print(f"AI chose action: {action}")
+                if action < 9:
+                    # Placement move on the top face.
+                    i = action % 3  # Column index
+                    j = action // 3  # Row index
+                    if self.cube.get_pion((0, j, i)) == 0:
+                        print(f"Placing AI piece at ({i}, {j})")
+                        self.cube.set_pion((0, j, i), self.current_player)
+                    else:
+                        print(f"AI move: cell ({i}, {j}) already occupied.")
+                    self.coup_interdit = action + 9
+                elif action < 18:
+                    # Rotation move.
+                    self.cube.jouer(action, self.current_player)
+                    self.coup_interdit = action - 9
+                else:
+                    self.coup_interdit = -1
+                print(f"AI played action {action}, coup_interdit: {self.coup_interdit}")
+                self.current_player *= -1
+                self.cube_ui.reset_info()
 
     def draw(self):
-        """Draw the cube game interface and the overlay buttons onto the UI surface."""
-        # Clear the entire UI surface (with transparency if needed)
-        self.screen.fill((0, 0, 0, 0))
+        """Draw the cube game interface and overlay buttons onto the UI surface."""
+        # Fill the entire UI surface with a fully opaque black background.
+        self.screen.fill((0, 0, 0, 255))
 
-        # Draw a background for the cube game area
-        pg.draw.rect(self.screen, (30, 30, 30), self.game_rect)
-        # Clear the game surface and draw the cube game
+        # Draw the cube game within the defined game area.
         self.game_surface.fill((0, 0, 0))
-        # Note: We pass a mouse position relative to the game area.
+        # Get the mouse position relative to the game area.
         local_mouse = pg.math.Vector2(pg.mouse.get_pos()[0] - self.game_rect.x,
                                       pg.mouse.get_pos()[1] - self.game_rect.y)
-        # The third parameter (False) indicates “no click” in this simple example.
-        self.cube_ui.draw(self.game_surface, local_mouse, False)
-        # Blit the game surface into the designated game area of the UI surface.
+        # Pass the click flag to cube_ui.draw.
+        self.cube_ui.draw(self.game_surface, local_mouse, self.mouse_clicked)
+        # Reset the click flag after processing.
+        self.mouse_clicked = False
+        # Blit the game surface onto the UI surface.
         self.screen.blit(self.game_surface, self.game_rect.topleft)
 
-        # Draw the overlay buttons
+        # Draw the overlay buttons.
         font = pg.font.SysFont("Arial", 20)
         for name, rect in self.buttons.items():
             pg.draw.rect(self.screen, self.button_color, rect)

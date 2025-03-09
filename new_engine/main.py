@@ -177,7 +177,7 @@ class GraphicsEngine:
                 self.ui3.handle_event(event)
                 continue
 
-            # Otherwise, if UI2_1 or UI2 are active, forward events there.
+            # Existing UI2_1 and UI2 event handling...
             if self.ui2_1.active:
                 self.ui2_1.handle_event(event)
                 continue
@@ -185,13 +185,12 @@ class GraphicsEngine:
                 self.ui2.handle_event(event)
                 continue
             else:
-                # Check for key L to launch UI3:
+                # Press L to launch UI3.
                 if event.type == pg.KEYDOWN and event.key == pg.K_l:
-                    # Create a UI3 instance (make sure UI3 is imported in hud_elements)
-                    from hud_elements import UI3  # Import here if not already imported.
+                    from hud_elements import UI3  # Ensure UI3 is imported.
                     self.ui3 = UI3(self.ui_surface)
                     pg.mouse.set_visible(True)
-                # Also, check for the Toggle Menu key (e.g. Escape) to trigger UI2.
+                # Other key handling...
                 elif event.type == pg.KEYDOWN and event.key == self.controls["Toggle Menu"]:
                     self.ui2.active = True
                     pg.mouse.set_visible(True)
@@ -201,7 +200,7 @@ class GraphicsEngine:
             self.ui2_1.active = True
             pg.mouse.set_visible(True)
 
-        # Only hide the mouse if none of the menus are active.
+        # Only hide the mouse if no UI is active.
         if not self.ui2.active and not self.ui2_1.active and self.ui3 is None:
             pg.mouse.set_visible(False)
 
@@ -250,9 +249,14 @@ class GraphicsEngine:
             self.get_time()
             self.check_events()
 
-            if not (self.ui2.active or self.ui2_1.active):
+            # When UI3 is active, update its cube state (human and AI moves)
+            if self.ui3 is not None:
+                self.ui3.update(self.delta_time)
+            # Otherwise update the main game (e.g. camera movement) if no menus are active.
+            elif not (self.ui2.active or self.ui2_1.active):
                 self.camera.update()
 
+            # Update shader programs.
             for shader_program in self.scene.shader_programs.values():
                 shader_program.update()
 
@@ -264,12 +268,10 @@ class GraphicsEngine:
             self.delta_time = self.clock.tick(200)
             elapsed_time = time.time() - start_time
 
-            #print(f"FPS: {format_fps(elapsed_time, 200)}, Frame Time: {elapsed_time:.3f}s")
-
             num_loaded = len(self.scene.chunks)
             num_loading = len(self.scene.chunks_loading)
             self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
-            #print()
+
 
 # ------------------------------------------------------------ #
 # Entry Point
