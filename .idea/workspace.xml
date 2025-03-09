@@ -5,12 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1c7ecba8-375c-4b36-9127-ccdb536538d7" name="Changes" comment="Ajoute une possibilité de reset">
+      <change afterPath="$PROJECT_DIR$/new_engine/benchmark_noise.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/heatcore-project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/heatcore-project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/chunk_jittery_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/chunk_jittery_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/log_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/log_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/meshes/base_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/meshes/base_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/meshes/chunk_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/meshes/chunk_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/meshes/heatcores_obj.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/meshes/obj_base_mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/meshes/obj_base_mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/meshes/ship_mesh.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/options.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/options.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/planet.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/planet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/new_engine/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/scene.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/new_engine/shaders/chunk.vert" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/shaders/chunk.vert" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/visualize/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/visualize/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/new_engine/visualize/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/new_engine/visualize/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,33 +52,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.Chunk_Generator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_class.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_mesh.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_solo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.chunk_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.cube_ui.executor&quot;: &quot;Run&quot;,
-    &quot;Python.implementation_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.light.executor&quot;: &quot;Run&quot;,
-    &quot;Python.logs.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptest2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptest3.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mptestimplementation.executor&quot;: &quot;Run&quot;,
-    &quot;Python.multi_processing_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scene.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.world_3d_preview.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;Shell Script.ExecProject.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;generation-affichage-3d&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/cosmo/Documents/github/heatcore-project/new_engine&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Chunk_Generator.executor": "Run",
+    "Python.benchmark_noise.executor": "Run",
+    "Python.chunk.executor": "Run",
+    "Python.chunk_class.executor": "Run",
+    "Python.chunk_jittery_test.executor": "Run",
+    "Python.chunk_mesh.executor": "Run",
+    "Python.chunk_solo.executor": "Run",
+    "Python.chunk_test.executor": "Run",
+    "Python.cube_ui.executor": "Run",
+    "Python.implementation_test.executor": "Run",
+    "Python.light.executor": "Run",
+    "Python.logs.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.mptest2.executor": "Run",
+    "Python.mptest3.executor": "Run",
+    "Python.mptestimplementation.executor": "Run",
+    "Python.multi_processing_test.executor": "Run",
+    "Python.scene.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.world_3d_preview.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "Shell Script.ExecProject.executor": "Run",
+    "git-widget-placeholder": "generation-affichage-3d",
+    "last_opened_file_path": "/Users/cosmo/Documents/github/heatcore-project/new_engine",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/new_engine" />
@@ -128,5 +143,15 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Ajoute une possibilité de reset" />
     <option name="LAST_COMMIT_MESSAGE" value="Ajoute une possibilité de reset" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/new_engine/visualize/camera.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

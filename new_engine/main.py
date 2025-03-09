@@ -1,7 +1,9 @@
 import pygame as pg
 import moderngl as mgl
+import glm
 import sys, time
-from new_engine.meshes.obj_base_mesh import DefaultObjMesh, GameObjMesh
+import random
+from new_engine.meshes.obj_base_mesh import GameObjMesh
 from new_engine.planet import Planet
 from new_engine.logs import Logs
 
@@ -29,17 +31,28 @@ class GraphicsEngine:
         
         self.meshes = {}
         self.load_meshes()
-        self.planet = Planet(self)
-        # self.scene = Scene(self)
+        self.planet = None
         
         self.logs = Logs()
         print("Graphics engine initialized successfully")
     
     def load_meshes(self):
+        self.meshes["spaceship"] = GameObjMesh(self, "spaceship_player", "obj",
+                                               scale=0.002,
+                                               obj_transformation=glm.rotate(glm.radians(90), glm.vec3(0, 1, 0)))
         self.meshes["heatcore"] = GameObjMesh(self, "heat_core", "obj",
                                               scale=0.01)
         self.meshes["starting_base"] = GameObjMesh(self, "starting_base", "obj",
                                                    scale=0.005)
+
+    def load_new_planet(self, seed = None):
+        if seed is None:
+            seed = random.randrange(1500)
+            seed = 1500
+            print(f"Current seed: {seed}")
+        self.planet = Planet(self, seed)
+        self.planet.load_attributes()
+        self.planet.cinematique_entree()
 
     def check_events(self):
         for event in pg.event.get():
@@ -61,8 +74,9 @@ class GraphicsEngine:
         self.time = pg.time.get_ticks() * 0.001
 
     def run(self):
-        debug = False
         while True:
+            if self.planet is None:
+                self.load_new_planet()
             start_time = time.perf_counter()  # High-resolution timer
 
             self.get_time()

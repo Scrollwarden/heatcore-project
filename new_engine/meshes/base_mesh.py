@@ -27,3 +27,8 @@ class BaseMesh:
     def destroy(self):
         self.vbo.release()
         self.vao.release()
+
+    def __repr__(self):
+        load_string = "NoVertices" if self.vertex_data is None else ""
+        context_string = ", NoContext" if self.vao is None else ""
+        return f"BaseMesh<{load_string}{context_string}>"

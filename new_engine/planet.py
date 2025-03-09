@@ -8,9 +8,8 @@ import pygame as pg
 
 from new_engine.light import Light
 from new_engine.camera import CameraAlt, CameraFollow
-from new_engine.player import Player, PlayerFollow, PlayerNoChangeInHeight, SatisfyingPlayer, FollowTerrainPlayer
+from new_engine.player import FollowTerrainPlayer
 
-from new_engine.meshes.obj_base_mesh import DefaultObjMesh, GameObjMesh
 from new_engine.objects.starting_base import StartingBase
 from new_engine.objects.heatcore import HeatCore
 
@@ -51,25 +50,27 @@ def flatten(vector: glm.vec3):
     return glm.vec3(vector.x, 0, vector.z)
 
 class Planet:
-    def __init__(self, app):
-        self.radius = 10
+    def __init__(self, app, seed):
+        self.radius = 8
         self.radius_squared = self.radius ** 2
         self.app = app
         
-        self.light = Light()
+        self.light = None
+        self.camera = None
+        self.player = None
 
-        points = ((0.0, -0.2), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
+        points = ((0.0, -0.3), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
         self.height_params = SplineHeightParams(points, HEIGHT_SCALE)
         self.color_params = ColorParams()
-        self.seed = 2
+        self.seed = seed
         self.noise = PerlinGenerator(self.height_params, self.color_params,
                                      seed=self.seed, scale=100 / INV_NOISE_SCALE, octaves=NUM_OCTAVES)
         self.chunk_shader = open_shaders(self.app, 'chunk')
         self.init_shader()
 
-        self.objects = []
+        self.starting_base = None
+        self.heatcores = []
         self.num_heatcores = 3
-        self.load_objects()
 
         self.result_queue = queue.Queue()
         self.threads = []
@@ -81,14 +82,19 @@ class Planet:
         self.chunks_to_load_dic = {}
         self.chunks_to_load_set = set()
         self.tasks_per_frame = TASKS_PER_FRAME
+
+    def load_attributes(self):
+        self.light = Light()
+        self.camera = CameraFollow(self.app)
+        self.player = FollowTerrainPlayer(self.app)
+        self.load_objects()
     
     def load_objects(self):
         # Starting base
         position = glm.vec3(0, 0, 0)
-        position = self.avoid_cliffs(position)
+        position = self.avoid_cliffs(position, NUM_OCTAVES)
         position.y = max(0, position.y) + 0.02 * HEIGHT_SCALE
-        starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
-        self.objects.append(starting_base)
+        self.starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
         
         rng = np.random.default_rng(self.seed)
         for i in range(self.num_heatcores):
@@ -96,27 +102,18 @@ class Planet:
             angle = rng.uniform(0, 360)
             position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
             
-            position = self.avoid_water(position)
+            position = self.avoid_water(position, NUM_OCTAVES)
             position.y += 0.005 * HEIGHT_SCALE
             print(f"Heatcore {i} at position: {position}")
             heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
             
-            self.objects.append(heatcore)
-        
+            self.heatcores.append(heatcore)
     
     def init_shader(self):
-        # light
-        self.chunk_shader['light.position'].write(self.app.light.position)
-        self.chunk_shader['light.Ia'].write(self.app.light.Ia)
-        self.chunk_shader['light.Id'].write(self.app.light.Id)
-        self.chunk_shader['light.Is'].write(self.app.light.Is)
-        # mvp
         colors_256 = np.zeros((256, 3), dtype=np.float32)
         colors_256[:len(self.color_params.colors)] = self.color_params.colors
         colors_256 *= 1 / 255
         self.chunk_shader['colors'].write(colors_256.tobytes())
-        self.chunk_shader['m_proj'].write(self.app.camera.m_proj)
-        self.chunk_shader['m_model'].write(glm.mat4())
 
     def generate_chunk_worker(self, coord, detail):
         """Worker function for generating chunks and rendering."""
@@ -127,7 +124,7 @@ class Planet:
     
     def generate_chunks(self):
         """Update chunks and load new ones."""
-        player_position = self.app.player.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
+        player_position = self.player.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
         player_chunk_coord = glm.vec2(glm.floor(player_position.x), glm.floor(player_position.y))
         keys_to_delete = [chunk_coord for chunk_coord in self.chunk_meshes.keys()
                           if glm.length2(player_position - chunk_coord - 0.5) > self.radius_squared]
@@ -193,9 +190,19 @@ class Planet:
         #print(f"Chunks that finished loading: {temp}")
     
     def update_shader(self):
-        self.chunk_shader['m_proj'].write(self.app.camera.m_proj)
-        self.chunk_shader['m_view'].write(self.app.camera.view_matrix)
-        self.chunk_shader['camPos'].write(self.app.camera.position)
+        # Light
+        self.chunk_shader['light.position'].write(self.light.position)
+        self.chunk_shader['light.Ia'].write(self.light.Ia)
+        self.chunk_shader['light.Id'].write(self.light.Id)
+        self.chunk_shader['light.Is'].write(self.light.Is)
+
+        # MVP + camera
+        self.chunk_shader['m_model'].write(glm.mat4())
+        self.chunk_shader['m_view'].write(self.camera.view_matrix)
+        self.chunk_shader['m_proj'].write(self.camera.m_proj)
+        self.chunk_shader['camPos'].write(self.camera.position)
+
+        # Time
         self.chunk_shader['time'].write(struct.pack('f', self.app.time))
 
     def update(self):
@@ -209,7 +216,7 @@ class Planet:
     def render(self):
         """Render all chunks within the active radius."""
         self.update()
-        player_position = self.app.camera.position / (CHUNK_SIZE * CHUNK_SCALE)
+        player_position = self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)
 
         for (i, j) in self.chunk_meshes.keys():
             chunk_mesh = self.chunk_meshes[(i, j)]
@@ -218,13 +225,12 @@ class Planet:
             distance_sq = (player_position.x - i - 0.5) ** 2 + (player_position.z - j - 0.5) ** 2
             chunk_mesh.update_model_matrix(glm.sqrt(distance_sq))
             chunk_mesh.render()
-        
-        for obj in self.objects:
-            print(type(obj))
-            print(obj.position)
-            obj.render()
-        
-        self.player.mesh.render()
+
+        # Object
+        self.starting_base.render()
+        for heatcore in self.heatcores:
+            heatcore.render()
+        self.player.render()
 
     def destroy(self):
         """Clean up resources."""
@@ -255,12 +261,12 @@ class Planet:
             return height_center, normal
         return normal
 
-    def avoid_water(self, position: glm.vec3):
+    def avoid_water(self, position: glm.vec3, octaves: int = 1):
         i = 0
-        height, terrain_normal = self.get_normal(position, 1, True)
+        height, terrain_normal = self.get_normal(position, octaves, True)
         while height < 0.01 * HEIGHT_SCALE:
             position -= flatten(terrain_normal)
-            height, terrain_normal = self.get_normal(position, 1, True)
+            height, terrain_normal = self.get_normal(position, octaves, True)
             i += 1
             print()
             print(f"Iteration {i}")
@@ -270,13 +276,13 @@ class Planet:
         print(f"Iteration of avoiding water: {i}")
         return flatten(position) + glm.vec3(0, height, 0)
     
-    def avoid_cliffs(self, position: glm.vec3):
+    def avoid_cliffs(self, position: glm.vec3, octaves: int = 1):
         i = 0
-        height, terrain_normal = self.get_normal(position, 1, True)
-        terrain_normal = flatten(terrain_normal)
+        height, terrain_normal = self.get_normal(position, octaves, True)
+        terrain_normal.y = 0
         while terrain_normal.y < glm.sin(glm.radians(75)):
             position -= flatten(terrain_normal)
-            height, terrain_normal = self.get_normal(position, 1, True)
+            height, terrain_normal = self.get_normal(position, octaves, True)
             i += 1
             print()
             print(f"Iteration {i}")
@@ -289,14 +295,11 @@ class Planet:
     def cinematique_entree(self):
         running = True
         while running:
+            self.app.context.clear(color=(0, 0, 0))
             self.generate_chunks()
             self.update_chunks()
             if len(self.chunks_to_load_set) == 0 and len(self.chunks_loading) == 0:
                 running = False
-            
+
             pg.display.flip()
             self.app.clock.tick(FPS)
-        self.load_objects()
-        
-        self.player = Pl
-        pass

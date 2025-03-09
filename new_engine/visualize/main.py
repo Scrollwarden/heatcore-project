@@ -52,7 +52,6 @@ class GraphicsEngine:
         self.time = pg.time.get_ticks() * 0.001
 
     def run(self):
-        debug = False
         while True:
             start_time = time.perf_counter()  # High-resolution timer
 
@@ -93,7 +92,7 @@ class Scene:
         self.load()
     
     def load(self):
-        self.objects.append(DefaultObjMesh(self.app, 'starting_base'))
+        self.objects.append(DefaultObjMesh(self.app, 'spaceship_player'))
     
     def update(self):
         for obj in self.objects:

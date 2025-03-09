@@ -148,10 +148,7 @@ class CameraFollow:
         sensitivity = (0.1 if self.right_click else 1.0) * MOUSE_SENSITIVITY
         
         self.yaw = glm.clamp(self.yaw - dx * sensitivity, - self.max_yaw, self.max_yaw)
-        print(f"Camera pitch before clamping: {self.pitch}")
-        print(f"Camera pitch velocity: {- dy * sensitivity}")
         self.pitch = glm.clamp(self.pitch - dy * sensitivity, - 89.0, 89.0)
-        print(f"Camera pitch: {self.pitch}")
 
     def update(self):
         self.update_perspective()

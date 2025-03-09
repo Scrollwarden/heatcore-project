@@ -30,6 +30,7 @@ class Camera:
         self.yaw += mouse_dx * SENSITIVITY
         self.pitch -= mouse_dy * SENSITIVITY
         self.pitch = max(-89, min(89, self.pitch))
+        pg.mouse.set_pos((800, 450))
         # Recenter the mouse
         #screen_width, screen_height = pg.display.get_surface().get_size()
         #pg.mouse.set_pos(screen_width // 2, screen_height // 2)

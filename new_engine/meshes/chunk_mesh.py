@@ -78,7 +78,7 @@ class ChunkMesh(BaseMesh):
         return self.vertex_data.nbytes + self.chunk.get_chunk_size()
 
     def __repr__(self):
-        load_string = ", NotLoaded" if self.vertex_data is None else ""
+        load_string = ", NoVertices" if self.vertex_data is None else ""
         context_string = ", NoContext" if self.vao is None else ""
         return f"ChunkMesh<{self.chunk}{load_string}{context_string}>"
 
@@ -95,7 +95,7 @@ class DelaunayChunkMesh(BaseMesh):
         self.app = app
         self.chunk = chunk
         self.context = self.app.context
-        self.shader_program = self.app.chunk_manager.chunk_shader
+        self.shader_program = self.app.planet.chunk_shader
 
         self.vbo_format = '3f 3f 1u1'
         self.attrs = ('in_position', 'in_normal', 'in_id')
@@ -163,6 +163,6 @@ class DelaunayChunkMesh(BaseMesh):
         return self.vertex_data.nbytes + self.chunk.get_chunk_size()
 
     def __repr__(self):
-        load_string = ", NotLoaded" if self.vertex_data is None else ""
+        load_string = ", NoVertices" if self.vertex_data is None else ""
         context_string = ", NoContext" if self.vao is None else ""
-        return f"ChunkMesh<{self.chunk}{load_string}{context_string}>"
+        return f"DelaunayChunkMesh<{self.chunk}{load_string}{context_string}>"

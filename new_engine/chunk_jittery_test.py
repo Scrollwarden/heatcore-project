@@ -10,9 +10,9 @@ CHUNK_SIZE = 16
 LG2_CS = math.floor(math.log2(CHUNK_SIZE))
 # from new_engine.options import CHUNK_SIZE, LG2_CS
 
-SIDE_LENGTH = 2
+SIDE_LENGTH = 5
 SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
-JITTER_STRENGHT = 1/3
+JITTER_STRENGTH = 1 / 3
 
 class HeightParams:
     __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
@@ -106,7 +106,7 @@ class ColorParams:
 
 
 class PerlinGenerator:
-    def __init__(self, height_params: HeightParams | PointsHeightParams, color_params: ColorParams,
+    def __init__(self, height_params: HeightParams | PointsHeightParams | SplineHeightParams, color_params: ColorParams,
                  seed: int = 0, scale: float = 1.0, octaves: int = 1,
                  persistence: float = 0.5, lacunarity: float = 2.0):
         self.height_params = height_params
@@ -139,6 +139,7 @@ class PerlinGenerator:
         # Normalized value (experimental adjustment)
         noise_value = (perlin_value / max(0.5, (0.42 / params["octaves"] + 0.44)) + 1) / 2
         return np.clip(noise_value, 0, 1)  # Ensure within [0,1]
+
 
 class ChunkTerrain:
     """Represents a terrain chunk, containing information about its vertices and associated data.
@@ -200,12 +201,12 @@ class ChunkTerrain:
                 # Correctly assign RNG based on position
                 if y in (0, CHUNK_SIZE) or x in (0, CHUNK_SIZE):
                     rng = self.get_deterministic_rng(self.coord * CHUNK_SIZE + [x, y])
-                    rng_step = 1
+                    jitter_strength = JITTER_STRENGTH
                 else:
                     rng = default_rng
-                    rng_step = step
-                jitter_x = rng.uniform(-JITTER_STRENGHT * rng_step, JITTER_STRENGHT * rng_step)
-                jitter_y = rng.uniform(-JITTER_STRENGHT * rng_step, JITTER_STRENGHT * rng_step)
+                    jitter_strength = JITTER_STRENGTH * step
+                jitter_x = rng.uniform(-jitter_strength, jitter_strength)
+                jitter_y = rng.uniform(-jitter_strength, jitter_strength)
                 
                 sample_x, sample_y = (self.coord * CHUNK_SIZE) + [x + jitter_x, y + jitter_y]
                 noise_value = self.noise.noise_value(sample_x, sample_y)
@@ -379,10 +380,10 @@ def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
         color = chunk_mesh.chunk.noise.color_params.get_color_from_id(face_id)
         # color = [min(value + (sum(chunk_mesh.chunk.coord) % 2) * 30, 255) for value in color]
 
-        a, b, c = [chunk_mesh.chunk.coord * scale + [int(ele[0][i] * scale) for i in (0, 2)] for ele in data]
+        a, b, c = [[int(ele[0][i] * scale) for i in (0, 2)] for ele in data]
         pygame.draw.polygon(screen, color, [a, b, c])
 
-def generate_chunk(x_chunk, y_chunk, noise, detail):
+def generate_chunk(x_chunk, y_chunk, noise, detail: float = 1.0):
     chunk_terrain = ChunkTerrain(noise, x_chunk, y_chunk)
     chunk_terrain.generate_detail(detail)
     chunk_mesh = DelaunayChunkMesh(chunk_terrain)
@@ -392,7 +393,7 @@ def generate_chunk(x_chunk, y_chunk, noise, detail):
 if __name__ == "__main__":
     height_param = HeightParams()
     color_param = ColorParams()
-    perlin_noise = PerlinGenerator(height_param, color_param, seed=2, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
+    perlin_noise = PerlinGenerator(height_param, color_param, seed=2500, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
 
     # chunk = ChunkTerrain(perlin_noise, 0, 0)
 
@@ -423,7 +424,7 @@ if __name__ == "__main__":
     chunk_meshes = []
     for x in range(SIDE_LENGTH):
         for y in range(SIDE_LENGTH):
-            chunk_mesh = generate_chunk(x, y, perlin_noise, y / SIDE_LENGTH)
+            chunk_mesh = generate_chunk(x, y, perlin_noise, 0.5)
             chunk_meshes.append(chunk_mesh)
     et = time.time()
     print(f"Size of chunks: {format_size(sum(chunk_mesh.get_byte_size() for chunk_mesh in chunk_meshes))}")
