@@ -260,7 +260,7 @@ class DeepThought :
     def __init__(self, agent : Agent) :
         self.agent = agent
     
-    def choisir_rec(self, etat : ndarray, joueur : int, largeur : int, profondeur : int, coup_interdit : int = -1, info_mode : bool = False) :
+    def choisir_rec(self, etat : ndarray, joueur : int, largeur : int, profondeur : int, coup_interdit : int = -1) :
         surface = Surface(etat)
         cube = Cube(surface)
         actions = cube.actions_possibles(coup_interdit)
@@ -292,8 +292,6 @@ class DeepThought :
         situations.sort(reverse=joueur==1, key=lambda arg : next(mapper))
         values.sort(reverse=joueur==1)
         values = values[:concrete_largeur]
-        """if values[0] * joueur <= -1 :
-            return values[0], action[0]"""
         print("Profondeur :", profondeur, "Before :")
         for i in range(concrete_largeur) :
             print(actions[i], values[i])
@@ -301,25 +299,13 @@ class DeepThought :
             if actions[i] not in actions_gagnantes :
                 coup_interdit = (actions[i] + 9) % 18 if actions[i] < 18 else -1
                 """print("Coup joué :", actions[i])"""
-                new_value = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0]
+                new_value = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit)[0]
                 if new_value == int(new_value) :
                     if new_value > 1 :
                         new_value -= 1
                     elif new_value < -1 :
                         new_value += 1
                 values[i] = new_value
-        """if joueur == 1 :
-            mapper = map(lambda i : values[i] if i < concrete_largeur else max(values)+i, range(len(actions)))
-        else :
-            mapper = map(lambda i : values[i] if i < concrete_largeur else min(values)-i, range(len(actions)))
-
-        actions.sort(reverse=joueur==1, key=lambda arg : next(mapper))
-        if joueur == 1 :
-            mapper = map(lambda i : values[i] if i < concrete_largeur else max(values)+i, range(len(situations)))
-        else :
-            mapper = map(lambda i : values[i] if i < concrete_largeur else min(values)-i, range(len(situations)))
-        situations.sort(reverse=joueur==1, key=lambda arg : next(mapper))
-        values.sort(reverse=joueur==1)"""
         print("Profondeur :", profondeur, "After :")
         for i in range(concrete_largeur) :
             print(actions[i], values[i])
@@ -329,7 +315,7 @@ class DeepThought :
             while values[i] <= -1 and i < len(actions) - 1 :
                 i = concrete_largeur
                 concrete_largeur += 1
-                values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0])
+                values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit)[0])
                 if values[i_max] < values[i] :
                     i_max = i
         else :
@@ -338,7 +324,7 @@ class DeepThought :
             while values[i] >= 1 and i < len(actions) - 1 :
                 i = concrete_largeur
                 concrete_largeur += 1
-                values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0])
+                values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit)[0])
                 if values[i_max] > values[i] :
                     i_max = i
         return values[i_max], actions[i_max]
@@ -426,11 +412,9 @@ class DeepThought :
         return values[i], actions[i]
 
 
-
-
     
-    def choisir(self, cube : Cube, joueur : int,  largeur : int, profondeur : int, coup_interdit : int = -1, info_mode : bool = False) :
-        res = self.choisir_rec(cube.get_state()*joueur, 1, largeur, profondeur, coup_interdit, info_mode=info_mode)
+    def choisir(self, cube : Cube, joueur : int,  largeur : int, profondeur : int, coup_interdit : int = -1) :
+        res = self.choisir_rec(cube.get_state()*joueur, 1, largeur, profondeur, coup_interdit)
         print("Action choisie :", res[1], res[0])
         action = res[1]
         return action
