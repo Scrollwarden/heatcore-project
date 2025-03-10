@@ -105,6 +105,7 @@ class Planet:
             position = self.avoid_water(position, NUM_OCTAVES)
             position.y += 0.005 * HEIGHT_SCALE
             print(f"Heatcore {i} at position: {position}")
+            self.app.hud.hud_game.set_heatcore_marker(position)
             heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
             
             self.heatcores.append(heatcore)
@@ -206,8 +207,10 @@ class Planet:
         self.chunk_shader['time'].write(struct.pack('f', self.app.time))
 
     def update(self):
-        self.player.update()
-        self.camera.update()
+        # Long aaah line
+        if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
+            self.player.update()
+            self.camera.update()
         
         self.generate_chunks()
         self.update_chunks()

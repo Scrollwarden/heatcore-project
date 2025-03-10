@@ -4,8 +4,10 @@ import glm
 import sys, time
 import random
 from new_engine.meshes.obj_base_mesh import GameObjMesh
+from new_engine.objects.hud import HUDObject
 from new_engine.planet import Planet
 from new_engine.logs import Logs
+from new_engine.hud_elements import DEFAULT_CONTROLS
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLOR, CHUNK_SIZE, CHUNK_SCALE
 
@@ -13,6 +15,7 @@ from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLO
 class GraphicsEngine:
     def __init__(self):
         self.mouse_clicks = [0, 0]
+        self.controls = DEFAULT_CONTROLS.copy()
         self.time = 0
         self.delta_time = 0
 
@@ -32,6 +35,7 @@ class GraphicsEngine:
         self.meshes = {}
         self.load_meshes()
         self.planet = None
+        self.hud = HUDObject(self)
         
         self.logs = Logs()
         print("Graphics engine initialized successfully")
@@ -46,28 +50,35 @@ class GraphicsEngine:
                                                    scale=0.005)
 
     def load_new_planet(self, seed = None):
+        if self.planet is not None:
+            self.planet.destroy()
         if seed is None:
             seed = random.randrange(1500)
-            seed = 1500
             print(f"Current seed: {seed}")
         self.planet = Planet(self, seed)
         self.planet.load_attributes()
-        self.planet.cinematique_entree()
+        # self.planet.cinematique_entree()
 
     def check_events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key in (pg.K_p, pg.K_ESCAPE)):
+            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_p):
                 self.planet.destroy()
+                self.hud.destroy()
                 pg.quit()
                 self.logs.save("new_engine/log_data")
                 #self.logs.display_single_window()
                 sys.exit()
+            if event.type == pg.KEYDOWN and event.key == self.controls["Reset Planet"]:
+                if not (self.hud.hud_menu.active or self.hud.hud_buttons.active):
+                    self.load_new_planet()
             if event.type == pg.MOUSEWHEEL:
                 self.planet.player.camera_zoom *= 0.97 ** event.y
+            self.hud.handle_event(event)
 
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
         self.planet.render()
+        self.hud.render()
         # self.scene.render()
 
     def get_time(self):
@@ -81,9 +92,12 @@ class GraphicsEngine:
 
             self.get_time()
             self.check_events()
+            self.hud.update()
             for mesh in self.meshes.values():
                 mesh.update()
 
+            if not self.hud.hud_buttons.active:
+                self.controls = self.hud.hud_buttons.bindings
             self.render()
             pg.display.flip()
             self.delta_time = self.clock.tick(FPS)

@@ -123,7 +123,7 @@ class CameraFollow:
         self.fov = FOV
         self.right_click = False
 
-        self.forward = glm.vec3(0, -1.0, -1)
+        self.forward = glm.vec3(0, 0, -1)
         self.right = glm.vec3(1, 0, 0)
         self.up = glm.vec3(0, 1, 0)
 

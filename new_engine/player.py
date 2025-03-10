@@ -59,13 +59,13 @@ class FollowTerrainPlayer:
         angular_velocity = 0.0
 
         keys = pg.key.get_pressed()
-        if keys[pg.K_z]:
+        if keys[self.app.controls["Forward"]]:
             acceleration += self.FORWARD_ACCELERATION
-        if keys[pg.K_s]:
+        if keys[self.app.controls["Backward"]]:
             acceleration += self.BACKWARD_ACCELERATION
-        if keys[pg.K_d]:
+        if keys[self.app.controls["Strafe Right"]]:
             angular_velocity += 0.003
-        if keys[pg.K_q]:
+        if keys[self.app.controls["Strafe Left"]]:
             angular_velocity -= 0.003
 
         self.velocity += acceleration * self.app.delta_time
