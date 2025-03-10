@@ -274,12 +274,12 @@ class DeepThought :
             if (gagnant := scratch.terminal_state())[0] :
                 gain = gagnant[1]
                 if gain * joueur >= 1 :
-                    return constant(float(gain)), action
+                    return constant(float(gain)) * 10, action
                 actions_gagnantes.append((action, gain))
             situations.append(scratch.get_flatten_state())
         values = list(self.agent(array(situations)))
         for action, gagnant in actions_gagnantes :
-            values[actions.index(action)] = constant(float(gagnant))
+            values[actions.index(action)] = constant(float(gagnant)) * 10
         if profondeur == 0 :
             if joueur == 1 : # Quand c'est le tour de l'IA
                 i = max(range(len(actions)), key=lambda x : values[x])
@@ -291,15 +291,23 @@ class DeepThought :
         mapper = map(lambda i : values[i], range(len(situations)))
         situations.sort(reverse=joueur==1, key=lambda arg : next(mapper))
         values.sort(reverse=joueur==1)
-        if values[0] * joueur <= -1 :
-            return values[0], action[0]
+        values = values[:concrete_largeur]
+        """if values[0] * joueur <= -1 :
+            return values[0], action[0]"""
         print("Profondeur :", profondeur, "Before :")
         for i in range(concrete_largeur) :
             print(actions[i], values[i])
         for i in range(concrete_largeur) :
-            coup_interdit = (actions[i] + 9) % 18 if actions[i] < 18 else -1
-            """print("Coup joué :", actions[i])"""
-            values[i] = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0]
+            if actions[i] not in actions_gagnantes :
+                coup_interdit = (actions[i] + 9) % 18 if actions[i] < 18 else -1
+                """print("Coup joué :", actions[i])"""
+                new_value = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0]
+                if new_value == int(new_value) :
+                    if new_value > 1 :
+                        new_value -= 1
+                    elif new_value < -1 :
+                        new_value += 1
+                values[i] = new_value
         """if joueur == 1 :
             mapper = map(lambda i : values[i] if i < concrete_largeur else max(values)+i, range(len(actions)))
         else :
@@ -316,18 +324,24 @@ class DeepThought :
         for i in range(concrete_largeur) :
             print(actions[i], values[i])
         if joueur == 1 :
-            i = max(range(concrete_largeur), key=lambda j : values[j])
+            i_max = max(range(concrete_largeur), key=lambda j : values[j])
+            i = i_max
             while values[i] <= -1 and i < len(actions) - 1 :
                 i = concrete_largeur
                 concrete_largeur += 1
                 values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0])
+                if values[i_max] < values[i] :
+                    i_max = i
         else :
-            i = min(range(concrete_largeur), key=lambda j : values[j])
+            i_max = min(range(concrete_largeur), key=lambda j : values[j])
+            i = i_max
             while values[i] >= 1 and i < len(actions) - 1 :
                 i = concrete_largeur
                 concrete_largeur += 1
-                values[i] = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0]
-        return values[i], actions[i]
+                values.append(self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur*-1, largeur, profondeur-1, coup_interdit, info_mode)[0])
+                if values[i_max] > values[i] :
+                    i_max = i
+        return values[i_max], actions[i_max]
     
     def choisir_rec2(self, etat : ndarray, joueur : int, largeur : int, profondeur : int, coup_interdit : int = -1, info_mode : bool = False) :
         """Ancien"""

@@ -1049,7 +1049,7 @@ if __name__ == "__main__":
     mouse_click = [0, 0]
     prev_mouse_x, prev_mouse_y = pygame.mouse.get_pos()
     player = 1
-    ia_player = 1
+    ia_player = choice((1, -1))
     coup_interdit = -1
     fini = False
     agent = Agent(True)
@@ -1085,7 +1085,7 @@ if __name__ == "__main__":
 
     while running :
         if not fini and player == ia_player :
-            action = deep_toughts.choisir(cube_ui.cube, player, 5, 2, coup_interdit)
+            action = deep_toughts.choisir(cube_ui.cube, player, 7, 3, coup_interdit)
             #action = agent.choisir_non_deterministe2(cube_ui.cube, player, coup_interdit)
             cube_ui.cube.jouer(action, player)
             player *= -1
@@ -1112,7 +1112,7 @@ if __name__ == "__main__":
                     cube.reset()
                     fini = False
                     player = 1
-                    ia_player = 1
+                    ia_player = choice((1, -1))
                 elif event.key == pygame.K_p :
                     camera.longitude = 0
                     camera.latitude = 0
