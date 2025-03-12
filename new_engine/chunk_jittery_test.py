@@ -66,12 +66,14 @@ class PointsHeightParams:
 BIOME_POINTS = {
     # à chaque fois on met tous les points avec valeur x entre 0 et 1 triés avec leur valeur de hauteur respective,
     # Pour les valeurs entre les points on fait un mélange
-    "plain": ((0.0, -0.3), (0.4, 0.0), (0.51, 0.04), (0.6, 0.1), (0.68, 0.19), (1.0, 0.96)),
-    "plateau": ((0.0, -0.3), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0)),
-    "desert_dune": ((0.0, -0.3), (0.4, 0.0), (0.55, 0.04), (0.65, 0.09), (0.79, 0.55), (1.0, 0.6)),
-    "desert_rock": ((0.0, -0.3), (0.4, 0.0), (0.53, 0.11), (0.66, 0.22), (0.8, 0.98), (1.0, 1.0)),
-    "snowy": ((0.0, -0.3), (0.4, 0.0), (0.51, 0.04), (0.6, 0.1), (0.68, 0.19), (1.0, 0.96)),
-    "archipel": ((0.0, -0.3), (0.4, -0.13), (0.52, 0.13), (0.66, -0.05), (0.85, 0.19), (1.0, 1.0))
+    "plain": ((0.0, -0.3), (0.45, 0.0), (0.48, 0.08), (0.67, 0.1), (0.76, 0.18), (0.84, 0.67), (0.94, 0.82), (1.0, 1.0)), # plat
+    "plateau": ((0.0, -0.3), (0.4, 0.0), (0.45, 0.18), (0.51, 0.19), (0.6, 0.26), (0.9, 0.88), (1.0, 1.0)), # plat avec falaise aux côtes
+    "desert_dune": ((0.0, -0.2), (0.3, 0.0), (0.36, 0.08), (0.41, 0.09), (0.43, 0.08), (0.46, 0.1), (0.49, 0.07), (0.53, 0.11), (0.55, 0.08), (0.58, 0.14), (0.61, 0.15), (0.65, 0.14), (0.67, 0.16), (0.68, 0.14), (0.71, 0.16), (0.74, 0.15), (0.76, 0.2), (0.8, 0.19), (0.82, 0.21), (0.85, 0.19), (0.88, 0.21), (0.9, 0.19), (1.0, 1.0)), # plat avec dunes et étages de plateaux
+    "desert_rock": ((0.0, -0.3), (0.4, 0.0), (0.53, 0.11), (0.66, 0.22), (0.8, 0.98), (1.0, 1.0)), # plats avec grands rochers rouges
+    "snowy": ('will take plain params, with icy peaks if possible'), # plat enneigé
+    "tundra": ('will take plateau params, with icy peaks if possible'), # plat avec falaise aux côtes enneigé
+    "archipel": ((0.0, -0.3), (0.5, -0.13), (0.52, 0.13), (0.66, -0.05), (0.85, 0.19), (1.0, 1.0)), # îles
+    "natural_bastions":((0.0, -0.3), (0.3, 0.0), (0.51, 0.1), (0.6, 0.9), (0.68, 0.2), (1.0, 0.6)) # cercles de pierres autour de petites collines
 }
 
 BIOME_COLORS = {
