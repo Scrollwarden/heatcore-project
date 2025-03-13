@@ -50,7 +50,7 @@ def flatten(vector: glm.vec3):
     return glm.vec3(vector.x, 0, vector.z)
 
 class Planet:
-    def __init__(self, app, seed):
+    def __init__(self, app, seed, biome):
         self.radius = 8
         self.radius_squared = self.radius ** 2
         self.app = app
@@ -59,9 +59,8 @@ class Planet:
         self.camera = None
         self.player = None
 
-        points = ((0.0, -0.3), (0.4, 0.0), (0.45, 0.1), (0.5, 0.2), (0.6, 0.26), (1.0, 1.0))
-        self.height_params = SplineHeightParams(points, HEIGHT_SCALE)
-        self.color_params = ColorParams()
+        self.height_params = SplineHeightParams(biome, HEIGHT_SCALE)
+        self.color_params = ColorParams(biome)
         self.seed = seed
         self.noise = PerlinGenerator(self.height_params, self.color_params,
                                      seed=self.seed, scale=100 / INV_NOISE_SCALE, octaves=NUM_OCTAVES)
@@ -211,7 +210,16 @@ class Planet:
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
             self.player.update()
             self.camera.update()
-        
+
+            heatcores = []
+            for heatcore in self.heatcores:
+                if glm.length2(heatcore.position.xz - self.player.position.xz) <= CHUNK_SCALE:
+                    self.app.hud.hud_game.add_heatcore_count()
+                    print("Heatcore taken !")
+                else:
+                    heatcores.append(heatcore)
+            self.heatcores = heatcores
+
         self.generate_chunks()
         self.update_chunks()
         self.update_shader()

@@ -6,20 +6,34 @@ import enum
 from new_engine.options import FPS, CHUNK_SCALE, HEIGHT_SCALE, CHUNK_SIZE, NUM_OCTAVES
 
 CAMERA_ZOOM_SCALE = 0.5
-ROLL_INTENSITY = 50.0
+ROLL_INTENSITY = 10.0
 
 
 
 ROLL_FRICTION = 0.95
-MAX_ROTATION_SPEED = 1.0
 HOVER_HEIGHT = 0.2 * HEIGHT_SCALE * CHUNK_SCALE
 
 
 def flatten(vector):
     return glm.vec3(vector.x, 0, vector.z)
 
+def collision(point, center, radius, vector):
+    c = glm.length2(point - center) - radius ** 2
+
+    if c >= 0:
+        return point
+
+    b = 2 * sum((point - center) * vector)
+    d = b ** 2 - 4 * c
+
+    if d <= 0:
+        return point
+
+    t = (- b + glm.sqrt(d)) / 2
+    return point + t * vector
+
 class FollowTerrainPlayer:
-    MAX_SPEED = 0.03 * CHUNK_SCALE # How many chunks per second
+    MAX_SPEED = 0.06 * CHUNK_SCALE # How many chunks per second
     MIN_SPEED = - 0.5 * MAX_SPEED
     MAX_ROTATION_SPEED = 60.0 / FPS # How many degrees per second
 
@@ -41,11 +55,14 @@ class FollowTerrainPlayer:
         
         # Movement physics
         self.velocity = 0.0
+        self.angular_acceleration = 0.0
         self.angular_velocity = 0.0
+        self.roll = 0.0
         
         # Orientation
         self.rotation = 0.0
         self.forward = glm.vec3(0, 0, -1)
+        self.no_roll_up = glm.vec3(0, 1, 0)
         self.up = glm.vec3(0, 1, 0)
         self.right = glm.cross(self.forward, self.up)
         
@@ -56,7 +73,7 @@ class FollowTerrainPlayer:
     def handle_inputs(self):
         """Handles key inputs and updates acceleration values."""
         acceleration = 0.0
-        angular_velocity = 0.0
+        self.angular_acceleration = 0.0
 
         keys = pg.key.get_pressed()
         if keys[self.app.controls["Forward"]]:
@@ -64,12 +81,12 @@ class FollowTerrainPlayer:
         if keys[self.app.controls["Backward"]]:
             acceleration += self.BACKWARD_ACCELERATION
         if keys[self.app.controls["Strafe Right"]]:
-            angular_velocity += 0.003
+            self.angular_acceleration += 0.003
         if keys[self.app.controls["Strafe Left"]]:
-            angular_velocity -= 0.003
+            self.angular_acceleration -= 0.003
 
         self.velocity += acceleration * self.app.delta_time
-        self.angular_velocity += angular_velocity * self.app.delta_time
+        self.angular_velocity += self.angular_acceleration * self.app.delta_time
     
     def apply_friction(self):
         """Applies friction to gradually slow down movement and rotation."""
@@ -102,42 +119,49 @@ class FollowTerrainPlayer:
         if terrain_height < 0:
             terrain_height = 0
             terrain_normal = glm.vec3(0, 1, 0)
-        self.up = glm.mix(self.up, terrain_normal, 0.02)
-        self.forward.y = - glm.dot(self.forward, self.up) / self.up.y
+        self.no_roll_up = glm.normalize(glm.mix(self.no_roll_up, terrain_normal, 0.02))
+        self.forward.y = - glm.dot(self.forward, self.no_roll_up) / self.no_roll_up.y
         self.forward = glm.normalize(self.forward)
         self.position += self.forward * self.velocity
         self.position.y = glm.mix(self.position.y, terrain_height + HOVER_HEIGHT, 0.02)
-        
-        if self.app.delta_time:
-            roll_angle = glm.radians(self.angular_velocity * ROLL_INTENSITY / self.app.delta_time)
+
+        if self.angular_acceleration > 0:
+            self.roll = glm.mix(self.roll, self.MAX_ROLL, 0.05)
+        elif self.angular_acceleration < 0:
+            self.roll = glm.mix(self.roll, - self.MAX_ROLL, 0.05)
         else:
-            roll_angle = 0
-        rolled_normal = glm.rotate(self.up, roll_angle, self.forward)
+            self.roll *= 0.95
+        rolled_normal = glm.rotate(self.no_roll_up, glm.radians(self.roll), self.forward)
+        rolled_normal.y = max(0.01, rolled_normal.y)
         
-        self.up = glm.normalize(self.up)
-        self.right = glm.normalize(glm.cross(self.forward, rolled_normal))
+        self.up = glm.normalize(rolled_normal)
+        self.right = glm.normalize(glm.cross(self.forward, self.up))
+
+    def apply_base_collision(self):
+        base_pos = self.app.planet.starting_base.position
+        direction = self.position - base_pos
+        distance = glm.length(direction)
+
+        max_distance = CHUNK_SCALE * 3
+        if distance < max_distance:
+            repel_strength = (max_distance - distance) / max_distance
+            repel_force = glm.normalize(direction) * (repel_strength ** 3) * CHUNK_SCALE
+
+            self.position += repel_force
 
     def update_camera(self):
         """Smoothly updates the camera position to follow the player with zoom and slight delay."""
-        self.camera_zoom = glm.clamp(self.camera_zoom, 0.05, 2.0)
+        self.camera_zoom = glm.clamp(self.camera_zoom, 0.13, 0.8)
         pitch_offset = glm.radians((2.05 - self.camera_zoom) * 10)
-        camera_displacement = - self.forward + glm.tan(pitch_offset) * self.up
+        camera_displacement = - flatten(self.forward) + glm.tan(pitch_offset) * self.up
         camera_position_vector = camera_displacement * self.camera_zoom * CAMERA_ZOOM_SCALE
         camera_position = self.position + camera_position_vector
 
-        """num_step = 10
-        current_power = 1.0
-        camera_terrain_height = self.app.planet.get_perlin_height(camera_position, 2) + 0.01 * HEIGHT_SCALE
-        in_base = glm.length2(flatten(camera_position), flatten(self.app.planet.starting_base.position)) < CHUNK_SCALE
-        in_walls = camera_position.y < camera_terrain_height
-        if in_base or in_walls:
-            for i in range(10):
-                current_power *= 0.5
-                if glm.length2(flatten(camera_position), flatten(self.app.planet.starting_base.position)) < CHUNK_SCALE:
-                    camera_position -= camera_position_vector * current_power
-                elif camera_position.y < self.app.planet.get_perlin_height(camera_position, 2) + 0.01 * HEIGHT_SCALE:
-                    camera_position += camera_position_vector * current_power
-                num_step -= 1"""
+        camera_terrain_height = self.app.planet.get_perlin_height(camera_position, NUM_OCTAVES) + 0.015 * HEIGHT_SCALE
+        camera_position.y = max(camera_position.y, camera_terrain_height)
+
+        camera_position.xz = collision(camera_position.xz, self.app.planet.starting_base.position.xz,
+                                       CHUNK_SCALE * 1.5, - glm.normalize(camera_position_vector.xz))
 
         self.camera.position = camera_position
         self.camera.forward = self.position + 0.02 * self.up - self.camera.position
@@ -165,6 +189,7 @@ class FollowTerrainPlayer:
         self.apply_friction()
         self.clamp_velocities()
         self.update_vectors()
+        self.apply_base_collision()
         self.update_camera()
 
         self.update_model_matrix()
