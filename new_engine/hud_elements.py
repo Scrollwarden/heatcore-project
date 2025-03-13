@@ -44,7 +44,7 @@ class CompassMarker:
         self.color = color
         self.size = size
         self.thickness = thickness
-        self.image = pg.image.load(image_path) if image_path else None
+        self.image = pg.image.load(image_path) if image_path is not None else None
         self.image_offset_y = 20
 
     def draw(self):
@@ -52,7 +52,7 @@ class CompassMarker:
         end_pos = (self.x, self.y + self.size // 2)
         pg.draw.line(self.screen, self.color, start_pos, end_pos, self.thickness)
 
-        if self.image:
+        if self.image is not None:
             image_x = self.x - self.image.get_width() // 2
             image_y = self.y + self.image_offset_y
             self.screen.blit(self.image, (image_x, image_y))
@@ -69,7 +69,7 @@ class DynamicCompassMarker(CompassMarker):
     def update_yaw(self, camera_x, camera_y):
         dx = self.x_coord - camera_x
         dy = self.y_coord - camera_y
-        self.yaw = math.degrees(math.atan2(dy, dx))
+        self.yaw = math.degrees(math.atan2(dx, dy))
 
 class HeatcoreBar:
     def __init__(self, screen, x, y, width, height):
@@ -90,6 +90,9 @@ class HeatcoreBar:
 
     def set_heatcore_count(self, count):
         self.heatcore_count = max(0, min(count, self.sections))
+
+    def add_heatcore_count(self, num = 1):
+        self.heatcore_count += num
 
     def draw(self):
         section_spacing = 5  # Space between bars
@@ -150,7 +153,7 @@ class UI1:
         for dynamic, marker in self.compass_markers:
             if dynamic:
                 marker.update_yaw(x, y)
-            angle = (yaw - math.radians(marker.yaw) + math.pi) % (2 * math.pi) - math.pi
+            """angle = (yaw - math.radians(marker.yaw) + math.pi) % (2 * math.pi) - math.pi
             # Make the angle in [-180°, 180°] range instead of [0°, 360°]
             compass_coef = SCREEN_WIDTH / math.tan(fov)
             if abs(angle) >= fov:
@@ -158,19 +161,25 @@ class UI1:
             x_coord = compass_coef * math.tan(angle)
             if abs(x_coord) >= self.compass_bar_length / 2:
                 continue
-            x_coord += SCREEN_WIDTH / 2
-            marker.set_position(x_coord)
+            x_coord += SCREEN_WIDTH / 2"""
+            theta = marker.yaw  # Angle in radians
+            screen_ratio = (theta + (fov / 2)) / fov
+            compass_x = screen_ratio * self.compass_bar_length
+            marker.set_position(compass_x)
             marker.draw()
 
         self.heatcore_bar.draw()
 
     def set_heatcore_marker(self, position):
         marker = DynamicCompassMarker(self.screen, self.compass_bar_x, self.compass_bar_y,
-                                      position.x, position.y,(0, 0, 0), 15, 8)
+                                      position.x, position.z,(0, 0, 0), 15, 8)
         self.compass_markers.append((True, marker))
 
     def update_heatcore_count(self, count):
         self.heatcore_bar.set_heatcore_count(count)
+
+    def add_heatcore_count(self, num = 1):
+        self.heatcore_bar.add_heatcore_count(num)
 
 class UI2:
     def __init__(self, screen):

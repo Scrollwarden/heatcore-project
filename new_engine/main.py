@@ -54,10 +54,16 @@ class GraphicsEngine:
             self.planet.destroy()
         if seed is None:
             seed = random.randrange(1500)
+            seed = 1300
             print(f"Current seed: {seed}")
-        self.planet = Planet(self, seed)
+        self.planet = Planet(self, seed, "desert_dune")
         self.planet.load_attributes()
         # self.planet.cinematique_entree()
+        if pg.mixer.music.get_busy():
+            pg.mixer.music.stop()
+        pg.mixer.music.load("musics/The Road Ahead_LoudnessComp.wav")
+        pg.mixer.music.set_volume(0.5)
+        pg.mixer.music.play(-1)
 
     def check_events(self):
         for event in pg.event.get():
