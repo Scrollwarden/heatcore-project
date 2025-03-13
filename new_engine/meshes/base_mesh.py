@@ -27,6 +27,8 @@ class BaseMesh:
     def destroy(self):
         self.vbo.release()
         self.vao.release()
+        if self.shader_program:
+            self.shader_program.destroy()
 
     def __repr__(self):
         load_string = "NoVertices" if self.vertex_data is None else ""

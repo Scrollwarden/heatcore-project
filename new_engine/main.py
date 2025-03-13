@@ -62,7 +62,7 @@ class GraphicsEngine:
         if pg.mixer.music.get_busy():
             pg.mixer.music.stop()
         pg.mixer.music.load("musics/The Road Ahead_LoudnessComp.wav")
-        pg.mixer.music.set_volume(0.5)
+        pg.mixer.music.set_volume(0.0)
         pg.mixer.music.play(-1)
 
     def check_events(self):

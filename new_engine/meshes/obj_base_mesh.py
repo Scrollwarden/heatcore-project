@@ -2,6 +2,7 @@ from new_engine.meshes.base_mesh import BaseMesh
 from new_engine.shader_program import open_shaders
 from new_engine.meshes.load_objects import load_vertex_data_obj
 import glm
+
 """
 class ObjMesh(BaseMesh):
     def __init__(self, app, shader_name):

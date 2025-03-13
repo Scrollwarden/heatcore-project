@@ -104,8 +104,8 @@ class Planet:
             position = self.avoid_water(position, NUM_OCTAVES)
             position.y += 0.005 * HEIGHT_SCALE
             print(f"Heatcore {i} at position: {position}")
-            self.app.hud.hud_game.set_heatcore_marker(position)
             heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
+            self.app.hud.hud_game.set_heatcore_marker(heatcore)
             
             self.heatcores.append(heatcore)
     

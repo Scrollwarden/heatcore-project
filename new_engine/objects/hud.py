@@ -72,9 +72,7 @@ class HUDObject:
         elif self.hud_menu.active:
             self.hud_menu.draw()
         elif self.hud_game:
-            x, y = self.app.planet.camera.forward.xz
-            fov = math.radians(self.app.planet.camera.fov)
-            self.hud_game.draw(x, y, math.atan2(x, y), fov)
+            self.hud_game.draw(self.app.planet.camera)
 
         ui_texture_data = pg.image.tostring(self.ui_surface, "RGBA", True)
         self.mesh.ui_texture.write(ui_texture_data)

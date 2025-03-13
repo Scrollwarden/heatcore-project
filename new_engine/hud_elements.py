@@ -3,12 +3,12 @@ import sys
 # from intel_arti.cube_v2.cube_ui import Renderer, Camera, CubeUI
 import os, math
 import pygame as pg
+import glm
 
 from new_engine.options import SCREEN_WIDTH, FOV
 
 # from tensorflow.keras.models import load_model
 # from intel_arti.cube_v2.agent import Agent
-
 
 
 
@@ -36,40 +36,55 @@ class CompassBar:
         pg.draw.line(self.screen, self.color, start_pos, end_pos, self.thickness)
 
 class CompassMarker:
-    def __init__(self, screen, x, y, yaw, color=(255, 255, 255), size=10, thickness=5, image_path=None):
+    def __init__(self, screen, compass_bar_y, compass_bar_length,
+                 color=(255, 255, 255), size=10, thickness=5, image_path=None):
         self.screen = screen
-        self.x = x
-        self.y = y
-        self.yaw = yaw
+        self.compass_bar_y = compass_bar_y
+        self.compass_factor = compass_bar_length / SCREEN_WIDTH
         self.color = color
         self.size = size
         self.thickness = thickness
         self.image = pg.image.load(image_path) if image_path is not None else None
         self.image_offset_y = 20
 
-    def draw(self):
-        start_pos = (self.x, self.y - self.size // 2)
-        end_pos = (self.x, self.y + self.size // 2)
+    def get_point(self, camera): ...
+
+    def draw(self, camera):
+        clip_pos = camera.m_proj * camera.view_matrix * self.get_point(camera)
+        if clip_pos.w <= 0:
+            return # Point is behind the camera or on the sides
+        ndc_x = clip_pos.x / clip_pos.w
+        if abs(ndc_x) >= self.compass_factor:
+            return # Point is outside the compass bar
+        x_coord = (ndc_x + 1) / 2 * SCREEN_WIDTH
+
+        # Draw the actual marker
+        start_pos = (x_coord, self.compass_bar_y - self.size // 2)
+        end_pos = (x_coord, self.compass_bar_y + self.size // 2)
         pg.draw.line(self.screen, self.color, start_pos, end_pos, self.thickness)
 
         if self.image is not None:
-            image_x = self.x - self.image.get_width() // 2
-            image_y = self.y + self.image_offset_y
+            image_x = x_coord - self.image.get_width() // 2
+            image_y = self.compass_bar_y + self.image_offset_y
             self.screen.blit(self.image, (image_x, image_y))
 
-    def set_position(self, x):
-        self.x = x
+class HeatcoreMarker(CompassMarker):
+    def __init__(self, screen, heatcore, compass_bar_y, compass_bar_length,
+                 color=(255, 255, 255), size=10, thickness=5, image_path=None):
+        super().__init__(screen, compass_bar_y, compass_bar_length, color, size, thickness, image_path)
+        self.heatcore = heatcore
 
-class DynamicCompassMarker(CompassMarker):
-    def __init__(self, screen, x, y, x_coord, y_coord, color=(255, 255, 255), size=10, thickness=5, image_path=None):
-        super().__init__(screen, x, y, 0, color, size, thickness, image_path)
-        self.x_coord = x_coord
-        self.y_coord = y_coord
+    def get_point(self, camera):
+        return self.heatcore.m_model * glm.vec4(0, 0, 0, 1.0)
 
-    def update_yaw(self, camera_x, camera_y):
-        dx = self.x_coord - camera_x
-        dy = self.y_coord - camera_y
-        self.yaw = math.degrees(math.atan2(dx, dy))
+class PolarMarker(CompassMarker):
+    def __init__(self, screen, position, compass_bar_y, compass_bar_length,
+                 color=(255, 255, 255), size=10, thickness=5, image_path=None):
+        super().__init__(screen, compass_bar_y, compass_bar_length, color, size, thickness, image_path)
+        self.position = glm.vec4(position, 1.0)
+
+    def get_point(self, camera):
+        return glm.vec4(camera.position, 0) + self.position
 
 class HeatcoreBar:
     def __init__(self, screen, x, y, width, height):
@@ -122,23 +137,24 @@ class UI1:
         self.compass_bar = CompassBar(screen, self.compass_bar_x, self.compass_bar_y, self.compass_bar_length)
 
         marker_data = [
-            {"yaw": 0, "color": (255, 0, 0), "size": 15, "thickness": 4},    # North
-            {"yaw": 180, "color": (0, 255, 0), "size": 15, "thickness": 4},  # South
-            {"yaw": 90, "color": (0, 0, 255), "size": 15, "thickness": 4},   # East
-            {"yaw": 270, "color": (255, 255, 0), "size": 15, "thickness": 4},  # West
+            {"position": glm.vec3(1, 0, 0), "color": (255, 0, 0), "size": 15, "thickness": 4},    # North
+            {"position": glm.vec3(-1, 0, 0), "color": (0, 255, 0), "size": 15, "thickness": 4},  # South
+            {"position": glm.vec3(0, 0, 1), "color": (0, 0, 255), "size": 15, "thickness": 4},   # East
+            {"position": glm.vec3(0, 0, -1), "color": (255, 255, 0), "size": 15, "thickness": 4},  # West
         ]
-        self.compass_markers = [
-            (False, CompassMarker(
+        self.polar_markers = [
+            PolarMarker(
                 screen,
-                self.compass_bar_x,
+                data["position"],
                 self.compass_bar_y,
-                yaw=data["yaw"],
+                self.compass_bar_length,
                 color=data.get("color", (255, 255, 255)),
                 size=data.get("size", 10),
                 thickness=data.get("thickness", 5),
-            ))
+            )
             for data in marker_data
         ]
+        self.heatcore_markers = []
 
         height = 200
         width = 10
@@ -146,34 +162,21 @@ class UI1:
         y = screen.get_height() - (height + 50)
         self.heatcore_bar = HeatcoreBar(screen, x, y, width, height)
 
-    def draw(self, x, y, yaw, fov):
+    def draw(self, camera):
         """yaw and fov in radians please"""
         self.compass_bar.draw()
 
-        for dynamic, marker in self.compass_markers:
-            if dynamic:
-                marker.update_yaw(x, y)
-            """angle = (yaw - math.radians(marker.yaw) + math.pi) % (2 * math.pi) - math.pi
-            # Make the angle in [-180°, 180°] range instead of [0°, 360°]
-            compass_coef = SCREEN_WIDTH / math.tan(fov)
-            if abs(angle) >= fov:
-                continue
-            x_coord = compass_coef * math.tan(angle)
-            if abs(x_coord) >= self.compass_bar_length / 2:
-                continue
-            x_coord += SCREEN_WIDTH / 2"""
-            theta = marker.yaw  # Angle in radians
-            screen_ratio = (theta + (fov / 2)) / fov
-            compass_x = screen_ratio * self.compass_bar_length
-            marker.set_position(compass_x)
-            marker.draw()
+        for polar_marker in self.polar_markers:
+            polar_marker.draw(camera)
+        for heatcore_marker in self.heatcore_markers:
+            heatcore_marker.draw(camera)
 
         self.heatcore_bar.draw()
 
-    def set_heatcore_marker(self, position):
-        marker = DynamicCompassMarker(self.screen, self.compass_bar_x, self.compass_bar_y,
-                                      position.x, position.z,(0, 0, 0), 15, 8)
-        self.compass_markers.append((True, marker))
+    def set_heatcore_marker(self, heatcore):
+        marker = HeatcoreMarker(self.screen, heatcore, self.compass_bar_y, self.compass_bar_length,
+                                (0, 0, 0), 15, 8)
+        self.heatcore_markers.append(marker)
 
     def update_heatcore_count(self, count):
         self.heatcore_bar.set_heatcore_count(count)
