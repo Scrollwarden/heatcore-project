@@ -75,8 +75,8 @@ BIOME_POINTS = {
     "desert_rock": ((0.0, -0.3), (0.4, 0.0), (0.53, 0.11), (0.66, 0.22), (0.8, 0.98), (1.0, 1.0)), # plats avec grands rochers rouges
     "snowy": ('will take plain params, with icy peaks if possible'), # plat enneigé
     "tundra": ('will take plateau params, with icy peaks if possible'), # plat avec falaise aux côtes enneigé
-    "archipel": ((0.0, -0.3), (0.5, -0.13), (0.52, 0.13), (0.66, -0.05), (0.85, 0.19), (1.0, 1.0)), # îles
-    "natural_bastions":((0.0, -0.3), (0.3, 0.0), (0.51, 0.1), (0.6, 0.9), (0.68, 0.2), (1.0, 0.6)) # cercles de pierres autour de petites collines
+    "archipel": ((0, -0.3), (0.2, -0.22), (0.46, 0), (0.52, 0.12), (0.59, 0.15), (0.65, 0.12), (0.68, 0), (0.72, -0.1), (0.75, 0), (0.77, 0.1), (0.84, 0.23), (1.0, 1.0)), # îles
+    "natural_bastions":((0.0, -0.3), (0.35, 0.0), (0.4, 0.13), (0.5, 0.15), (0.52, 0.35), (0.57, 0.47), (0.64, 0.46), (0.68, 0.36), (0.69, 0.22), (0.84, 0.23), (0.89, 0.34), (1.0, 1.0)) # cercles de pierres autour de petites collines
 }
 
 BIOME_COLORS = {
