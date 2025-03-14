@@ -3,6 +3,7 @@
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_normal;
 layout (location = 2) in uint in_id;
+layout (location = 3) in vec2 in_texCoord;
 
 out vec3 inNormal;
 out vec3 waveNormal;
@@ -10,6 +11,7 @@ out vec3 fragPos;
 out vec3 inColor;
 out float fragRealHeight;
 out float fragOriginalHeight;
+out vec2 texCoord;
 
 uniform vec3[256] colors;
 uniform mat4 m_proj;
@@ -103,4 +105,5 @@ void main() {
     fragPos = vec3(m_model * vec4(position, 1.0));
     gl_Position = m_proj * m_view * m_model * vec4(position, 1.0);
     inColor = colors[in_id];
+    texCoord = in_texCoord;
 }

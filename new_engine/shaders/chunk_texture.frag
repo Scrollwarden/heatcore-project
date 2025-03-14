@@ -5,7 +5,6 @@ layout (location = 0) out vec4 fragColor;
 in vec3 inNormal;
 in vec3 waveNormal;
 in vec3 fragPos;
-in vec3 inColor;
 in float fragRealHeight;
 in float fragOriginalHeight;
 
@@ -18,14 +17,11 @@ struct Light {
 
 uniform Light light;
 uniform vec3 camPos;
-
-// Apply gamma correction (common value is 2.2)
-vec3 gammaCorrect(vec3 color, float value) {
-    return pow(color, vec3(1.0 / value));
-}
+uniform sampler2D textureSampler;
 
 void main() {
     vec3 viewDirection = normalize(camPos - fragPos);
+    vec3 inColor = texture(textureSampler, texCoord);
     vec3 color;
 
     if (fragOriginalHeight <= 0) {
@@ -86,5 +82,5 @@ void main() {
         color = (ambient + diffuse + specular) * inColor;
     }
 
-    fragColor = vec4(gammaCorrect(color, 2.2), 1.0);
+    fragColor = vec4(color, 1.0);
 }
