@@ -71,15 +71,15 @@ Herbe2 {
 
 /* Desert */
 Sand1 {
-    color: rgb(124, 162,  55);
+    color: rgb(238, 220, 162);
    }
 
 Sand2 {
-    color: rgb(124, 162,  55);
+    color: rgb(248, 222, 138);
    }
 
 SandRed1 {
-    color: rgb(124, 162,  55);
+    color: rgb(248, 197, 138);
    }
 
 /* Froid */
@@ -112,36 +112,36 @@ Stone4 {
 
 /* Desert */
 SandStone1 {
-    color: rgb(21, 47, 88);
+    color: rgb(248, 222, 138);
    }
 
 SandStone2 {
-    color: rgb(25,  54, 100);
+    color: rgb(248, 222, 138);
    }
 
 SandStone3 {
-    color: rgb(33,  69, 120);
+    color: rgb(248, 222, 138);
    }
 
 SandStone4 {
-    color: rgb(44,  87, 147);
+    color: rgb(248, 222, 138);
    }
 
 /* Desert rouge */
 RedStone1 {
-    color: rgb(21, 47, 88);
+    color: rgb(206, 106, 75);
    }
 
 RedStone2 {
-    color: rgb(25,  54, 100);
+    color: rgb(226, 128, 98);
    }
 
 RedStone3 {
-    color: rgb(33,  69, 120);
+    color: rgb(240, 139, 93);
    }
 
 RedStone4 {
-    color: rgb(44,  87, 147);
+    color: rgb(238, 161, 116);
    }
 
 /* Froid */
