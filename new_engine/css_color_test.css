@@ -19,19 +19,19 @@ EauTemp4 {
 
 /* Desert */
 EauWarm1 {
-    color: rgb(124, 162,  55);
+    color: rgb(100, 188, 223);
    }
 
 EauWarm2 {
-    color: rgb(124, 162,  55);
+    color: rgb(128, 203, 212);
    }
 
 EauWarm3 {
-    color: rgb(124, 162,  55);
+    color: rgb(159, 230, 240);
    }
 
 EauWarm4 {
-    color: rgb(124, 162,  55);
+    color: rgb(174, 247, 250);
    }
 
 /* Froid */
@@ -170,7 +170,7 @@ PeakSnow {
 
 /* Desert */
 ColdTop {
-    color: rgb(245, 222, 154);
+    color: rgb(255, 255, 255);
 }
 
 /* Froid */
