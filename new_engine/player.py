@@ -104,26 +104,16 @@ class FollowTerrainPlayer:
         angle_cos, angle_sin = glm.cos(glm.radians(self.rotation)), glm.sin(glm.radians(self.rotation))
         self.forward = glm.vec3(angle_cos, 0, angle_sin)
         self.right = glm.vec3(angle_sin, 0, - angle_cos)
-        
-        # Sample terrain height at different positions to get a smooth normal
-        vec_forward = glm.normalize(self.forward) * 0.05 * CHUNK_SCALE * CHUNK_SIZE
-        vec_right = glm.normalize(self.right) * 0.05 * CHUNK_SCALE * CHUNK_SIZE
-        terrain_height = self.app.planet.get_perlin_height(self.position, 2)
-        forward_height = self.app.planet.get_perlin_height(self.position + vec_forward, 2)
-        right_height = self.app.planet.get_perlin_height(self.position + vec_right, 2)
-        terrain_normal = - glm.normalize(glm.cross(
-            glm.vec3(vec_right.x, right_height - terrain_height, vec_right.z),
-            glm.vec3(vec_forward.x, forward_height - terrain_height, vec_forward.z)
-        ))
-        
+
+        terrain_height, terrain_normal = self.app.planet.get_normal(self.position, 5, True)
         if terrain_height < 0:
             terrain_height = 0
             terrain_normal = glm.vec3(0, 1, 0)
-        self.no_roll_up = glm.normalize(glm.mix(self.no_roll_up, terrain_normal, 0.02))
+        self.no_roll_up = glm.normalize(glm.mix(self.no_roll_up, terrain_normal, 0.04))
         self.forward.y = - glm.dot(self.forward, self.no_roll_up) / self.no_roll_up.y
         self.forward = glm.normalize(self.forward)
         self.position += self.forward * self.velocity
-        self.position.y = glm.mix(self.position.y, terrain_height + HOVER_HEIGHT, 0.02)
+        self.position.y = glm.mix(self.position.y, terrain_height + HOVER_HEIGHT, 0.04)
 
         if self.angular_acceleration > 0:
             self.roll = glm.mix(self.roll, self.MAX_ROLL, 0.05)
@@ -153,7 +143,7 @@ class FollowTerrainPlayer:
         """Smoothly updates the camera position to follow the player with zoom and slight delay."""
         self.camera_zoom = glm.clamp(self.camera_zoom, 0.13, 0.8)
         pitch_offset = glm.radians((2.05 - self.camera_zoom) * 10)
-        camera_displacement = - flatten(self.forward) + glm.tan(pitch_offset) * self.up
+        camera_displacement = - glm.normalize(flatten(self.forward)) + glm.tan(pitch_offset) * self.up
         camera_position_vector = camera_displacement * self.camera_zoom * CAMERA_ZOOM_SCALE
         camera_position = self.position + camera_position_vector
 

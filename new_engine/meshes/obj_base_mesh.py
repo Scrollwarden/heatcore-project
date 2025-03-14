@@ -79,7 +79,7 @@ class GameObjMesh(BaseMesh):
                                                 self.scale, self.obj_transformation)
     
     def update(self):
-        self.shader_program['light.position'].write(self.app.planet.light.position)
+        self.shader_program['light.direction'].write(self.app.planet.light.direction)
         self.shader_program['light.Ia'].write(self.app.planet.light.Ia)
         self.shader_program['light.Id'].write(self.app.planet.light.Id)
         self.shader_program['light.Is'].write(self.app.planet.light.Is)

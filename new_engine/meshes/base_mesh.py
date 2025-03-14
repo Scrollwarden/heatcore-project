@@ -28,7 +28,7 @@ class BaseMesh:
         self.vbo.release()
         self.vao.release()
         if self.shader_program:
-            self.shader_program.destroy()
+            self.shader_program.release()
 
     def __repr__(self):
         load_string = "NoVertices" if self.vertex_data is None else ""

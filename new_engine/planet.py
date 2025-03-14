@@ -8,6 +8,7 @@ import pygame as pg
 
 from new_engine.light import Light
 from new_engine.camera import CameraAlt, CameraFollow
+from new_engine.objects.advanced_skybox import AdvancedSkyBoxObject
 from new_engine.player import FollowTerrainPlayer
 
 from new_engine.objects.starting_base import StartingBase
@@ -67,6 +68,7 @@ class Planet:
         self.chunk_shader = open_shaders(self.app, 'chunk')
         self.init_shader()
 
+        self.skybox = None
         self.starting_base = None
         self.heatcores = []
         self.num_heatcores = 3
@@ -83,18 +85,23 @@ class Planet:
         self.tasks_per_frame = TASKS_PER_FRAME
 
     def load_attributes(self):
-        self.light = Light()
+        self.app.get_time()
+        self.light = Light(self.app)
         self.camera = CameraFollow(self.app)
         self.player = FollowTerrainPlayer(self.app)
         self.load_objects()
     
     def load_objects(self):
+        # Skybox
+        self.skybox = AdvancedSkyBoxObject(self.app, self.app.meshes["advanced_skybox"])
+
         # Starting base
         position = glm.vec3(0, 0, 0)
         position = self.avoid_cliffs(position, NUM_OCTAVES)
         position.y = max(0, position.y) + 0.02 * HEIGHT_SCALE
         self.starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
-        
+
+        # Heatcores
         rng = np.random.default_rng(self.seed)
         for i in range(self.num_heatcores):
             radius = rng.uniform(1, 2)
@@ -191,13 +198,12 @@ class Planet:
     
     def update_shader(self):
         # Light
-        self.chunk_shader['light.position'].write(self.light.position)
+        self.chunk_shader['light.direction'].write(self.light.direction)
         self.chunk_shader['light.Ia'].write(self.light.Ia)
         self.chunk_shader['light.Id'].write(self.light.Id)
         self.chunk_shader['light.Is'].write(self.light.Is)
 
         # MVP + camera
-        self.chunk_shader['m_model'].write(glm.mat4())
         self.chunk_shader['m_view'].write(self.camera.view_matrix)
         self.chunk_shader['m_proj'].write(self.camera.m_proj)
         self.chunk_shader['camPos'].write(self.camera.position)
@@ -208,6 +214,7 @@ class Planet:
     def update(self):
         # Long aaah line
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
+            self.light.update()
             self.player.update()
             self.camera.update()
 
@@ -238,6 +245,7 @@ class Planet:
             chunk_mesh.render()
 
         # Object
+        self.skybox.render()
         self.starting_base.render()
         for heatcore in self.heatcores:
             heatcore.render()

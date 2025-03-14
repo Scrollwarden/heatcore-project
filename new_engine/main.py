@@ -4,6 +4,7 @@ import glm
 import sys, time
 import random
 from new_engine.meshes.obj_base_mesh import GameObjMesh
+from new_engine.meshes.advanced_skybox import AdvancedSkyBoxMesh
 from new_engine.objects.hud import HUDObject
 from new_engine.planet import Planet
 from new_engine.logs import Logs
@@ -34,6 +35,8 @@ class GraphicsEngine:
         
         self.meshes = {}
         self.load_meshes()
+        self.textures = {}
+        self.load_textures()
         self.planet = None
         self.hud = HUDObject(self)
         
@@ -48,15 +51,19 @@ class GraphicsEngine:
                                               scale=0.01)
         self.meshes["starting_base"] = GameObjMesh(self, "starting_base", "obj",
                                                    scale=0.005)
+        self.meshes["advanced_skybox"] = AdvancedSkyBoxMesh(self)
+
+    def load_textures(self):
+        self.textures["test"] = 0
+
 
     def load_new_planet(self, seed = None):
         if self.planet is not None:
             self.planet.destroy()
         if seed is None:
             seed = random.randrange(1500)
-            seed = 1300
             print(f"Current seed: {seed}")
-        self.planet = Planet(self, seed, "desert_dune")
+        self.planet = Planet(self, seed, "archipel")
         self.planet.load_attributes()
         # self.planet.cinematique_entree()
         if pg.mixer.music.get_busy():
@@ -77,6 +84,8 @@ class GraphicsEngine:
             if event.type == pg.KEYDOWN and event.key == self.controls["Reset Planet"]:
                 if not (self.hud.hud_menu.active or self.hud.hud_buttons.active):
                     self.load_new_planet()
+            if event.type == pg.KEYDOWN and event.key == pg.K_l:
+                self.planet.light.time = 0
             if event.type == pg.MOUSEWHEEL:
                 self.planet.player.camera_zoom *= 0.97 ** event.y
             self.hud.handle_event(event)
@@ -85,15 +94,14 @@ class GraphicsEngine:
         self.context.clear(color=BACKGROUND_COLOR)
         self.planet.render()
         self.hud.render()
-        # self.scene.render()
 
     def get_time(self):
         self.time = pg.time.get_ticks() * 0.001
 
     def run(self):
+        self.get_time()
+        self.load_new_planet(1300)
         while True:
-            if self.planet is None:
-                self.load_new_planet()
             start_time = time.perf_counter()  # High-resolution timer
 
             self.get_time()
