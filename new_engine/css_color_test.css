@@ -1,53 +1,53 @@
-/* EAU */
+/* Water */
 
 /* tempéré */
-EauTemp1 {
+WaterTemp1 {
     color: rgb(21, 47, 88);
    }
 
-EauTemp2 {
+WaterTemp2 {
     color: rgb(25,  54, 100);
    }
 
-EauTemp3 {
+WaterTemp3 {
     color: rgb(33,  69, 120);
    }
 
-EauTemp4 {
+WaterTemp4 {
     color: rgb(44,  87, 147);
    }
 
 /* Desert */
-EauWarm1 {
+WaterWarm1 {
     color: rgb(100, 219, 223);
    }
 
-EauWarm2 {
+WaterWarm2 {
     color: rgb(128, 203, 212);
    }
 
-EauWarm3 {
+WaterWarm3 {
     color: rgb(159, 240, 220);
    }
 
-EauWarm4 {
+WaterWarm4 {
     color: rgb(199, 245, 230);
    }
 
 /* Froid */
-EauCold1 {
+WaterCold1 {
     color: rgb(41, 48, 87);
    }
 
-EauCold2 {
+WaterCold2 {
     color: rgb(51, 65, 112);
    }
 
-EauCold3 {
+WaterCold3 {
     color: rgb(87, 99, 138);
    }
 
-EauCold4 {
+WaterCold4 {
     color: rgb(115, 134, 189);
    }
 
@@ -112,20 +112,17 @@ Stone4 {
 
 /* Desert */
 SandStone1 {
-    color: rgb(248, 222, 138);
+    color: rgb(219, 195, 114);
    }
 
 SandStone2 {
-    color: rgb(248, 222, 138);
+    color: rgb(163, 147, 93);
    }
 
 SandStone3 {
-    color: rgb(248, 222, 138);
+    color: rgb(138, 126, 87);
    }
-
-SandStone4 {
-    color: rgb(248, 222, 138);
-   }
+/* last color is normal rock Stone4 */
 
 /* Desert rouge */
 RedStone1 {
