@@ -19,7 +19,7 @@ EauTemp4 {
 
 /* Desert */
 EauWarm1 {
-    color: rgb(100, 188, 223);
+    color: rgb(100, 219, 223);
    }
 
 EauWarm2 {
@@ -27,11 +27,11 @@ EauWarm2 {
    }
 
 EauWarm3 {
-    color: rgb(159, 230, 240);
+    color: rgb(159, 240, 220);
    }
 
 EauWarm4 {
-    color: rgb(174, 247, 250);
+    color: rgb(199, 245, 230);
    }
 
 /* Froid */
