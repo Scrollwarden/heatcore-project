@@ -1,0 +1,179 @@
+/* EAU */
+
+/* tempéré */
+EauTemp1 {
+    color: rgb(21, 47, 88);
+   }
+
+EauTemp2 {
+    color: rgb(25,  54, 100);
+   }
+
+EauTemp3 {
+    color: rgb(33,  69, 120);
+   }
+
+EauTemp4 {
+    color: rgb(44,  87, 147);
+   }
+
+/* Desert */
+EauWarm1 {
+    color: rgb(124, 162,  55);
+   }
+
+EauWarm2 {
+    color: rgb(124, 162,  55);
+   }
+
+EauWarm3 {
+    color: rgb(124, 162,  55);
+   }
+
+EauWarm4 {
+    color: rgb(124, 162,  55);
+   }
+
+/* Froid */
+EauCold1 {
+    color: rgb(41, 48, 87);
+   }
+
+EauCold2 {
+    color: rgb(51, 65, 112);
+   }
+
+EauCold3 {
+    color: rgb(87, 99, 138);
+   }
+
+EauCold4 {
+    color: rgb(115, 134, 189);
+   }
+
+/* BEACH */
+
+/* all */
+Beach1 {
+    color: rgb(245, 222, 154);
+}
+
+/* GROUND */
+
+/* tempéré */
+Herbe1 {
+    color: rgb(124, 162,  55);
+   }
+
+Herbe2 {
+    color: rgb(89, 135,  51);
+   }
+
+/* Desert */
+Sand1 {
+    color: rgb(124, 162,  55);
+   }
+
+Sand2 {
+    color: rgb(124, 162,  55);
+   }
+
+SandRed1 {
+    color: rgb(124, 162,  55);
+   }
+
+/* Froid */
+SnowyGrass1 {
+    color: rgb(135, 175, 131);
+   }
+
+SnowyGrass2 {
+    color: rgb(148, 177, 146);
+   }
+
+/* STONE */
+
+/* tempéré */
+Stone1 {
+    color: rgb(39,  39,  39);
+   }
+
+Stone2 {
+    color: rgb(67,  57,  47);
+   }
+
+Stone3 {
+    color: rgb(74,  62,  53);
+   }
+
+Stone4 {
+    color: rgb(79,  73,  68);
+   }
+
+/* Desert */
+SandStone1 {
+    color: rgb(21, 47, 88);
+   }
+
+SandStone2 {
+    color: rgb(25,  54, 100);
+   }
+
+SandStone3 {
+    color: rgb(33,  69, 120);
+   }
+
+SandStone4 {
+    color: rgb(44,  87, 147);
+   }
+
+/* Desert rouge */
+RedStone1 {
+    color: rgb(21, 47, 88);
+   }
+
+RedStone2 {
+    color: rgb(25,  54, 100);
+   }
+
+RedStone3 {
+    color: rgb(33,  69, 120);
+   }
+
+RedStone4 {
+    color: rgb(44,  87, 147);
+   }
+
+/* Froid */
+SnowyStone1 {
+    color: rgb(178, 179, 182);
+   }
+
+SnowyStone2 {
+    color: rgb(197, 198, 201);
+   }
+
+SnowyStone3 {
+    color: rgb(207, 207, 209);
+   }
+
+SnowyStone4 {
+    color: rgb(134, 134, 134);
+   }
+
+/* PEAK */
+
+/* tempéré */
+PeakSnow {
+    color: rgb(255, 255, 255);
+}
+
+/* Desert */
+ColdTop {
+    color: rgb(245, 222, 154);
+}
+
+/* Froid */
+IcePeak {
+    color: rgb(214, 246, 248);
+}
