@@ -66,17 +66,16 @@ class PointsHeightParams:
 BIOME_POINTS = {
     # à chaque fois on met tous les points avec valeur x entre 0 et 1 triés avec leur valeur de hauteur respective,
     # Pour les valeurs entre les points on fait un mélange
-    "plain": ((0.0, -0.3), (0.45, 0.0), (0.48, 0.08), (0.67, 0.1), (0.76, 0.18), (0.84, 0.67), (0.94, 0.82), (1.0, 1.0)), # plat
+    "plain": ((0.0, -0.3), (0.43, 0.0), (0.45, 0.05), (0.67, 0.09), (0.76, 0.18), (0.84, 0.67), (0.94, 0.82), (1.0, 1.0)), # plat
     "plateau": ((0.0, -0.3), (0.4, 0.0), (0.45, 0.18), (0.51, 0.19), (0.6, 0.26), (0.9, 0.88), (1.0, 1.0)), # plat avec falaise aux côtes
-    "desert_dune": ((0.0, -0.1), (0.05, 0.0), (0.03, 0.115), (0.07, 0.085), (0.11, 0.11), (0.16, 0.09), (0.17, 0.07), (0.25, 0.11), (0.3, 0.1), # Wiggle around 0.1
+    "desert_dune": ((0.0, -0.1), (0.083, 0.0), (0.084, 0.065), (0.088, 0.085), (0.11, 0.11), (0.16, 0.09), (0.17, 0.07), (0.25, 0.11), (0.3, 0.1), # Wiggle around 0.1
                     (0.36, 0.125), (0.39, 0.165), (0.41, 0.13), (0.43, 0.145), (0.46, 0.17), (0.49, 0.18), (0.53, 0.17), # Wiggle around 0.15
                     (0.55, 0.225), (0.58, 0.18), (0.61, 0.185), (0.65, 0.22), (0.67, 0.24), # Wiggle around 0.2
-                    (0.71, 0.3), (0.8, 0.6), (1.0, 1.0)), # Smooth rise
+                    (0.8, 0.3), (0.85, 0.6), (1.0, 1.0)), # Smooth rise
     "desert_rock": ((0.0, -0.3), (0.4, 0.0), (0.53, 0.11), (0.66, 0.22), (0.8, 0.98), (1.0, 1.0)), # plats avec grands rochers rouges
-    "snowy": ((0.0, -0.3), (0.45, 0.0), (0.48, 0.08), (0.67, 0.1), (0.76, 0.18), (0.84, 0.67), (0.94, 0.82), (1.0, 1.0)), # plat enneigé
+    "snowy": ((0.0, -0.3), (0.43, 0.0), (0.45, 0.05), (0.67, 0.09), (0.76, 0.18), (0.84, 0.47), (0.9, 0.62), (0.98, 0.9), (1.0, 1.0)), # plat enneigé
     "tundra": ((0.0, -0.3), (0.4, 0.0), (0.45, 0.18), (0.51, 0.19), (0.6, 0.26), (0.9, 0.88), (1.0, 1.0)), # plat avec falaise aux côtes enneigé
-    "archipel": ((0, -0.3), (0.2, -0.22), (0.5, 0), (0.54, 0.12), (0.60, 0.16), (0.65, 0.12), (0.68, 0), (0.72, -0.1), (0.75, 0), (0.77, 0.1), (0.84, 0.23), (1.0, 1.0)), # îles
-    "natural_bastions":((0.0, -0.3), (0.35, 0.0), (0.4, 0.13), (0.5, 0.15), (0.52, 0.45), (0.57, 0.57), (0.64, 0.56), (0.68, 0.46), (0.69, 0.22), (0.84, 0.23), (0.89, 0.34), (1.0, 1.0)) # cercles de pierres autour de petites collines
+    "archipel": ((0.0, -0.4), (0.55, 0.0), (0.58, 0.05), (0.7, 0.14), (0.75, 0.25), (0.84, 0.4), (0.89, 0.68), (0.92, 0.83), (1.0, 1.0)) # îles
 }
 
 BIOME_COLORS = {
@@ -101,8 +100,8 @@ BIOME_COLORS = {
     "desert_rock": [(100, 219, 223), (128, 203, 212), (159, 240, 220), (199, 245, 230), # Water
                        (245, 222, 154),  # Beach
                        (248, 222, 138), (248, 197, 138),  # Sand
-                       (206, 106, 75), (226, 128, 98), (240, 139, 93), (238, 161, 116),  # Mountain
-                       (255, 255, 255)],  # Peak
+                       (165, 84, 59), (197, 104, 76), (211, 115, 71), (221, 147, 105),  # Mountain
+                       (255, 255, 255)],  # Peak (grass on top ?)
 
     "snowy": [(41, 48, 87), (51, 65, 112), (87, 99, 138), (115, 134, 189), # Water
                        (245, 222, 154),  # Beach
@@ -119,31 +118,18 @@ BIOME_COLORS = {
     "archipel": [(100, 219, 223), (128, 203, 212), (159, 240, 220), (199, 245, 230), # Water
                        (245, 222, 154),  # Beach
                        (124, 162,  55),  # Grass
-                       (245, 222, 154),  # Beach again (before second water)
-                       (199, 245, 230), (159, 240, 220), (199, 245, 230),  # Water again and inverted, clearer
-                       (245, 222, 154),  # Beach again (after second water)
-                       (124, 162,  55), ( 89, 135,  51),  # Grass again (between water and mountains)
-                       ( 39,  39,  39), ( 67,  57,  47), ( 74,  62,  53), ( 79,  73,  68),  # Mountain
-                       (255, 255, 255)],  # Peak
-
-    "natural_bastions": [( 21,  47,  88), ( 25,  54, 100), ( 33,  69, 120), ( 44,  87, 147), # Water
-                       (245, 222, 154),  # Beach
-                       (124, 162,  55), ( 89, 135,  51),  # Grass
-                       ( 74,  62,  53), ( 79,  73,  68), ( 74,  62,  53), # hill and inverted (clear mountain)
-                       ( 89, 135,  51),  # Grass again (between hills and mountains)
                        ( 39,  39,  39), ( 67,  57,  47), ( 74,  62,  53), ( 79,  73,  68),  # Mountain
                        (255, 255, 255)]  # Peak
 }
 
 BIOME_HEIGHTS_LIMIT = {
-    "plain": [0.05, 0.2, 0.35, 0.45, 0.48, 0.6, 0.76, 0.79, 0.81, 0.84, 0.9],
-    "plateau": [0.005, 0.25, 0.3, 0.35, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.85],
-    "desert_dune": [0.02, 0.05, 0.52, 0.6, 0.71, 0.75, 0.8, 0.9, 0.95],
+    "plain": [0.05, 0.15, 0.3, 0.4, 0.46, 0.65, 0.71, 0.74, 0.76, 0.79, 0.85],
+    "plateau": [0.005, 0.2, 0.25, 0.3, 0.4, 0.475, 0.54, 0.63, 0.69, 0.74, 0.8],
+    "desert_dune": [0.02, 0.075, 0.16, 0.5, 0.71, 0.75, 0.8, 0.9, 0.95],
     "desert_rock": [0.05, 0.2, 0.3, 0.4, 0.43, 0.5, 0.7, 0.73, 0.75, 0.8, 0.95],
-    "snowy": [0.05, 0.2, 0.35, 0.45, 0.48, 0.6, 0.76, 0.79, 0.81, 0.84, 0.8],
-    "tundra": [0.005, 0.25, 0.3, 0.35, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.8],
-    "archipel": [0.2, 0.35, 0.4, 0.5, 0.55, 0.64, 0.68, 0.7, 0.73, 0.75, 0.8, 0.83, 0.84, 0.86, 0.88, 0.90, 0.92],
-    "natural_bastions": [0.05, 0.1, 0.25, 0.35, 0.38, 0.43, 0.55, 0.6, 0.66, 0.69, 0.84, 0.85, 0.86, 0.87, 0.89]
+    "snowy": [0.05, 0.2, 0.35, 0.45, 0.48, 0.6, 0.76, 0.79, 0.81, 0.84, 0.86],
+    "tundra": [0.005, 0.25, 0.3, 0.32, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.8],
+    "archipel": [0.2, 0.35, 0.4, 0.5, 0.6, 0.7, 0.76, 0.81, 0.85, 0.9]
 }
 
 class SplineHeightParams:
@@ -369,7 +355,7 @@ class ChunkMesh:
         return self.vertex_data.nbytes + self.chunk.get_chunk_size()
 
     def __repr__(self):
-        return f"ChunkMesh<{self.chunk}{", NotLoaded" if self.vertex_data is None else ""}>"
+        return f"ChunkMesh<{self.chunk}{', NotLoaded' if self.vertex_data is None else ''}>"
 
 class DelaunayChunkMesh:
     """Chunk mesh that can update its details using Delaunay triangulation"""
@@ -472,7 +458,7 @@ def generate_chunk(x_chunk, y_chunk, noise, detail: float = 1.0):
 
 if __name__ == "__main__":
     height_param = HeightParams()
-    color_param = ColorParams()
+    color_param = ColorParams("archipel")
     perlin_noise = PerlinGenerator(height_param, color_param, seed=2500, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
 
     # chunk = ChunkTerrain(perlin_noise, 0, 0)
