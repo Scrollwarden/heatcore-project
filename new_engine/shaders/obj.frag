@@ -40,5 +40,6 @@ void main() {
 
     vec3 color = (ambient + diffuse + specular) * inColor;
 
-    fragColor = vec4(gammaCorrect(color, 2.2), 1.0);
+    // fragColor = vec4(gammaCorrect(color, 2.2), 1.0);
+    fragColor = vec4(color, 1.0);
 }

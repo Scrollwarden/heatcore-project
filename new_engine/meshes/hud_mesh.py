@@ -1,11 +1,12 @@
 from new_engine.meshes.base_mesh import BaseMesh
 import numpy as np
 import moderngl as mgl
+import struct
 
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class HUDMesh(BaseMesh):
-    def __init__(self, app):
+    def __init__(self, app, alpha = 1.0):
         super().__init__()
         self.context = app.context
         self.shader_program = self.context.program(
@@ -22,19 +23,23 @@ class HUDMesh(BaseMesh):
             fragment_shader="""
             #version 330
             uniform sampler2D ui_texture;
+            uniform float alpha;
             in vec2 v_uv;
             out vec4 f_color;
             void main() {
-                f_color = texture(ui_texture, v_uv);
+                vec4 color = texture(ui_texture, v_uv);
+                f_color = vec4(color.rgb, color.a * alpha);
             }
             """
         )
+        self.alpha = alpha
         self.vbo_format = "2f 2f"
         self.attrs = ('in_pos', 'in_uv')
         self.ui_texture = self.context.texture((SCREEN_WIDTH, SCREEN_HEIGHT), 4)
         self.ui_texture.filter = (mgl.LINEAR, mgl.LINEAR)
         self.init_vertex_data()
         self.init_context()
+        self.update()
 
     def init_vertex_data(self):
         self.vertex_data = np.array([
@@ -52,6 +57,9 @@ class HUDMesh(BaseMesh):
     def destroy(self):
         super().destroy()
         self.ui_texture.release()
+    
+    def update(self):
+        self.shader_program["alpha"].write(struct.pack('f', self.alpha))
 
     def __repr__(self):
         load_string = "NoVertices" if self.vertex_data is None else ""

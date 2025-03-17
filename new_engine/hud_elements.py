@@ -87,14 +87,14 @@ class PolarMarker(CompassMarker):
         return glm.vec4(camera.position, 0) + self.position
 
 class HeatcoreBar:
-    def __init__(self, screen, x, y, width, height):
+    def __init__(self, screen, x, y, width, height, heatcore_number = 3):
         self.screen = screen
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.heatcore_count = 0
-        self.sections = 3
+        self.sections = heatcore_number
         self.colors = {
             "inactive": (50, 50, 50),
             "active": (255, 165, 0),
@@ -128,8 +128,10 @@ class HeatcoreBar:
 
 
 class UI1:
-    def __init__(self, screen):
+    def __init__(self, app, screen):
+        self.app = app
         self.screen = screen
+        self.active = True
 
         self.compass_bar_x = screen.get_width() // 2
         self.compass_bar_y = 50
@@ -154,38 +156,56 @@ class UI1:
             )
             for data in marker_data
         ]
-        self.heatcore_markers = []
+        self.heatcore_markers = {}
+        self.ancient_strcture_marker = None
 
         height = 200
         width = 10
         x = screen.get_width() - (width + 50)
         y = screen.get_height() - (height + 50)
         self.heatcore_bar = HeatcoreBar(screen, x, y, width, height)
+    
+    def update(self):
+        heatcore_keys = set(self.app.planet.heatcores.keys())
+        marker_keys = set(self.heatcore_markers.keys())
+        keys_to_remove = marker_keys.difference(heatcore_keys)
+        keys_to_add = heatcore_keys.difference(marker_keys)
+        for key in keys_to_remove:
+            del self.heatcore_markers[key]
+        for key in keys_to_add:
+            self.heatcore_markers[key] = HeatcoreMarker(
+                self.screen, self.app.planet.heatcores[key], 
+                self.compass_bar_y, self.compass_bar_length,
+                (0, 0, 0), 15, 8
+            )
+        
+        self.heatcore_bar.set_heatcore_count(self.app.planet.num_heatcores - len(self.heatcore_markers))
+        
+        ancient_structure = self.app.planet.ancient_structure
+        self.ancient_strcture_marker = HeatcoreMarker(
+            self.screen, ancient_structure, self.compass_bar_y, self.compass_bar_length,
+            (255, 0, 255), 20, 12
+        )
+        
 
     def draw(self, camera):
         """yaw and fov in radians please"""
+        self.update()
         self.compass_bar.draw()
 
         for polar_marker in self.polar_markers:
             polar_marker.draw(camera)
-        for heatcore_marker in self.heatcore_markers:
+        for heatcore_marker in self.heatcore_markers.values():
             heatcore_marker.draw(camera)
+
+        if self.ancient_strcture_marker is not None:
+            self.ancient_strcture_marker.draw(camera)
 
         self.heatcore_bar.draw()
 
-    def set_heatcore_marker(self, heatcore):
-        marker = HeatcoreMarker(self.screen, heatcore, self.compass_bar_y, self.compass_bar_length,
-                                (0, 0, 0), 15, 8)
-        self.heatcore_markers.append(marker)
-
-    def update_heatcore_count(self, count):
-        self.heatcore_bar.set_heatcore_count(count)
-
-    def add_heatcore_count(self, num = 1):
-        self.heatcore_bar.add_heatcore_count(num)
-
 class UI2:
-    def __init__(self, screen):
+    def __init__(self, app, screen):
+        self.app = app
         self.screen = screen
         self.width, self.height = screen.get_size()
         self.active = False
@@ -261,8 +281,7 @@ class UI2:
             mouse_pos = event.pos
             if self.close_button_rect.collidepoint(mouse_pos):
                 print("Close button clicked: Ending the game.")
-                pg.quit()
-                sys.exit()
+                self.app.quit_game()
             elif self.play_button_rect.collidepoint(mouse_pos):
                 print("Play button clicked!")
                 self.active = False

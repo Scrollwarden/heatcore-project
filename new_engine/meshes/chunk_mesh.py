@@ -96,6 +96,7 @@ class DelaunayChunkMesh(BaseMesh):
         self.chunk = chunk
         self.context = self.app.context
         self.shader_program = self.app.planet.chunk_shader
+        self.shadow_shader_program = self.app.planet.shadow_map
 
         self.vbo_format = '3f 3f 1u1'
         self.attrs = ('in_position', 'in_normal', 'in_id')
@@ -182,10 +183,10 @@ class TextureDelaunayChunkMesh(BaseMesh):
         self.chunk = chunk
         self.context = self.app.context
         self.shader_program = self.app.planet.chunk_shader
-        self.texture = app.textures["test"]
+        # self.shadow_shader_program = self.app.planet.shadow_map
 
         self.vbo_format = '3f 3f 1u1 2f'
-        self.attrs = ('in_position', 'in_normal', 'in_id')
+        self.attrs = ('in_position', 'in_normal', 'in_id', 'in_texCoord')
 
         self.vertex_data = None
         self.detail = None
@@ -226,9 +227,10 @@ class TextureDelaunayChunkMesh(BaseMesh):
             # Get the face ID
             face_id = max([self.chunk.id_data[pt[0], pt[1]] for pt in points[simplex]])
 
+            uv = [(0, 0), (1, 0), (0, 1)][index % 3]
             # Store the vertices, normals, and face IDs for each triangle
             for i in range(3):
-                self.vertex_data[index + i] = (vertices[i], normal, face_id)
+                self.vertex_data[index + i] = (vertices[i], normal, face_id, uv)
 
             index += 3
 

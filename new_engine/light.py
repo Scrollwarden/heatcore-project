@@ -1,7 +1,7 @@
 import glm
 
 class Light:
-    def __init__(self, app, normal=(-0.5, 1.0, 0.0), direction=(0.0, -0.2, 1.0), color=(1, 1, 1)):
+    def __init__(self, app, normal=(0.0, 0.5, 1.0), direction=(1.0, -0.2, 0.0), color=(1, 1, 1)):
         self.app = app
         self.color = glm.vec3(color)
 
@@ -10,6 +10,7 @@ class Light:
         self.starting_direction = glm.vec3(direction)
 
         self.direction = glm.vec3()
+        # self.m_view = glm.lookAt(self.direction, glm.vec3(0, 0, 0))
         self.Ia = glm.vec3()
         self.Id = glm.vec3()
         self.Is = glm.vec3()
@@ -29,7 +30,8 @@ class Light:
         self.Is = (0.8 + 0.2 * sun_height) * self.color  # Specular slightly increases
 
     def update(self):
-        current_direction = glm.rotate(glm.radians(self.time * 90 / 30), self.normal) * glm.vec4(self.starting_direction, 0.0)
+        time_full_rotation = 90 # in seconds
+        current_direction = glm.rotate(glm.radians(self.time * 360 / time_full_rotation), self.normal) * glm.vec4(self.starting_direction, 0.0)
         self.set_direction(current_direction)
         self.time += self.app.delta_time / 1000 # number of seconds
         print(f"Light time: {self.time}")
