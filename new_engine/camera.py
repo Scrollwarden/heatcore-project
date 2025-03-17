@@ -117,7 +117,14 @@ def sigmoid_function(x, a):
 MOUSE_SENSITIVITY = 0.1
 
 class CameraFollow:
+    """Class for the camera"""
+    
     def __init__(self, app):
+        """Class constructor
+
+        Args:
+            app (GraphicsEngine): the graphic engine class
+        """
         self.app = app
         self.position = glm.vec3(0.0, 3.0, 0.0)
         self.fov = FOV
@@ -136,11 +143,13 @@ class CameraFollow:
         self.update_perspective()
     
     def update_perspective(self):
+        """Update the 4d perspective matrix for frustum clipping"""
         fov_target = ZOOMED_FOV if self.right_click else FOV
         self.fov = glm.mix(self.fov, fov_target, 0.25)
         self.m_proj = glm.perspective(glm.radians(self.fov), SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR)
 
     def update_mouse_look(self):
+        """Update camera movement from mouse movement"""
         x, y = pg.mouse.get_pos()
         pg.mouse.set_pos((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         dx, dy = x - SCREEN_WIDTH // 2, y - SCREEN_HEIGHT // 2
@@ -151,6 +160,7 @@ class CameraFollow:
         self.pitch = glm.clamp(self.pitch - dy * sensitivity, - 89.0, 89.0)
 
     def update(self):
+        """Update every bits for each frame"""
         self.update_perspective()
         self.update_mouse_look()
         

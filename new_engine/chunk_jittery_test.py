@@ -15,6 +15,7 @@ SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
 JITTER_STRENGTH = 1 / 3
 
 class HeightParams:
+    """Classe de calcul de la hauteur d'un point par calcul mathématique"""
     __slots__ = ['x1', 'y1', 'p', 'q', 'a', 'b', 'scale']
 
     def __init__(self, scale: float = 1.0) -> None:
@@ -141,9 +142,17 @@ BIOME_HEIGHTS_LIMIT = {
 }
 
 class SplineHeightParams:
+    """Class for height parameters with spline calculation (smoothness)"""
+    
     __slots__ = ['num_points', 'x_values', 'y_values', 'spline']
 
-    def __init__(self, biome, scale: float = 1.0) -> None:
+    def __init__(self, biome: str, scale: float = 1.0) -> None:
+        """Class constructor
+
+        Args:
+            biome (str): biome name for the heights
+            scale (float, optional): height scale factor. Defaults to 1.0.
+        """
         points = BIOME_POINTS[biome]
         self.num_points = len(points)
         
@@ -155,13 +164,27 @@ class SplineHeightParams:
         self.spline = CubicSpline(self.x_values, self.y_values, bc_type='natural')
 
     def height_from_noise(self, noise_value: float) -> float:
+        """Height calculation for a given Perlin noise
+
+        Args:
+            noise_value (float): Perlin noise value
+
+        Returns:
+            float: height associated with noise value
+        """
         return self.spline(noise_value)
 
 
 class ColorParams:
+    """Class for color parameters"""
+    
     __slots__ = ['heights_limit', 'colors']
 
-    def __init__(self, biome) -> None:
+    def __init__(self, biome: str) -> None:
+        """Class constructor
+        
+        Args:
+            biome (str): biome name for color parameters"""
         """self.heights_limit = [0.005, 0.02, 0.25, 0.4, 0.45, 0.525, 0.59, 0.68, 0.74, 0.79, 0.85]
         self.colors = [( 21,  47,  88), ( 25,  54, 100), ( 33,  69, 120), ( 44,  87, 147), # Water
                        (224, 199, 161), # Beach
@@ -171,18 +194,49 @@ class ColorParams:
         self.heights_limit = BIOME_HEIGHTS_LIMIT[biome]
         self.colors = BIOME_COLORS[biome]
 
-    def get_id_from_noise(self, height: float) -> int:
-        return min(bisect.bisect_right(self.heights_limit, height), 
+    def get_id_from_noise(self, noise_value: float) -> int:
+        """Give the id of a point for a certain Perlin noise value
+
+        Args:
+            noise_value (float): Perlin noise value
+
+        Returns:
+            int: id of the point
+        """
+        return min(bisect.bisect_right(self.heights_limit, noise_value), 
                    len(self.colors) - 1)
 
     def get_color_from_id(self, id: int) -> tuple[int, int, int]:
+        """Give the color for a certain id
+
+        Args:
+            id (int): input id
+
+        Returns:
+            tuple[int, int, int]: color associated with id
+        """
         return self.colors[id]
 
 
 class PerlinGenerator:
+    """Perlin noise generation class"""
+    
+    __slots__ = ['height_params', 'color_params', 'seed', 'scale', 'octaves', 'persistence', 'lacunarity']
+    
     def __init__(self, height_params: HeightParams | PointsHeightParams | SplineHeightParams, color_params: ColorParams,
                  seed: int = 0, scale: float = 1.0, octaves: int = 1,
                  persistence: float = 0.5, lacunarity: float = 2.0):
+        """Class constructor
+
+        Args:
+            height_params (HeightParams | PointsHeightParams | SplineHeightParams):height parameters associated
+            color_params (ColorParams): color parameters associated
+            seed (int, optional): Perlin seed. Defaults to 0.
+            scale (float, optional): inital frequence of Perlin noise. Defaults to 1.0.
+            octaves (int, optional): number of fractal octaves. Defaults to 1.
+            persistence (float, optional): weight of each octave. Defaults to 0.5.
+            lacunarity (float, optional): weight of frequence of each octave. Defaults to 2.0.
+        """
         self.height_params = height_params
         self.color_params = color_params
         self.seed = seed
@@ -192,6 +246,16 @@ class PerlinGenerator:
         self.lacunarity = lacunarity
 
     def noise_value(self, x: float, y: float, **overrides) -> float:
+        """Return the Perlin noise value for a point in 2d
+
+        Args:
+            x (float): x-axis coordinate
+            y (float): y-axis coordinate
+            **overrides (Any): the kwargs to override the class attributes
+
+        Returns:
+            float: valeur du bruit de Perlin
+        """
         # Use provided overrides or fall back to the object's default attributes
         params = {
             "octaves": self.octaves,
