@@ -62,6 +62,7 @@ class GameObjMesh(BaseMesh):
         self.app = app
         self.context = app.context
         self.shader_program = open_shaders(app, shader_name)
+        # self.shadow_shader_program = self.app.planet.shadow_map
         
         self.name = object_name
         self.scale = scale
@@ -87,6 +88,9 @@ class GameObjMesh(BaseMesh):
         self.shader_program['m_proj'].write(self.app.planet.camera.m_proj)
         self.shader_program['m_view'].write(self.app.planet.camera.view_matrix)
         self.shader_program['camPos'].write(self.app.planet.camera.position)
+        
+        # self.shadow_shader_program['m_proj'].write(self.app.planet.camera.m_proj)
+        # self.shadow_shader_program['m_view_light'].write(self.app.planet.light.view_matrix)
     
     def render(self):
         self.vao.render()

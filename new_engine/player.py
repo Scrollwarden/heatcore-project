@@ -47,7 +47,7 @@ class FollowTerrainPlayer:
 
     MAX_ROLL = 60.0 # How much you roll to the side
 
-    def __init__(self, app, position=glm.vec3(0.0, 1.0, 0.0)):
+    def __init__(self, app, position=glm.vec3(0.0, 1.0, 1.0)):
         self.app = app
         self.camera = app.planet.camera
         self.camera_zoom = 0.2

@@ -7,6 +7,7 @@ in vec3 waveNormal;
 in vec3 fragPos;
 in float fragRealHeight;
 in float fragOriginalHeight;
+in vec2 texCoord;
 
 struct Light {
     vec3 direction;
@@ -21,7 +22,7 @@ uniform sampler2D textureSampler;
 
 void main() {
     vec3 viewDirection = normalize(camPos - fragPos);
-    vec3 inColor = texture(textureSampler, texCoord);
+    vec3 inColor = texture(textureSampler, texCoord).rgb;
     vec3 color;
 
     if (fragOriginalHeight <= 0) {
@@ -82,5 +83,6 @@ void main() {
         color = (ambient + diffuse + specular) * inColor;
     }
 
+    // fragColor = vec4(gammaCorrect(color, 2.2), 1.0);
     fragColor = vec4(color, 1.0);
 }

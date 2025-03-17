@@ -1,5 +1,5 @@
 import glm
-from new_engine.options import HEIGHT_SCALE
+from new_engine.options import HEIGHT_SCALE, CHUNK_SIZE, CHUNK_SCALE, MAX_FALL_DISTANCE
 
 class HeatCore:
     def __init__(self, app, mesh, position = (0, 1, 0)):
@@ -10,12 +10,22 @@ class HeatCore:
         self.m_model = glm.mat4()
     
     def update(self):
-        angle = self.app.time
-        position = self.position + glm.vec3(0, glm.sin(1.5 * angle), 0) * 0.00025 * HEIGHT_SCALE
+        angle = 1.5 * self.app.time
+        camera_position = self.app.planet.camera.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
+        distance = glm.distance(camera_position, self.position.xz / (CHUNK_SIZE * CHUNK_SCALE))
         
-        axis_rotation = glm.normalize(glm.vec3(-0.15925, 0.59725, 0.45675))
+        offset = 3
+        if distance <= offset:
+            fall_amount = 0.0
+        else:
+            fall_amount = (distance - offset) ** 2 * MAX_FALL_DISTANCE / ((10 - offset) ** 2)
         
-        self.m_model = glm.translate(position) * glm.rotate(angle, axis_rotation)
+        position = self.position + glm.vec3(0, glm.sin(angle), 0) * 0.00025 * HEIGHT_SCALE
+        
+        translation = glm.translate(position + glm.vec3(0, fall_amount, 0))
+        rotation = glm.rotate(angle, glm.normalize(glm.vec3(-0.15925, 0.59725, 0.45675)))
+        
+        self.m_model = translation * rotation
         self.mesh.shader_program['m_model'].write(self.m_model)
         # self.update_wild()
     

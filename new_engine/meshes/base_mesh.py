@@ -2,11 +2,13 @@ class BaseMesh:
     def __init__(self):
         self.context = None
         self.shader_program = None
+        # self.shadow_shader_program = None
         self.vbo_format = None
         self.attrs: tuple[str, ...] = None
         self.vertex_data = None
         self.vbo = None
         self.vao = None
+        # self.shadow_vao = None
     
     def init_shader(self): ...
 
@@ -15,6 +17,9 @@ class BaseMesh:
         self.vao = self.context.vertex_array(
             self.shader_program, [(self.vbo, self.vbo_format, *self.attrs)], skip_errors=True
         )
+        # self.shadow_vao = self.context.vertex_array(
+        #     self.shadow_shader_program, [(self.vbo, self.vbo_format, *self.attrs)], skip_errors=True
+        # )
     
     def init_vertex_data(self): ...
 

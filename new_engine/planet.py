@@ -13,9 +13,10 @@ from new_engine.player import FollowTerrainPlayer
 
 from new_engine.objects.starting_base import StartingBase
 from new_engine.objects.heatcore import HeatCore
+from new_engine.objects.ancient_structure import AncientStructure
 
 from new_engine.chunk_jittery_test import ChunkTerrain, ColorParams, PointsHeightParams, SplineHeightParams, PerlinGenerator
-from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, CHUNK_SIZE, LG2_CS
+from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, TextureDelaunayChunkMesh, CHUNK_SIZE, LG2_CS
 from new_engine.options import FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
 
@@ -65,13 +66,19 @@ class Planet:
         self.seed = seed
         self.noise = PerlinGenerator(self.height_params, self.color_params,
                                      seed=self.seed, scale=100 / INV_NOISE_SCALE, octaves=NUM_OCTAVES)
+        # self.chunk_shader = open_shaders(self.app, 'chunk_texture')
         self.chunk_shader = open_shaders(self.app, 'chunk')
-        self.init_shader()
+        self.shadow_map = open_shaders(self.app, 'shadow_map')
+        # self.texture = app.textures["test"]
+        # self.depth_texture = self.app.textures["depth_texture"]
+        # self.depth_fbo = self.app.context.framebuffer(depth_attachment=self.depth_texture)
+        self.init_shaders()
 
         self.skybox = None
         self.starting_base = None
-        self.heatcores = []
-        self.num_heatcores = 3
+        self.ancient_structure = None
+        self.heatcores = {}
+        self.num_heatcores = 10
 
         self.result_queue = queue.Queue()
         self.threads = []
@@ -101,26 +108,48 @@ class Planet:
         position.y = max(0, position.y) + 0.02 * HEIGHT_SCALE
         self.starting_base = StartingBase(self.app, self.app.meshes["starting_base"], position)
 
-        # Heatcores
+        # Ancient structure
         rng = np.random.default_rng(self.seed)
+        angle = rng.uniform(0, 360)
+        radius = rng.uniform(5, 10)
+        position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
+        position = self.avoid_water(position, NUM_OCTAVES)
+        self.ancient_structure = AncientStructure(self.app, self.app.meshes["ancient_structure"], position)
+
+        # Heatcores
+        angles = [rng.uniform(0, 360) for _ in range(self.num_heatcores)]
+        radiuses = [rng.uniform(5, 10) for _ in range(self.num_heatcores)]
+        
+        # Make them spread
+        min_diff = 30 / (self.num_heatcores - 2)
+        for _ in range(3):
+            for i in range(self.num_heatcores):
+                next_idx = (i + 1) % self.num_heatcores
+                diff = (angles[i] - angles[next_idx] % 360) - 180
+                
+                if diff < min_diff:
+                    shift = (min_diff - diff) / 2
+                    angles[i] -= shift
+                    angles[next_idx] += shift
+        
         for i in range(self.num_heatcores):
-            radius = rng.uniform(1, 2)
-            angle = rng.uniform(0, 360)
-            position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
+            position = radiuses[i] * glm.vec3(np.cos(np.radians(angles[i])), 0.0, np.sin(np.radians(angles[i])))
             
             position = self.avoid_water(position, NUM_OCTAVES)
             position.y += 0.005 * HEIGHT_SCALE
             print(f"Heatcore {i} at position: {position}")
             heatcore = HeatCore(self.app, self.app.meshes["heatcore"], position)
-            self.app.hud.hud_game.set_heatcore_marker(heatcore)
             
-            self.heatcores.append(heatcore)
+            self.heatcores[i] = heatcore
     
-    def init_shader(self):
+    def init_shaders(self):
         colors_256 = np.zeros((256, 3), dtype=np.float32)
         colors_256[:len(self.color_params.colors)] = self.color_params.colors
         colors_256 *= 1 / 255
         self.chunk_shader['colors'].write(colors_256.tobytes())
+        # self.texture.use(location=1)
+        # self.chunk_shader["textureSampler"].value = 1
+        
 
     def generate_chunk_worker(self, coord, detail):
         """Worker function for generating chunks and rendering."""
@@ -218,14 +247,13 @@ class Planet:
             self.player.update()
             self.camera.update()
 
-            heatcores = []
-            for heatcore in self.heatcores:
+            keys_to_delete = set()
+            for index, heatcore in self.heatcores.items():
                 if glm.length2(heatcore.position.xz - self.player.position.xz) <= CHUNK_SCALE:
-                    self.app.hud.hud_game.add_heatcore_count()
                     print("Heatcore taken !")
-                else:
-                    heatcores.append(heatcore)
-            self.heatcores = heatcores
+                    keys_to_delete.add(index)
+            for index in keys_to_delete:
+                del self.heatcores[index]
 
         self.generate_chunks()
         self.update_chunks()
@@ -246,8 +274,9 @@ class Planet:
 
         # Object
         self.skybox.render()
+        self.ancient_structure.render()
         self.starting_base.render()
-        for heatcore in self.heatcores:
+        for heatcore in self.heatcores.values():
             heatcore.render()
         self.player.render()
 
@@ -280,36 +309,98 @@ class Planet:
             return height_center, normal
         return normal
 
+    MAX_ITERATIONS = 100  # Prevent infinite loops
+    MIN_MOVEMENT = 0.001  # Threshold for minimal movement
+    FORCED_STEP = 0.1 * CHUNK_SCALE  # Small step to escape if stuck
+    RANDOM_STEP = 0.1 * CHUNK_SCALE
+
     def avoid_water(self, position: glm.vec3, octaves: int = 1):
         i = 0
         height, terrain_normal = self.get_normal(position, octaves, True)
-        while height < 0.01 * HEIGHT_SCALE:
-            position -= flatten(terrain_normal)
-            height, terrain_normal = self.get_normal(position, octaves, True)
-            i += 1
-            print()
+        prev_height = height  # Store previous height to detect local maxima
+        local_max_count = 0  # Counter to track local max occurrences
+        rng = np.random.default_rng(abs(hash(tuple(position))))
+
+        while height < 0.01 * HEIGHT_SCALE and i < self.MAX_ITERATIONS:
             print(f"Iteration {i}")
-            print(f"Position {position} with height {height}")
-            print(f"Normal: {terrain_normal}")
-            print(f"While loop condition: {height} < {0.01 * HEIGHT_SCALE}")
-        print(f"Iteration of avoiding water: {i}")
+            print(f"  Position {position} with height {height}")
+            movement = flatten(terrain_normal)
+            movement_length = glm.length(movement)
+
+            if movement_length < self.MIN_MOVEMENT:
+                print("    Minimal movement detected, forcing displacement.")
+                movement = glm.normalize(glm.cross(terrain_normal, glm.vec3(0, 1, 0))) * self.FORCED_STEP * i
+
+            position -= movement
+            new_height, terrain_normal = self.get_normal(position, octaves, True)
+            print(f"  Movement {movement} with new height {new_height}")
+            print(f"  New normal {terrain_normal}")
+
+            # Detect local maximum (if height doesn't really change)
+            if abs(new_height - prev_height) <= 0.05 * HEIGHT_SCALE:
+                local_max_count += 1
+            else:
+                local_max_count = 0  # Reset if we find an increasing height
+
+            if local_max_count > 3:  # If we're stuck for multiple steps
+                print("    Local maximum detected, moving randomly.")
+                random_direction = glm.vec3(rng.uniform(-1, 1), 0, rng.uniform(-1, 1))
+                random_direction = glm.normalize(random_direction) * self.RANDOM_STEP * i # Increase step by iteration
+                position += random_direction  # Move randomly to escape
+
+                # Reset height tracking
+                local_max_count = 0
+
+            prev_height = new_height  # Update previous height
+            height = new_height  # Update current height
+
+            i += 1
+            print(f"Loop condition: {height} < {0.01 * HEIGHT_SCALE} and {i} < {self.MAX_ITERATIONS}")
+            print(f"  -> {height < 0.01 * HEIGHT_SCALE and i < self.MAX_ITERATIONS}")
+            print()
+
+        print(f"Total iterations for avoiding water: {i}")
         return flatten(position) + glm.vec3(0, height, 0)
-    
+
+    def avoid_cliffs(self, position: glm.vec3, octaves: int = 1):
+        i = 0
+        height, terrain_normal = self.get_normal(position, octaves, True)
+        terrain_normal.y = 0  # Ensure no vertical influence
+
+        while terrain_normal.y > glm.sin(glm.radians(30)) and i < self.MAX_ITERATIONS:
+            print(f"Iteration {i}")
+            print(f"  Position {position} with normal {terrain_normal}")
+            movement = flatten(terrain_normal)
+            movement_length = glm.length(movement)
+
+
+            position -= movement
+            height, terrain_normal = self.get_normal(position, octaves, True)
+            terrain_normal.y = 0  # Re-flatten the normal after update
+
+            i += 1
+            print(f"Iteration {i}, Position {position}, Height {height}")
+
+        print(f"Total iterations for avoiding cliffs: {i}")
+        return flatten(position) + glm.vec3(0, height, 0)
+
     def avoid_cliffs(self, position: glm.vec3, octaves: int = 1):
         i = 0
         height, terrain_normal = self.get_normal(position, octaves, True)
         terrain_normal.y = 0
-        while terrain_normal.y < glm.sin(glm.radians(75)):
+        while terrain_normal.y > glm.sin(glm.radians(30)):
+            print(f"Iteration {i}")
+            print(f"  Position {position} with normal {terrain_normal}")
             position -= flatten(terrain_normal)
             height, terrain_normal = self.get_normal(position, octaves, True)
             i += 1
+            print(f"  New normal {terrain_normal}")
+            print(f"Loop condition: {terrain_normal.y} > {glm.sin(glm.radians(30))}")
+            print(f"  -> {terrain_normal.y > glm.sin(glm.radians(30))}")
             print()
-            print(f"Iteration {i}")
-            print(f"Position {position} with height {height}")
-            print(f"Normal: {terrain_normal}")
-            print(f"While loop condition: {terrain_normal.y} < {glm.sin(glm.radians(75))}")
         print(f"Iteration of avoiding cliff: {i}")
         return flatten(position) + glm.vec3(0, height, 0)
+
     
     def cinematique_entree(self):
         running = True

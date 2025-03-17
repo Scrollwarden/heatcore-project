@@ -12,8 +12,8 @@ class HUDObject:
         self.context = app.context
         self.ui_surface = pg.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pg.SRCALPHA)
         self.mesh = HUDMesh(app)
-        self.hud_game = UI1(self.ui_surface)
-        self.hud_menu = UI2(self.ui_surface)
+        self.hud_game = UI1(app, self.ui_surface)
+        self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
         self.hud_cube = None
 
@@ -32,10 +32,12 @@ class HUDObject:
             return
 
         # Press L to launch UI3.
-        if event.type == pg.KEYDOWN and event.key == pg.K_l:
-            #self.hud_cube = UI3(self.ui_surface)
-            pg.mouse.set_visible(True)
+        # if event.type == pg.KEYDOWN and event.key == pg.K_l:
+        #     self.hud_cube = UI3(self.ui_surface)
+        #     pg.mouse.set_visible(True)
         # Other key handling...
+        if event.type == pg.KEYDOWN and event.key == pg.K_h:
+            self.hud_game.active = not self.hud_game.active
         elif event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
             self.hud_menu.active = True
             pg.mouse.set_visible(True)
@@ -71,7 +73,7 @@ class HUDObject:
             self.hud_buttons.draw()
         elif self.hud_menu.active:
             self.hud_menu.draw()
-        elif self.hud_game:
+        elif self.hud_game.active:
             self.hud_game.draw(self.app.planet.camera)
 
         ui_texture_data = pg.image.tostring(self.ui_surface, "RGBA", True)
