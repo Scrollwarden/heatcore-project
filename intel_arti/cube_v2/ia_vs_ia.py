@@ -1,5 +1,4 @@
 import os
-import time
 from sys import stdout
 from random import choice
 from agent import Agent
@@ -35,7 +34,6 @@ while True :
 # [Egalité, [IA 1 ronds, IA 1 croix], [IA 2 ronds, IA 2 croix]]
 gagnants = [0, [0, 0], [0, 0]]
 coups = {}
-debut = time.time()
 for i in range(1000) :
     stdout.flush()
     finie = False
@@ -45,10 +43,10 @@ for i in range(1000) :
     nb_coups = 0
     while not finie :
         if partie.joueur == pl_ia1 :
-            situation, action = agent1.choisir_non_det_sit(partie.cube, partie.joueur, partie.coup_interdit)
+            situation, action = agent1.choisir_sit(partie.cube, partie.joueur, partie.coup_interdit)
         else :
             situation, action = agent1.choisir_non_det_sit(partie.cube, partie.joueur, partie.coup_interdit)
-        partie.known_step(situation*partie.joueur, action)
+        partie.known_step(situation, action)
         nb_coups += 1
         if (gagnant := partie.cube.terminal_state())[0] or nb_coups > 200:
             if nb_coups > 200 :
@@ -63,4 +61,3 @@ for i in range(1000) :
                 gagnants[2][pl_ia1==-1] += 1
     stdout.write("\r" + str(i + 1) + " : " + str(gagnants))
 print("\n", coups)
-print("Temps :", time.time()-debut)

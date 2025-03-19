@@ -6,7 +6,7 @@ Les paramètres des models.
 
 NB_NEURONES = 800 #         M1 : 200    | M2 : 200    | M3 : 200    | M6 : 200    | M7 : 200    | M8 : 400      | M9 : 400      | M10 : 800     | M11 : 800     | M12 : 800
 NB_COUCHES = 1 #            M1 : 1      | M2 : 1      | M3 : 1      | M6 : 1      | M7 : 1      | M8 : 1        | M9 : 1        | M10 : 1       | M11 : 1       | M12 : 1
-LEARNING_RATE = 0.0001 #    M1 : 0.001  | M2 : 0.001  | M3 : 0.001  | M6 : 0.001  | M7 : 0.001  | M8 : 0.001    | M9 : 0.001    | M10 : 0.001   | M11 : 0.001   | M12 : 0.001
+LEARNING_RATE = 0.001 #     M1 : 0.001  | M2 : 0.001  | M3 : 0.001  | M6 : 0.001  | M7 : 0.001  | M8 : 0.001    | M9 : 0.001    | M10 : 0.001   | M11 : 0.001   | M12 : 0.001
 # optimizer                 M1 : ADAM   | M2 : ADAM   | M3 : ADAM   | M6 : ADAM   | M7 : ADAM   | M8 : ADAM     | M9 : ADAM     | M10 : ADAM    | M11 : ADAM    | M12 : ADAM
 # loss                      M1 : MSE    | M2 : MSE    | M3 : MSE    | M6 : MSE    | M7 : MSE    | M8 : MSE      | M9 : MSE      | M10 : MSE     | M11 : MSE     | M12 : MSE
 BATCH_SIZE = 55 #           M1 : 80     | M2 : 55     | M3 : 55     | M6 : 55     | M7 : 55     | M8 : 55       | M9 : 55       | M10 : 55      | M11 : 55      | M12 : 65
@@ -46,9 +46,7 @@ INFOS_ALL_MODELS = {
     11: ('16-12-2024', 'Winstate used True\ncurrently BEST'),
     12: ('16-12-2024', 'Inverted WinState team True'),
     13: ('13-01-2025', 'Identique à modèle 12 (erreur)'),
-    14: ('18-01-2025', 'MultipleWinAndLoss activated'), 
-    15: ('27-01-2025', 'High values for Win&Loss (1000 epochs)'),
-    16: ('30-01-2025', 'High values for Win&Loss (10000 epochs with a 0.0001 learning rate)')
+    14: ('18-01-2025', 'MultipleWinAndLoss activated')
 }
 
 def date_model(NUM_MODEL):

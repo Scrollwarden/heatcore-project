@@ -30,7 +30,7 @@ class GraphicsEngine:
 
     def check_events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
+            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key in (pg.K_q, pg.K_ESCAPE)):
                 self.scene.destroy()
                 pg.quit()
                 sys.exit()
@@ -54,7 +54,6 @@ class GraphicsEngine:
             elapsed_time = time.time() - start_time
 
             print(f"FPS: {format_fps(elapsed_time, 60)}, Frame Time: {elapsed_time:.3f}s")
-            print(self.camera.position)
 
 def format_fps(delta_time, fps):
     """delta time in seconds"""

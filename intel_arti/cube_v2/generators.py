@@ -4,7 +4,7 @@ Tous les générateurs de situations de jeu pour entrainer l'agent.
 
 from concurrent.futures import ProcessPoolExecutor
 from random import randint, choice, gauss
-from cube import Cube, check_type
+from intel_arti.cube_v2.cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones, savez, load
 import os
 from datetime import datetime
@@ -46,7 +46,7 @@ class GeneratorWinState:
             self._win_on_diagonal(face, times, joueur)
     
     def evaluate(self, situation : Cube) :
-        return situation.terminal_state()[1] * 10
+        return situation.terminal_state()[1]
 
     def generate_end_states(self, n=1) :
         self.liste_win_state = []
@@ -342,13 +342,11 @@ class Partie:
                 self.rewards[i, 0] = self.gagnant/(1<<(len(self.states)-i)//2)
             for i in range(1, len(self.states), 2) :
                 self.rewards[i, 0] = -self.gagnant/(1<<(len(self.states)-i-1)//2)
-            self.rewards[-1, 0] = self.gagnant * 10
         elif self.gagnant <= -1 : # Le joueur -1 (ou 2) a gagné
             for i in range(1, len(self.states), 2) :
                 self.rewards[i, 0] = -self.gagnant/(1<<(len(self.states)-i)//2)
             for i in range(0, len(self.states), 2) :
                 self.rewards[i, 0] = self.gagnant/(1<<(len(self.states)-i-1)//2)
-            self.rewards[-1, 0] = self.gagnant * 10
         else : # Egalite
             pass
     
@@ -628,14 +626,4 @@ def generate_directory_name(name, x=0):
 #     for i in range(2) :
 #         print(next(selected_generator))
 #     print(time()-temps)
-
-if __name__ == "__main__" :
-    gen = StateGenerator()
-    sel = gen.generator_perfection(55)
-    x, y = next(sel)
-    for i in range(len(x)) :
-        print(f"Etat évalué à {y[i]} :")
-        jeu = Cube()
-        jeu.set_flatten_state(x[i])
-        print(jeu)
     
