@@ -81,9 +81,9 @@ class GraphicsEngine:
         
         if pg.mixer.music.get_busy():
             pg.mixer.music.stop()
-        pg.mixer.music.load("musics/The Road Ahead_LoudnessComp.wav")
-        pg.mixer.music.set_volume(0.0)
-        pg.mixer.music.play(-1)
+        # pg.mixer.music.load("musics/The Road Ahead_LoudnessComp.wav")
+        # pg.mixer.music.set_volume(0.5)
+        # pg.mixer.music.play(-1)
     
     def quit_game(self):
         self.planet.destroy()
@@ -121,7 +121,11 @@ class GraphicsEngine:
 
     def run(self):
         self.get_time()
-        self.load_new_planet(1300)
+        # manual activation on first time app is launched
+        self.hud.hud_menu.first_time = True
+        self.hud.hud_menu.active = True
+        pg.mouse.set_visible(True)
+        self.load_new_planet()
         while True:
             start_time = time.perf_counter()  # High-resolution timer
 

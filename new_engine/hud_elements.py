@@ -21,6 +21,14 @@ DEFAULT_CONTROLS = {
     "Reset Planet": pg.K_r
 }
 
+HARDSET_CONTROLS = {
+    "Zoom": "Molette (scroll)",
+    "Focus": "Clique Droit"
+}
+
+MENU_BACKGROUND_ICON = pg.image.load("txt/background_logo.png")
+MENU_INGAME_BACKGROUND_ICON = pg.image.load("txt/dark_background_logo.png")
+
 class CompassBar:
     def __init__(self, screen, x, y, length, color=(255, 255, 255), thickness=5):
         self.screen = screen
@@ -209,13 +217,18 @@ class UI2:
         self.screen = screen
         self.width, self.height = screen.get_size()
         self.active = False
-        self.overlay = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        self.bg_color = (20, 20, 20, 180)
-        self.overlay.fill(self.bg_color)
+        self.first_time = True # True on the first time showed, controlling background image
+        self.first_time_overlay_icon = pg.transform.scale(MENU_BACKGROUND_ICON, (self.height, self.height))
+        self.first_time_overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.first_time_overlay_background.fill((200, 200, 200, 250))
+        self.overlay_icon = pg.transform.scale(MENU_INGAME_BACKGROUND_ICON, (self.height, self.height))
+        self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.overlay_background.fill((20, 20, 20, 100))
 
-        self.close_button_rect = pg.Rect(self.width - 130, 20, 100, 50)
-        self.play_button_rect = pg.Rect((self.width - 200) // 2, (self.height - 100) // 2, 200, 50)
-        self.controls_button_rect = pg.Rect((self.width - 150) // 2, self.play_button_rect.bottom + 20, 150, 50)
+        self.play_button_rect = pg.Rect(self.width//7, (self.height - 100) // 3, 250, 50)
+        self.controls_button_rect = pg.Rect(self.play_button_rect.left, self.play_button_rect.bottom + 20, 250, 50)
+        self.save_button_rect = pg.Rect(self.play_button_rect.left, self.controls_button_rect.bottom + 20, 250, 50)
+        self.close_button_rect = pg.Rect(self.play_button_rect.left, self.save_button_rect.bottom + 40, 250, 50)
 
         self.font = pg.font.SysFont("Arial", 24)
         self.title_font = pg.font.SysFont("Arial", 48)
@@ -234,47 +247,36 @@ class UI2:
                     self.screen.blit(outline, outline_rect)
         self.screen.blit(base_text, text_rect)
 
-    def draw_low_poly_button(self, rect, color, text):
+    def draw_low_poly_button(self, rect, text_hover_color, text):
         x, y, w, h = rect
-        offset = 10
-        # Octagonal button
         points = [
-            (x, y + offset),
-            (x + offset, y),
-            (x + w - offset, y),
-            (x + w, y + offset),
-            (x + w, y + h - offset),
-            (x + w - offset, y + h),
-            (x + offset, y + h),
-            (x, y + h - offset)
+            (x-500, y),
+            (x-500, y+h),
+            (x+w, y+h),
+            (x+w, y)
         ]
-        pg.draw.polygon(self.screen, color, points)
-        pg.draw.polygon(self.screen, (0, 0, 0), points, 2)
-        btn_text = self.font.render(text, True, (255, 255, 255))
+        button_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 120), points)
+        if button_rect.collidepoint(pg.mouse.get_pos()):
+            btn_text = self.font.render(text, True, text_hover_color)
+        else:
+            btn_text = self.font.render(text, True, (255, 255, 255))
         btn_text_rect = btn_text.get_rect(center=rect.center)
         self.screen.blit(btn_text, btn_text_rect)
 
     def draw(self):
-        self.screen.blit(self.overlay, (0, 0))
-
-        top_poly_points = [
-            (0, 0),
-            (self.width * 0.5, self.height * 0.15),
-            (self.width, 0),
-            (self.width, self.height * 0.25),
-            (self.width * 0.5, self.height * 0.35),
-            (0, self.height * 0.25)
-        ]
-        pg.draw.polygon(self.screen, (30, 30, 30), top_poly_points)
-
-        self.draw_text_with_outline("HEATCORE", self.title_font, (0, 255, 255),
-                                    (self.width // 2, 60), outline_color=(0, 0, 0), outline_offset=2)
+        self.screen.blit(self.first_time_overlay_background if self.first_time else self.overlay_background, (0, 0))
+        self.screen.blit(self.first_time_overlay_icon if self.first_time else self.overlay_icon, (self.width-self.overlay_icon.get_size()[0], 0))
+        image_text = pg.image.load("txt/title_logo.png")
+        self.screen.blit(image_text, ((self.width-image_text.get_size()[0])//2, 60))
         self.draw_text_with_outline("frozen worlds", self.subtitle_font, (180, 180, 255),
-                                    (self.width // 2, 110), outline_color=(0, 0, 0), outline_offset=1)
+                                    (self.width // 2, 160), outline_color=(0, 0, 0), outline_offset=1)
 
-        self.draw_low_poly_button(self.close_button_rect, (200, 0, 0), "Fermer")
-        self.draw_low_poly_button(self.play_button_rect, (0, 200, 0), "Jouer")
-        self.draw_low_poly_button(self.controls_button_rect, (0, 0, 200), "Controls")
+        clair = 70 # la couleur est celle du logo, rendue plus claire par soucis de visibilité
+        color_buttons = (53+clair, 15+clair, 30+clair)
+        self.draw_low_poly_button(self.close_button_rect, color_buttons, "Fermer")
+        self.draw_low_poly_button(self.play_button_rect, color_buttons, "Jouer")
+        self.draw_low_poly_button(self.controls_button_rect, color_buttons, "Contrôles")
+        self.draw_low_poly_button(self.save_button_rect, color_buttons, "Sauvegarder")
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -286,6 +288,7 @@ class UI2:
                 print("Play button clicked!")
                 self.active = False
                 pg.mouse.set_visible(False)
+                pg.mouse.set_pos(self.width//2, self.height//2)
             elif self.controls_button_rect.collidepoint(mouse_pos):
                 print("Controls button clicked: Accessing Control Settings.")
                 self.active = False
@@ -297,9 +300,13 @@ class UI2_1:
         self.screen = screen
         self.width, self.height = screen.get_size()
         self.active = False  # Whether this submenu is currently shown.
-        self.overlay = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        self.bg_color = (20, 20, 20, 200)  # Dark, translucent background.
-        self.overlay.fill(self.bg_color)
+        self.first_time = False # True on the first time showed, controlling background image
+        self.first_time_overlay_icon = pg.transform.scale(MENU_BACKGROUND_ICON, (self.height, self.height))
+        self.first_time_overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.first_time_overlay_background.fill((200, 200, 200, 250))
+        self.overlay_icon = pg.transform.scale(MENU_INGAME_BACKGROUND_ICON, (self.height, self.height))
+        self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.overlay_background.fill((20, 20, 20, 100))
 
         self.title_font = pg.font.SysFont("Arial", 48)
         self.font = pg.font.SysFont("Arial", 24)
@@ -312,20 +319,21 @@ class UI2_1:
         button_width = 100
         button_height = 40
         for i, action in enumerate(self.bindings.keys()):
-            x = self.width // 2 + 100
+            x = (self.width // 7) + 240
             y = start_y + i * spacing
             self.control_buttons[action] = pg.Rect(x, y, button_width, button_height)
 
-        self.back_button_rect = pg.Rect((self.width - 150) // 2, self.height - 100, 150, 50)
+        self.back_button_rect = pg.Rect(self.width//2 - 100, self.height - 250, 150, 50)
 
         self.awaiting_binding = None
 
         self.return_to_ui2 = False
 
     def draw(self):
-        self.screen.blit(self.overlay, (0, 0))
+        self.screen.blit(self.first_time_overlay_background if self.first_time else self.overlay_background, (0, 0))
+        self.screen.blit(self.first_time_overlay_icon if self.first_time else self.overlay_icon, (self.width-self.overlay_icon.get_size()[0], 0))
 
-        title_text = self.title_font.render("Controls", True, (0, 255, 255))
+        title_text = self.title_font.render("Contrôles", True, (53, 15, 30))
         title_rect = title_text.get_rect(center=(self.width // 2, 60))
         self.screen.blit(title_text, title_rect)
 
@@ -333,7 +341,14 @@ class UI2_1:
         spacing = 60
         for i, (action, key) in enumerate(self.bindings.items()):
             label_text = self.font.render(action + ":", True, (255, 255, 255))
-            label_rect = label_text.get_rect(midleft=(self.width // 2 - 100, start_y + i * spacing + 20))
+            label_points = label_text.get_rect(midleft=(self.width//7, start_y + i * spacing + 20))
+            points = [
+                (label_points.left-6, label_points.bottom+6),
+                (label_points.left-6, label_points.top-6),
+                (label_points.right+6, label_points.top-6),
+                (label_points.right+6, label_points.bottom+6),
+                ]
+            label_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 120), points)
             self.screen.blit(label_text, label_rect)
             button_rect = self.control_buttons[action]
             color = (255, 165, 0) if self.awaiting_binding == action else (0, 200, 0)
@@ -343,7 +358,7 @@ class UI2_1:
             key_rect = key_text.get_rect(center=button_rect.center)
             self.screen.blit(key_text, key_rect)
 
-        pg.draw.rect(self.screen, (200, 0, 0), self.back_button_rect)
+        pg.draw.rect(self.screen, pg.Color(200, 0, 0, 120), self.back_button_rect)
         back_text = self.font.render("Retour", True, (255, 255, 255))
         back_rect = back_text.get_rect(center=self.back_button_rect.center)
         self.screen.blit(back_text, back_rect)
@@ -370,6 +385,22 @@ class UI2_1:
                 self.active = False
                 self.return_to_ui2 = True
 
+
+class MenuIntroUI:
+    '''
+    L'écran sur lesquel défile le dialogue d'introduction au début du jeu
+    '''
+    def __init__(self, screen):
+        self.screen = screen
+        self.text_intro = "txt/text_intro.txt"
+
+    def handle_event(self, event):
+        """
+        Gère les interactions (bouton skip dialogue et scrolling du texte)
+        """
+
+    def raw(self):
+        """affiche l'écran"""
 
 class UI3:
     def __init__(self, screen):

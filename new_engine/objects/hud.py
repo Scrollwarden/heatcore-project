@@ -2,7 +2,7 @@ import pygame as pg
 import math
 import moderngl as mgl
 
-from new_engine.hud_elements import UI1, UI2, UI2_1, UI3
+from new_engine.hud_elements import UI1, UI2, UI2_1, MenuIntroUI, UI3
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT
 from new_engine.meshes.hud_mesh import HUDMesh
 
@@ -15,6 +15,7 @@ class HUDObject:
         self.hud_game = UI1(app, self.ui_surface)
         self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
+        self.hud_intro = MenuIntroUI(self.ui_surface)
         self.hud_cube = None
 
     def handle_event(self, event):
@@ -39,6 +40,7 @@ class HUDObject:
         if event.type == pg.KEYDOWN and event.key == pg.K_h:
             self.hud_game.active = not self.hud_game.active
         elif event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
+            self.hud_menu.first_time = False
             self.hud_menu.active = True
             pg.mouse.set_visible(True)
 
@@ -49,6 +51,7 @@ class HUDObject:
             self.hud_game = None
 
         if self.hud_menu.controls_requested:
+            self.hud_buttons.first_time = self.hud_menu.first_time
             self.hud_menu.controls_requested = False
             self.hud_buttons.active = True
             pg.mouse.set_visible(True)
