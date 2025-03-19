@@ -3,7 +3,14 @@ import matplotlib.pyplot as plt
 import csv
 
 class Logs:
+    """Class for logs in graphic engine performence"""
+    
     def __init__(self, frame_count_limit: int = 10000):
+        """Class constructor
+
+        Args:
+            frame_count_limit (int, optional): amount of frame stored in logs. Defaults to 10000.
+        """
         self.index = 0
         self.frame_count_limit = frame_count_limit
         self.times = np.zeros((frame_count_limit, ), dtype=np.float32)
@@ -12,7 +19,14 @@ class Logs:
         self.chunks_loaded = np.zeros((frame_count_limit, ), dtype=np.uint32)
         self.chunks_loading = np.zeros((frame_count_limit, ), dtype=np.uint32)
 
-    def add_to_log(self, delta_time, chunks_loaded, chunks_loading):
+    def add_to_log(self, delta_time: float, chunks_loaded: int, chunks_loading: int):
+        """Add information in logs
+
+        Args:
+            delta_time (float): the time between two frames
+            chunks_loaded (int): the number of chunks being loaded
+            chunks_loading (int): the number of chunks currently loading
+        """
         if self.index >= self.frame_count_limit:
             print("===========================================================")
             print("!!! Not enough place in logs to add in new informations !!!")
@@ -33,6 +47,7 @@ class Logs:
         self.index += 1
 
     def display_multiple_windows(self):
+        """Display of performence data in mutiple windows"""
         x = self.accumulated_time[:self.index]
 
         metrics = [
@@ -54,6 +69,7 @@ class Logs:
         plt.show()
 
     def display_single_window(self):
+        """Display of performence data in a single window"""
         x = self.accumulated_time[:self.index]
         fig, ax1 = plt.subplots(figsize=(10, 6))
         metrics = [
@@ -78,7 +94,11 @@ class Logs:
         plt.show()
 
     def save(self, file_name: str):
-        """Save logs to a CSV file."""
+        """Save logs to a CSV file
+
+        Args:
+            file_name (str): the file path for saving logs
+        """
         with open(f"{file_name}.csv", mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Time", "FPS", "Chunks Loaded", "Chunks Loading", "Accumulated Time"])
@@ -93,7 +113,11 @@ class Logs:
         print(f"Logs saved to {file_name}.csv")
 
     def load(self, file_name: str):
-        """Load logs from a CSV file."""
+        """Load logs from a CSV file
+
+        Args:
+            file_name (str): the file path for loading logs
+        """
         with open(f"{file_name}.csv", mode="r") as file:
             reader = csv.reader(file)
             next(reader)  # Skip the header

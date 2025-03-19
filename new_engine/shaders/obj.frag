@@ -25,6 +25,7 @@ vec3 gammaCorrect(vec3 color, float value) {
 void main() {
     vec3 viewDirection = normalize(camPos - fragPos);
     vec3 normal = inNormal;
+    float sunHeightFactor = max(0.1, (2 * atan(0.9 + 10 * light.direction.y) + 0.74) / 3.74);
 
     // Ambient
     vec3 ambient = light.Ia;
@@ -41,5 +42,5 @@ void main() {
     vec3 color = (ambient + diffuse + specular) * inColor;
 
     // fragColor = vec4(gammaCorrect(color, 2.2), 1.0);
-    fragColor = vec4(color, 1.0);
+    fragColor = vec4(color * sunHeightFactor, 1.0);
 }

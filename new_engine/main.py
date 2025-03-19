@@ -15,7 +15,10 @@ from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BACKGROUND_COLO
 
 
 class GraphicsEngine:
+    """Class for the 3d graphic engine"""
+    
     def __init__(self):
+        """Class constructor"""
         self.mouse_clicks = [0, 0]
         self.controls = DEFAULT_CONTROLS.copy()
         self.time = 0
@@ -46,6 +49,7 @@ class GraphicsEngine:
         print("Graphics engine initialized successfully")
     
     def load_meshes(self):
+        """Load all meshes for 3d objects"""
         self.meshes["spaceship"] = GameObjMesh(self, "spaceship_player", "obj",
                                                scale=0.002,
                                                obj_transformation=glm.rotate(glm.radians(90), glm.vec3(0, 1, 0)))
@@ -58,6 +62,7 @@ class GraphicsEngine:
         self.meshes["advanced_skybox"] = AdvancedSkyBoxMesh(self)
 
     def load_textures(self):
+        """Load textures for the rendering"""
         image = pg.image.load("new_engine/textures/img.png")
         image = pg.transform.flip(image, False, True)
         image_data = pg.image.tobytes(image, "RGB")
@@ -67,6 +72,11 @@ class GraphicsEngine:
 
 
     def load_new_planet(self, seed = None):
+        """Load a whole new planet
+
+        Args:
+            seed (int | None, optional): World seed (positive integer). Defaults to None -> aléatoire.
+        """
         if self.planet is not None:
             self.planet.destroy()
         if seed is None:
@@ -86,6 +96,7 @@ class GraphicsEngine:
         # pg.mixer.music.play(-1)
     
     def quit_game(self):
+        """Quit the game and it's garbage collection"""
         self.planet.destroy()
         self.hud.destroy()
         pg.quit()
@@ -94,6 +105,7 @@ class GraphicsEngine:
         sys.exit()
 
     def check_events(self):
+        """Pygame events loop"""
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_p):
                 self.quit_game()
@@ -110,6 +122,7 @@ class GraphicsEngine:
             self.hud.handle_event(event)
 
     def render(self):
+        """World rendering"""
         self.context.clear(color=BACKGROUND_COLOR)
         self.planet.render()
         self.hud.render()
@@ -117,9 +130,11 @@ class GraphicsEngine:
             self.popup.render()
 
     def get_time(self):
+        """Update the time"""
         self.time = pg.time.get_ticks() * 0.001
 
     def run(self):
+        """Main while loop"""
         self.get_time()
         # manual activation on first time app is launched
         self.hud.hud_menu.first_time = True
@@ -150,6 +165,14 @@ class GraphicsEngine:
             print()
 
 def format_fps(delta_time):
+    """Format a string for the FPS at a certain frame
+
+    Args:
+        delta_time (float): difference of time between two frames
+
+    Returns:
+        str: string of the fps with a given color for how close it is to the goal amount
+    """
     current_fps = 1 / delta_time
     diff_percentage = (current_fps - FPS) / FPS
     if diff_percentage >= -0.1:

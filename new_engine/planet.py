@@ -21,38 +21,28 @@ from new_engine.options import FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, 
 from new_engine.shader_program import open_shaders
 
 
-def in_triangle(point, triangle):
-    a, b, c = np.array([np.array([p[0], p[2]]) for p in triangle])
-    p = np.array([point[0], point[2]])
+def flatten(vector: glm.vec3) -> glm.vec3:
+    """Flatten a given 3d vector (remove y composant)
 
-    # Compute vectors
-    v0 = c - a
-    v1 = b - a
-    v2 = p - a
+    Args:
+        vector (glm.vec3): 3d vector
 
-    # Compute dot products
-    dot00 = np.dot(v0, v0)
-    dot01 = np.dot(v0, v1)
-    dot02 = np.dot(v0, v2)
-    dot11 = np.dot(v1, v1)
-    dot12 = np.dot(v1, v2)
-
-    # Compute barycentric coordinates
-    denom = dot00 * dot11 - dot01 * dot01
-    if denom == 0:  # Degenerate triangle
-        return False
-
-    u = (dot11 * dot02 - dot01 * dot12) / denom
-    v = (dot00 * dot12 - dot01 * dot02) / denom
-
-    # Check if point is inside the triangle
-    return (u >= 0) and (v >= 0) and (u + v <= 1)
-
-def flatten(vector: glm.vec3):
+    Returns:
+        glm.vec3: flatten 3d vector
+    """
     return glm.vec3(vector.x, 0, vector.z)
 
 class Planet:
+    """Class for a planet"""
+    
     def __init__(self, app, seed, biome):
+        """Class constructor
+
+        Args:
+            app (GraphicsEngine): the graphic engine object
+            seed (int): the Perlin seed for generation (positive integer)
+            biome (str): the biome name for generation
+        """
         self.radius = 8
         self.radius_squared = self.radius ** 2
         self.app = app
@@ -92,6 +82,7 @@ class Planet:
         self.tasks_per_frame = TASKS_PER_FRAME
 
     def load_attributes(self):
+        """Load attributes dependant of planet being present in the main app"""
         self.app.get_time()
         self.light = Light(self.app)
         self.camera = CameraFollow(self.app)
@@ -99,6 +90,7 @@ class Planet:
         self.load_objects()
     
     def load_objects(self):
+        """Load all objects of generation"""
         # Skybox
         self.skybox = AdvancedSkyBoxObject(self.app, self.app.meshes["advanced_skybox"])
 
@@ -143,6 +135,7 @@ class Planet:
             self.heatcores[i] = heatcore
     
     def init_shaders(self):
+        """Initialize the chunk shader"""
         colors_256 = np.zeros((256, 3), dtype=np.float32)
         colors_256[:len(self.color_params.colors)] = self.color_params.colors
         colors_256 *= 1 / 255
@@ -152,14 +145,18 @@ class Planet:
         
 
     def generate_chunk_worker(self, coord, detail):
-        """Worker function for generating chunks and rendering."""
+        """Worker function for generating chunks and rendering
+        
+        Args:
+            coord (tuple[int, int]): chunk coordinates as integers
+            detail (float): the amount of detail for the given chunk"""
         chunk = ChunkTerrain(self.noise, coord[0], coord[1], CHUNK_SCALE)
         chunk_mesh = DelaunayChunkMesh(self.app, chunk)
         chunk_mesh.update_detail(detail)
         self.result_queue.put((coord, chunk_mesh))
     
     def generate_chunks(self):
-        """Update chunks and load new ones."""
+        """Update chunks and load new ones"""
         player_position = self.player.position.xz / (CHUNK_SIZE * CHUNK_SCALE)
         player_chunk_coord = glm.vec2(glm.floor(player_position.x), glm.floor(player_position.y))
         keys_to_delete = [chunk_coord for chunk_coord in self.chunk_meshes.keys()
@@ -187,7 +184,7 @@ class Planet:
                 self.chunks_to_load_set.add(chunk_coord)
 
     def update_chunks(self):
-        """Distribute chunk generation tasks across multiple frames."""
+        """Distribute chunk generation tasks across multiple frames"""
         #print(f"Chunks to load: {self.chunks_to_load_dic}")
         tasks_this_frame = 0
         keys_used = []
@@ -226,6 +223,7 @@ class Planet:
         #print(f"Chunks that finished loading: {temp}")
     
     def update_shader(self):
+        """Update the chunk shader"""
         # Light
         self.chunk_shader['light.direction'].write(self.light.direction)
         self.chunk_shader['light.Ia'].write(self.light.Ia)
@@ -241,6 +239,7 @@ class Planet:
         self.chunk_shader['time'].write(struct.pack('f', self.app.time))
 
     def update(self):
+        """Update all components needed to be updated each frame"""
         # Long aaah line
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
             self.light.update()
@@ -260,7 +259,7 @@ class Planet:
         self.update_shader()
 
     def render(self):
-        """Render all chunks within the active radius."""
+        """Render all chunks within the active radius"""
         self.update()
         player_position = self.camera.position / (CHUNK_SIZE * CHUNK_SCALE)
 
@@ -281,7 +280,7 @@ class Planet:
         self.player.render()
 
     def destroy(self):
-        """Clean up resources."""
+        """Clean up resources (garbage collector)"""
         self.semaphore.acquire()
         for t in self.threads:
             t.join()
@@ -290,12 +289,32 @@ class Planet:
         self.chunk_shader.release()
 
     def get_perlin_height(self, position: glm.vec3, octaves: int = 1):
+        """Generate the height of a position in 3d (y component can be anything)
+
+        Args:
+            position (glm.vec3): the 3d vector of the vertex
+            octaves (int, optional): number of octaves for the height calculation. Defaults to 1.
+
+        Returns:
+            float: height of the position
+        """
         sample_x, sample_y = np.array(position.xz / CHUNK_SCALE)
         noise_value = self.noise.noise_value(sample_x, sample_y, octaves=octaves)
         height_value = self.noise.height_params.height_from_noise(noise_value)
         return height_value * CHUNK_SCALE
 
     def get_normal(self, position: glm.vec3, octaves: int = 1, get_height: bool = False):
+        """Generate the normal vector for a given position in 3d (y component can be anything)
+
+        Args:
+            position (glm.vec3): the 3d vector of the vertex
+            octaves (int, optional): number of octaves for height calculations. Defaults to 1.
+            get_height (bool, optional): returns height of the position as well. Defaults to False.
+
+        Returns:
+            glm.vec3 | tuple[float, glm.vec3]: the normal vector of the position
+                or with it the position height (if get_height is True)
+        """
         epsilon = 0.1 * CHUNK_SCALE 
         height_center = self.get_perlin_height(position, octaves)
         height_x = self.get_perlin_height(position + glm.vec3(epsilon, 0, 0), octaves)
@@ -315,6 +334,15 @@ class Planet:
     RANDOM_STEP = 0.1 * CHUNK_SCALE
 
     def avoid_water(self, position: glm.vec3, octaves: int = 1):
+        """Wiggle around a point until it is not underwater anymore
+
+        Args:
+            position (glm.vec3): the starting position
+            octaves (int, optional): number of octaves used for normal calculations. Defaults to 1.
+
+        Returns:
+            glm.vec3: the final position of the point
+        """
         i = 0
         height, terrain_normal = self.get_normal(position, octaves, True)
         prev_height = height  # Store previous height to detect local maxima
@@ -363,28 +391,15 @@ class Planet:
         return flatten(position) + glm.vec3(0, height, 0)
 
     def avoid_cliffs(self, position: glm.vec3, octaves: int = 1):
-        i = 0
-        height, terrain_normal = self.get_normal(position, octaves, True)
-        terrain_normal.y = 0  # Ensure no vertical influence
+        """Wiggle around a point until it is not on a cliff anymore
 
-        while terrain_normal.y > glm.sin(glm.radians(30)) and i < self.MAX_ITERATIONS:
-            print(f"Iteration {i}")
-            print(f"  Position {position} with normal {terrain_normal}")
-            movement = flatten(terrain_normal)
-            movement_length = glm.length(movement)
+        Args:
+            position (glm.vec3): the starting position
+            octaves (int, optional): number of octaves used for normal calculations. Defaults to 1.
 
-
-            position -= movement
-            height, terrain_normal = self.get_normal(position, octaves, True)
-            terrain_normal.y = 0  # Re-flatten the normal after update
-
-            i += 1
-            print(f"Iteration {i}, Position {position}, Height {height}")
-
-        print(f"Total iterations for avoiding cliffs: {i}")
-        return flatten(position) + glm.vec3(0, height, 0)
-
-    def avoid_cliffs(self, position: glm.vec3, octaves: int = 1):
+        Returns:
+            glm.vec3: resulting point of the wiggling around
+        """
         i = 0
         height, terrain_normal = self.get_normal(position, octaves, True)
         terrain_normal.y = 0
@@ -401,8 +416,8 @@ class Planet:
         print(f"Iteration of avoiding cliff: {i}")
         return flatten(position) + glm.vec3(0, height, 0)
 
-    
     def cinematique_entree(self):
+        """Cinematic of entrance to the world (not here yet)"""
         running = True
         while running:
             self.app.context.clear(color=(0, 0, 0))
