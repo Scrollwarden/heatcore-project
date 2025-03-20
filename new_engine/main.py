@@ -61,9 +61,9 @@ class GraphicsEngine:
         self.meshes["starting_base"] = GameObjMesh(self, "starting_base", "obj",
                                                    scale=0.005)
         self.meshes["ancient_structure"] = GameObjMesh(self, "door_dungeon", "obj", 
-                                                       scale=0.015)
+                                                       scale=0.04)
         self.meshes["heatcore"] = GameObjMesh(self, "heat_core", "obj",
-                                              scale=0.01)
+                                              scale=0.02)
         self.meshes["advanced_skybox"] = AdvancedSkyBoxMesh(self)
 
     def load_textures(self):

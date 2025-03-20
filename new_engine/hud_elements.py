@@ -29,6 +29,13 @@ HARDSET_CONTROLS = {
 MENU_BACKGROUND_ICON = pg.image.load("txt/background_logo.png")
 MENU_INGAME_BACKGROUND_ICON = pg.image.load("txt/dark_background_logo.png")
 
+PATH_TO_DATA = 'new_engine/data.pkl'
+
+def load_text(file):
+    """charge un fichier texte. Utilisé dans IntroUI"""
+    with open(file, 'r', encoding='utf-8') as f:
+        return f.read()
+
 class CompassBar:
     def __init__(self, screen, x, y, length, color=(255, 255, 255), thickness=5):
         self.screen = screen
@@ -225,16 +232,20 @@ class UI2:
         self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
         self.overlay_background.fill((20, 20, 20, 100))
 
-        self.play_button_rect = pg.Rect(self.width//7, (self.height - 100) // 3, 250, 50)
-        self.controls_button_rect = pg.Rect(self.play_button_rect.left, self.play_button_rect.bottom + 20, 250, 50)
+        self.play_button_rect = pg.Rect(self.width//7, (self.height - 150) // 3, 250, 50)
+        self.play_from_scratch_button_rect = pg.Rect(self.play_button_rect.left, self.play_button_rect.bottom + 20, 250, 50)
+        self.show_intro_again_rect = pg.Rect(self.play_button_rect.left, self.play_from_scratch_button_rect.bottom + 40, 250, 50)
+        self.controls_button_rect = pg.Rect(self.play_button_rect.left, self.show_intro_again_rect.bottom + 20, 250, 50)
         self.save_button_rect = pg.Rect(self.play_button_rect.left, self.controls_button_rect.bottom + 20, 250, 50)
-        self.close_button_rect = pg.Rect(self.play_button_rect.left, self.save_button_rect.bottom + 40, 250, 50)
+        self.show_credits_rect = pg.Rect(self.play_button_rect.left, self.save_button_rect.bottom + 50, 250, 50)
+        self.close_button_rect = pg.Rect(self.play_button_rect.left, self.show_credits_rect.bottom + 20, 250, 50)
 
         self.font = pg.font.SysFont("Arial", 24)
         self.title_font = pg.font.SysFont("Arial", 48)
         self.subtitle_font = pg.font.SysFont("Arial", 32)
 
         self.controls_requested = False
+        self.intro_requested = False
 
     def draw_text_with_outline(self, text, font, text_color, center, outline_color=(0, 0, 0), outline_offset=2):
         base_text = font.render(text, True, text_color)
@@ -273,30 +284,56 @@ class UI2:
 
         clair = 70 # la couleur est celle du logo, rendue plus claire par soucis de visibilité
         color_buttons = (53+clair, 15+clair, 30+clair)
-        self.draw_low_poly_button(self.close_button_rect, color_buttons, "Fermer")
-        self.draw_low_poly_button(self.play_button_rect, color_buttons, "Jouer")
+        self.draw_low_poly_button(self.close_button_rect, color_buttons, "Quitter le jeu")
+        self.draw_low_poly_button(self.play_button_rect, color_buttons, "Continuer" if os.path.isfile(PATH_TO_DATA) else "Jouer")
+        if self.first_time:
+            self.draw_low_poly_button(self.play_from_scratch_button_rect, color_buttons, "Nouvelle partie")    # pour un changement de mission qui ne casse pas
+        else:                                                                                                  # l'immersion il vaut mieux quitter la mission avant
+            self.draw_low_poly_button(self.play_from_scratch_button_rect, color_buttons, "Quitter la mission") # d'en lancer une nouvelle.
+        self.draw_low_poly_button(self.show_intro_again_rect, color_buttons, "Revoir l'introduction")
+        self.draw_low_poly_button(self.show_credits_rect, color_buttons, "Crédits")
         self.draw_low_poly_button(self.controls_button_rect, color_buttons, "Contrôles")
         self.draw_low_poly_button(self.save_button_rect, color_buttons, "Sauvegarder")
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
             mouse_pos = event.pos
-            if self.close_button_rect.collidepoint(mouse_pos):
-                print("Close button clicked: Ending the game.")
-                self.app.quit_game()
-            elif self.play_button_rect.collidepoint(mouse_pos):
+            if self.play_button_rect.collidepoint(mouse_pos):
                 print("Play button clicked!")
+                # if os.path.isfile(PATH_TO_DATA):
+                #     self.app.load_data(PATH_TO_DATA)
                 self.active = False
                 pg.mouse.set_visible(False)
                 pg.mouse.set_pos(self.width//2, self.height//2)
+                if self.first_time and not os.path.isfile(PATH_TO_DATA):
+                    self.intro_requested = True
+                    
             elif self.controls_button_rect.collidepoint(mouse_pos):
                 print("Controls button clicked: Accessing Control Settings.")
                 self.active = False
                 self.controls_requested = True
                 pg.mouse.set_visible(True)
+
             elif self.save_button_rect.collidepoint(mouse_pos):
                 print("Save button clicked: Saving data in file.")
-                self.app.save_data("new_engine/data.pkl")
+                self.app.save_data(PATH_TO_DATA)
+
+            elif self.play_from_scratch_button_rect.collidepoint(mouse_pos):
+                if  self.first_time: # voir le commentaire au dessin des boutons dans la méthode draw au dessus
+                    if os.path.isfile(PATH_TO_DATA):
+                        os.remove(PATH_TO_DATA)
+                    self.active = False
+                    pg.mouse.set_visible(False)
+                    pg.mouse.set_pos(self.width//2, self.height//2)
+                    self.intro_requested = True
+                else:
+                    pg.mouse.set_pos(self.width//2, self.height//2)
+                    self.first_time = True
+
+            elif self.close_button_rect.collidepoint(mouse_pos):
+                print("Close button clicked: Ending the game.")
+                self.app.quit_game()
+
 
 class UI2_1:
     def __init__(self, screen):
@@ -395,15 +432,58 @@ class MenuIntroUI:
     '''
     def __init__(self, screen):
         self.screen = screen
-        self.text_intro = "txt/text_intro.txt"
+        self.width, self.height = screen.get_size()
+        self.active = False
+        self.text_intro = load_text("txt/text_intro.txt")
+        self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.overlay_background.fill((20, 20, 20, 100))
+        self.skip_button_rect = pg.Rect(self.width//2, (self.height - 150) // 3, 250, 50)
+        self.animation_state = -20
+        self.wait_compteur = 0
+        self.animation_ended = False
+        self.texte_affiche = ''
+
+        self.font = pg.font.SysFont("Futura", 35)
 
     def handle_event(self, event):
         """
-        Gère les interactions (bouton skip dialogue et scrolling du texte)
+        Gère les interactions (bouton skip)
         """
+        if event.type == pg.MOUSEBUTTONDOWN:
+            mouse_pos = pg.mouse.get_pos()
+            if self.skip_button_rect.collidepoint(mouse_pos):
+                self.active = False
+                self.animation_state = len(self.text_intro)-1
+        if self.animation_state >= len(self.text_intro)-1:
+            self.animation_state = -20
+            self.texte_affiche = ''
+            self.animation_ended = True
 
-    def raw(self):
+    def affiche_texte(self):
+        """gère l'affichage du texte"""
+        if self.wait_compteur == 0:
+            self.animation_state += 1
+        if self.animation_state >= 0:
+            lettre = self.text_intro[self.animation_state]
+            if lettre == '\n':
+                if self.wait_compteur <= 90:
+                    self.wait_compteur += 1
+                else:
+                    self.wait_compteur = 0
+                    self.texte_affiche = ""
+            else:
+                self.texte_affiche += lettre
+            # self.screen.blit(self.overlay_background, (0, 0))
+            texte_surface = self.font.render(self.texte_affiche, True, (30, 30, 30))
+            self.screen.blit(texte_surface, (self.width//6, self.height//2))
+            pg.display.flip()
+
+    def draw(self):
         """affiche l'écran"""
+        # self.screen.blit(self.overlay_background, (0, 0))
+        # image_text = pg.image.load("txt/title_logo.png")
+        # self.screen.blit(image_text, ((self.width-image_text.get_size()[0])//2, 60))
+        self.affiche_texte()
 
 class UI3:
     def __init__(self, screen):

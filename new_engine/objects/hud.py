@@ -18,10 +18,12 @@ class HUDObject:
         self.hud_intro = MenuIntroUI(self.ui_surface)
 
     def handle_event(self, event):
-        # Existing UI2_1 and UI2 event handling...
+        # Existing UI2_1, UI2_2 and UI2 event handling...
         if self.hud_buttons.active:
             self.hud_buttons.handle_event(event)
             return
+        if self.hud_intro.active:
+            self.hud_intro.handle_event(event)
         if self.hud_menu.active:
             self.hud_menu.handle_event(event)
             return
@@ -44,6 +46,19 @@ class HUDObject:
             self.hud_menu.controls_requested = False
             self.hud_buttons.active = True
             pg.mouse.set_visible(True)
+        if self.hud_menu.intro_requested:
+            self.hud_menu.intro_requested = False
+            self.hud_menu.active = False
+            self.hud_intro.active = True
+        if self.hud_buttons.return_to_ui2:
+            self.hud_menu.first_time = self.hud_buttons.first_time
+            self.hud_buttons.return_to_ui2 = False
+            self.hud_menu.controls_requested = False # juste au cas où
+            self.hud_buttons.active = False
+            self.hud_menu.active = True
+        if self.hud_intro.animation_ended:
+            self.hud_intro.animation_ended = False
+            self.hud_intro.active = False
 
         # Only hide the mouse if no UI is active.
         if not self.hud_menu.active and not self.hud_buttons.active:
@@ -54,7 +69,9 @@ class HUDObject:
     def render(self):
         self.ui_surface.fill((0, 0, 0, 0))
         
-        if self.hud_buttons.active:
+        if self.hud_intro.active:
+            self.hud_intro.draw()
+        elif self.hud_buttons.active:
             self.hud_buttons.draw()
         elif self.hud_menu.active:
             self.hud_menu.draw()
