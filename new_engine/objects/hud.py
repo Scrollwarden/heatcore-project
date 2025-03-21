@@ -2,7 +2,7 @@ import pygame as pg
 import math
 import moderngl as mgl
 
-from new_engine.hud_elements import UI1, UI2, UI2_1, MenuIntroUI, UI3
+from new_engine.hud_elements import UI1, UI2, UI2_1, MenuIntroUI, CreditsUI, UI3
 from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT
 from new_engine.meshes.hud_mesh import HUDMesh
 
@@ -16,6 +16,7 @@ class HUDObject:
         self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
         self.hud_intro = MenuIntroUI(self.ui_surface)
+        self.hud_credits = CreditsUI(self.ui_surface)
 
     def handle_event(self, event):
         # Existing UI2_1, UI2_2 and UI2 event handling...
@@ -24,6 +25,8 @@ class HUDObject:
             return
         if self.hud_intro.active:
             self.hud_intro.handle_event(event)
+        if self.hud_credits.active:
+            self.hud_intro.handle_event(event)
         if self.hud_menu.active:
             self.hud_menu.handle_event(event)
             return
@@ -31,9 +34,12 @@ class HUDObject:
         if event.type == pg.KEYDOWN and event.key == pg.K_h:
             self.hud_game.active = not self.hud_game.active
         elif event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
-            self.hud_menu.first_time = False
-            self.hud_menu.active = True
-            pg.mouse.set_visible(True)
+            if self.hud_intro.active:
+                self.hud_intro.active = False
+            else:
+                self.hud_menu.first_time = False
+                self.hud_menu.active = True
+                pg.mouse.set_visible(True)
 
     def update(self):
         if self.app.planet is not None and self.hud_game is None:
@@ -41,24 +47,37 @@ class HUDObject:
         if self.app.planet is None and self.hud_game is not None:
             self.hud_game = None
 
-        if self.hud_menu.controls_requested:
+        if self.hud_menu.controls_requested: # from menu to options
             self.hud_buttons.first_time = self.hud_menu.first_time
             self.hud_menu.controls_requested = False
             self.hud_buttons.active = True
             pg.mouse.set_visible(True)
-        if self.hud_menu.intro_requested:
+        if self.hud_menu.intro_requested: # from menu to intro
             self.hud_menu.intro_requested = False
             self.hud_menu.active = False
+            self.hud_intro.animation_state = -20 # (ça marche pas dans hud_element)
+            self.hud_intro.texte_affiche = ''
             self.hud_intro.active = True
-        if self.hud_buttons.return_to_ui2:
+        if self.hud_menu.credits_requested: # from menu to credits
+            self.hud_menu.credits_requested = False
+            self.hud_menu.active = False
+            self.hud_credits.animation_state = -20 # (ça marche pas dans hud_element)
+            self.hud_credits.texte_affiche = ''
+            self.hud_credits.active = True
+        if self.hud_buttons.return_to_ui2: # from options to intro
             self.hud_menu.first_time = self.hud_buttons.first_time
             self.hud_buttons.return_to_ui2 = False
             self.hud_menu.controls_requested = False # juste au cas où
             self.hud_buttons.active = False
             self.hud_menu.active = True
-        if self.hud_intro.animation_ended:
+        if self.hud_intro.animation_ended: # intro to game
             self.hud_intro.animation_ended = False
             self.hud_intro.active = False
+        if self.hud_credits.animation_ended: # from credits to menu
+            self.hud_intro.animation_ended = False
+            self.hud_intro.active = False
+            self.hud_menu.first_time = True
+            self.hud_menu.active = True
 
         # Only hide the mouse if no UI is active.
         if not self.hud_menu.active and not self.hud_buttons.active:
@@ -71,6 +90,8 @@ class HUDObject:
         
         if self.hud_intro.active:
             self.hud_intro.draw()
+        elif self.hud_credits.active:
+            self.hud_credits.draw()
         elif self.hud_buttons.active:
             self.hud_buttons.draw()
         elif self.hud_menu.active:

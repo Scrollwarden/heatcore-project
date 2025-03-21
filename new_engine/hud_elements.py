@@ -246,6 +246,7 @@ class UI2:
 
         self.controls_requested = False
         self.intro_requested = False
+        self.credits_requested = False
 
     def draw_text_with_outline(self, text, font, text_color, center, outline_color=(0, 0, 0), outline_offset=2):
         base_text = font.render(text, True, text_color)
@@ -331,6 +332,16 @@ class UI2:
                 else:
                     pg.mouse.set_pos(self.width//2, self.height//2)
                     self.first_time = True
+
+            elif self.show_intro_again_rect.collidepoint(mouse_pos):
+                self.active = False
+                pg.mouse.set_visible(False)
+                self.intro_requested = True
+
+            elif self.show_credits_rect.collidepoint(mouse_pos):
+                pg.mouse.set_visible(False)
+                self.active = False
+                self.credits_requested = True
 
             elif self.close_button_rect.collidepoint(mouse_pos):
                 print("Close button clicked: Ending the game.")
@@ -430,7 +441,7 @@ class UI2_1:
 
 class MenuIntroUI:
     '''
-    L'écran sur lesquel défile le dialogue d'introduction au début du jeu
+    L'écran sur lequel défile le dialogue d'introduction au début du jeu
     '''
     def __init__(self, screen):
         self.screen = screen
@@ -438,7 +449,6 @@ class MenuIntroUI:
         self.active = False
         self.text_intro = load_text("txt/text_intro.txt")
         self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        self.skip_button_rect = pg.Rect(self.width//2, (self.height - 150) // 3, 250, 50)
         self.animation_state = -20
         self.wait_compteur = 0
         self.animation_ended = False
@@ -450,11 +460,9 @@ class MenuIntroUI:
         """
         Gère les interactions (bouton skip)
         """
-        if event.type == pg.MOUSEBUTTONDOWN:
-            mouse_pos = pg.mouse.get_pos()
-            if self.skip_button_rect.collidepoint(mouse_pos):
-                self.active = False
-                self.animation_state = len(self.text_intro)-2
+        if event.type == pg.K_ESCAPE:
+            self.active = False
+            self.animation_state = len(self.text_intro)-2
         if self.animation_state >= len(self.text_intro)-2:
             self.animation_state = -20
             self.texte_affiche = ''
@@ -474,20 +482,107 @@ class MenuIntroUI:
                     self.texte_affiche = ""
             else:
                 self.texte_affiche += lettre
-            self.overlay_background.fill((0, 0, 0, 255-(self.animation_state//3) if self.animation_state < 255*3 else 0))
+            self.overlay_background.fill((0, 0, 0, 255-(self.animation_state//8) if self.animation_state < 255*8 else 0))
             self.screen.blit(self.overlay_background, (0, 0))
             texte_surface = self.font.render(self.texte_affiche, True, (255, 255, 255))
-            x, y = self.width//5, self.height//2
+            x, y = self.width//6, self.height//2
             x_max_text = len(self.texte_affiche)*12
             text_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 120), ((x, y), (x+x_max_text, y), (x+x_max_text, y-22), (x, y-22)))
             self.screen.blit(texte_surface, text_rect)
 
     def draw(self):
         """affiche l'écran"""
-        # self.screen.blit(self.overlay_background, (0, 0))
-        # image_text = pg.image.load("txt/title_logo.png")
-        # self.screen.blit(image_text, ((self.width-image_text.get_size()[0])//2, 60))
         self.affiche_texte()
+
+class CreditsUI:
+    '''
+    L'écran sur lequel défilent les crédits
+    '''
+    def __init__(self, screen):
+        self.screen = screen
+        self.width, self.height = screen.get_size()
+        self.active = False
+        self.text_ending = load_text("txt/text_ending.txt")
+        self.text_credits = load_text("txt/text_credits.txt")
+        self.overlay_icon = pg.transform.scale(MENU_BACKGROUND_ICON, (self.height, self.height))
+        self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
+        self.overlay_background.fill((200, 200, 200, 250))
+        self.animation_state = -20
+        self.wait_compteur = 0
+        self.credits_state = 'ending'
+        self.animation_ended = False
+        self.texte_affiche = ''
+        self.y_scrolling_text = self.height
+
+        self.font = pg.font.SysFont("monospace", 25) # font dégueue mais au moins elle est mono et sysFont la connais
+
+    def handle_event(self, event):
+        """
+        Gère les interactions (bouton skip)
+        """
+        if event.type == pg.K_ESCAPE:
+            self.active = False
+            self.animation_state = len(self.text_ending)-2 # ça marche pas. Pourquoi ?
+        if self.animation_state >= len(self.text_ending)-2:
+            self.animation_state = -20
+            self.texte_affiche = ''
+            self.animation_ended = True
+
+
+    def affichage_texte_credits(self):
+        """gère l'affichage en scrolling des crédits"""
+        lines = self.text_credits.split('\n')
+        y = 0
+        for line in lines:
+            self.texte_affiche = self.font.render(line, True, (0, 0, 0))
+            self.screen.blit(self.texte_affiche, (50, self.y_scrolling_text-y))
+            y -= 22
+        self.y_scrolling_text -= 1
+        if self.y_scrolling_text <= -self.height:
+            self.texte_affiche = ''
+            self.credits_state = 'last_words'
+
+    def affiche_texte_ending(self):
+        """gère l'affichage du texte de fin de jeu"""
+        if self.wait_compteur == 0:
+            self.animation_state += 1
+        if self.animation_state >= 0:
+            lettre = self.text_ending[self.animation_state]
+            if lettre == '\n':
+                if self.wait_compteur <= 90:
+                    self.wait_compteur += 1
+                else:
+                    self.wait_compteur = 0
+                    self.texte_affiche = ""
+            elif lettre == '|':
+                self.credits_state = 'credits'
+                self.animation_state += 1
+            else:
+                self.texte_affiche += lettre
+            texte_surface = self.font.render(self.texte_affiche, True, (255, 255, 255))
+            x, y = self.width//6, self.height//2
+            x_max_text = len(self.texte_affiche)*12
+            text_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 255), ((x, y), (x+x_max_text, y), (x+x_max_text, y-22), (x, y-22)))
+            self.screen.blit(texte_surface, text_rect)
+
+    def draw(self):
+        """affiche l'écran"""
+        if self.credits_state == 'ending':
+            black_screen = pg.Surface((self.width, self.height))
+            black_screen.fill((0, 0, 0))
+            self.screen.blit(black_screen, (0, 0))
+            self.affiche_texte_ending()
+        elif self.credits_state == 'credits':
+            self.screen.blit(self.overlay_background, (0, 0))
+            self.screen.blit(self.overlay_icon, (self.width-self.overlay_icon.get_size()[0], 0))
+            self.affichage_texte_credits()
+        else: # reprise du texte d'ending sur les derniers mots
+            black_screen = pg.Surface((self.width, self.height))
+            black_screen.fill((0, 0, 0))
+            self.screen.blit(black_screen, (0, 0))
+            self.affiche_texte_ending()
+        title_image = pg.image.load("txt/title_logo.png")
+        self.screen.blit(title_image, ((self.width-title_image.get_size()[0])//2, 60))
 
 class UI3:
     def __init__(self, screen):
