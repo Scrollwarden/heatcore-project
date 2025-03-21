@@ -91,7 +91,6 @@ class GraphicsEngine:
         
         self.hud.hud_game.heatcore_markers = {}
         self.hud.hud_game.heatcore_bar.sections = self.planet.num_heatcores
-        # self.planet.cinematique_entree()
         
         if pg.mixer.music.get_busy():
             pg.mixer.music.stop()

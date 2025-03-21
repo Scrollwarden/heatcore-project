@@ -307,6 +307,7 @@ class UI2:
                 pg.mouse.set_pos(self.width//2, self.height//2)
                 if self.first_time and not os.path.isfile(PATH_TO_DATA):
                     self.intro_requested = True
+                    self.app.save_data(PATH_TO_DATA) # sinon ça refait l'intro jusqu'à ce que le joueur ai save manuellement
                     
             elif self.controls_button_rect.collidepoint(mouse_pos):
                 print("Controls button clicked: Accessing Control Settings.")
@@ -326,6 +327,7 @@ class UI2:
                     pg.mouse.set_visible(False)
                     pg.mouse.set_pos(self.width//2, self.height//2)
                     self.intro_requested = True
+                    self.app.save_data(PATH_TO_DATA) # sinon ça refait l'intro jusqu'à ce que le joueur ai save manuellement
                 else:
                     pg.mouse.set_pos(self.width//2, self.height//2)
                     self.first_time = True
@@ -436,7 +438,6 @@ class MenuIntroUI:
         self.active = False
         self.text_intro = load_text("txt/text_intro.txt")
         self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        self.overlay_background.fill((20, 20, 20, 100))
         self.skip_button_rect = pg.Rect(self.width//2, (self.height - 150) // 3, 250, 50)
         self.animation_state = -20
         self.wait_compteur = 0
@@ -453,8 +454,8 @@ class MenuIntroUI:
             mouse_pos = pg.mouse.get_pos()
             if self.skip_button_rect.collidepoint(mouse_pos):
                 self.active = False
-                self.animation_state = len(self.text_intro)-1
-        if self.animation_state >= len(self.text_intro)-1:
+                self.animation_state = len(self.text_intro)-2
+        if self.animation_state >= len(self.text_intro)-2:
             self.animation_state = -20
             self.texte_affiche = ''
             self.animation_ended = True
@@ -473,10 +474,13 @@ class MenuIntroUI:
                     self.texte_affiche = ""
             else:
                 self.texte_affiche += lettre
-            # self.screen.blit(self.overlay_background, (0, 0))
-            texte_surface = self.font.render(self.texte_affiche, True, (30, 30, 30))
-            self.screen.blit(texte_surface, (self.width//6, self.height//2))
-            pg.display.flip()
+            self.overlay_background.fill((0, 0, 0, 255-(self.animation_state//3) if self.animation_state < 255*3 else 0))
+            self.screen.blit(self.overlay_background, (0, 0))
+            texte_surface = self.font.render(self.texte_affiche, True, (255, 255, 255))
+            x, y = self.width//5, self.height//2
+            x_max_text = len(self.texte_affiche)*12
+            text_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 120), ((x, y), (x+x_max_text, y), (x+x_max_text, y-22), (x, y-22)))
+            self.screen.blit(texte_surface, text_rect)
 
     def draw(self):
         """affiche l'écran"""

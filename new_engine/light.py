@@ -8,7 +8,7 @@ class Light:
         self.color = glm.vec3(color)
 
         self.normal = glm.vec3(normal)
-        self.time = 0
+        self.time = 190
         self.starting_direction = glm.vec3(direction)
 
         self.direction = glm.vec3()
@@ -33,7 +33,7 @@ class Light:
 
     def update(self):
         """Update the light class for each frame"""
-        time_full_rotation = 90 # in seconds
+        time_full_rotation = 300 # in seconds
         current_direction = glm.rotate(glm.radians(self.time * 360 / time_full_rotation), self.normal) * glm.vec4(self.starting_direction, 0.0)
         self.set_direction(current_direction)
         self.time += self.app.delta_time / 1000 # number of seconds
