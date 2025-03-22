@@ -26,7 +26,7 @@ class HUDObject:
         if self.hud_intro.active:
             self.hud_intro.handle_event(event)
         if self.hud_credits.active:
-            self.hud_intro.handle_event(event)
+            self.hud_credits.handle_event(event)
         if self.hud_menu.active:
             self.hud_menu.handle_event(event)
             return
@@ -74,10 +74,11 @@ class HUDObject:
             self.hud_intro.animation_ended = False
             self.hud_intro.active = False
         if self.hud_credits.animation_ended: # from credits to menu
-            self.hud_intro.animation_ended = False
-            self.hud_intro.active = False
+            self.hud_credits.animation_ended = False
+            self.hud_credits.active = False
             self.hud_menu.first_time = True
             self.hud_menu.active = True
+            pg.mouse.set_visible(True)
 
         # Only hide the mouse if no UI is active.
         if not self.hud_menu.active and not self.hud_buttons.active:

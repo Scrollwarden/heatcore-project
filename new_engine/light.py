@@ -8,7 +8,7 @@ class Light:
         self.color = glm.vec3(color)
 
         self.normal = glm.vec3(normal)
-        self.time = 190
+        self.time = 195
         self.starting_direction = glm.vec3(direction)
 
         self.direction = glm.vec3()

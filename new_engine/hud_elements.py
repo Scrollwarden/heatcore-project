@@ -32,7 +32,7 @@ MENU_INGAME_BACKGROUND_ICON = pg.image.load("txt/dark_background_logo.png")
 PATH_TO_DATA = 'new_engine/data.pkl'
 
 def load_text(file):
-    """charge un fichier texte. Utilisé dans IntroUI"""
+    """charge un fichier texte. Utilisé dans IntroUI et CreditsUI"""
     with open(file, 'r', encoding='utf-8') as f:
         return f.read()
 
@@ -462,8 +462,8 @@ class MenuIntroUI:
         """
         if event.type == pg.K_ESCAPE:
             self.active = False
-            self.animation_state = len(self.text_intro)-2
-        if self.animation_state >= len(self.text_intro)-2:
+            self.animation_state = len(self.text_intro)-3
+        if self.animation_state >= len(self.text_intro)-3:
             self.animation_state = -20
             self.texte_affiche = ''
             self.animation_ended = True
@@ -503,7 +503,7 @@ class CreditsUI:
         self.width, self.height = screen.get_size()
         self.active = False
         self.text_ending = load_text("txt/text_ending.txt")
-        self.text_credits = load_text("txt/text_credits.txt")
+        self.img_credits = pg.image.load("txt/img_credits.png")
         self.overlay_icon = pg.transform.scale(MENU_BACKGROUND_ICON, (self.height, self.height))
         self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
         self.overlay_background.fill((200, 200, 200, 250))
@@ -514,39 +514,34 @@ class CreditsUI:
         self.texte_affiche = ''
         self.y_scrolling_text = self.height
 
-        self.font = pg.font.SysFont("monospace", 25) # font dégueue mais au moins elle est mono et sysFont la connais
+        self.font = pg.font.SysFont("Futura", 35)
 
     def handle_event(self, event):
         """
         Gère les interactions (bouton skip)
         """
+        print(self.animation_state, 'for', len(self.text_ending)-3)
         if event.type == pg.K_ESCAPE:
             self.active = False
-            self.animation_state = len(self.text_ending)-2 # ça marche pas. Pourquoi ?
-        if self.animation_state >= len(self.text_ending)-2:
+            self.animation_state = len(self.text_ending)-3
+        if self.animation_state >= len(self.text_ending)-3:
             self.animation_state = -20
             self.texte_affiche = ''
+            self.active = False
             self.animation_ended = True
-
 
     def affichage_texte_credits(self):
         """gère l'affichage en scrolling des crédits"""
-        lines = self.text_credits.split('\n')
-        y = 0
-        for line in lines:
-            self.texte_affiche = self.font.render(line, True, (0, 0, 0))
-            self.screen.blit(self.texte_affiche, (50, self.y_scrolling_text-y))
-            y -= 22
+        self.screen.blit(self.img_credits, (50, self.y_scrolling_text))
         self.y_scrolling_text -= 1
-        if self.y_scrolling_text <= -self.height:
-            self.texte_affiche = ''
+        if self.y_scrolling_text <= -(self.height*2):
             self.credits_state = 'last_words'
 
     def affiche_texte_ending(self):
         """gère l'affichage du texte de fin de jeu"""
         if self.wait_compteur == 0:
             self.animation_state += 1
-        if self.animation_state >= 0:
+        if self.animation_state >= 0 and self.animation_state <= len(self.text_ending)-3 :
             lettre = self.text_ending[self.animation_state]
             if lettre == '\n':
                 if self.wait_compteur <= 90:

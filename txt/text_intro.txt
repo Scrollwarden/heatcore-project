@@ -10,19 +10,19 @@ A bord du vaisseau-colonie, l'équipage envoyait ses premiers rapports.
 17/03/2500 - 08:37 - Transmission du 24PP 
 
 Nous avons vu trop grand. 
-L'ambition nous a dévoré. La mission est au bord de l'échec. 
+L'ambition nous a dévoré.
+La mission est au bord de l'échec. 
 Les systèmes Amberiens sont en perdition. Il n'y a aucune chance d'installation durable ici. 
 L'orbite de toutes les planètes a été modifiée. Probablement par un météore, nous ne savons pas. 
 Elles décrivent maintenant toutes une élipse autour de leur étoile, 
 qui les portent périodiquement à une distance mortelle. 
 Aucun être vivant n'y a survécu. 
-D'après nos scanners, aucune trace de vie 
-excepté un peu d'herbe n'est a recenser dans tout Ambera. 
+D'après nos scanners, aucune trace de vie n'est a recenser dans tout Ambera,
+excepté un peu d'herbe et des micro-organismes marins. 
 Ce n'est que grâce à l'autre moitié de leur orbite, 
 bien plus proches de leur soleil, 
 que les mondes ne gèlent pas complètement. 
-Leur sol gagne à peine assez de chaleur 
-pour ne pas devenir un glaçon lorsque la planète s'éloigne. 
+Leur sol gagne à peine assez de chaleur pour ne pas devenir un glaçon. 
 
 Nous n'avons pas assez d'énergie pour faire demi-tour. 
 Le 24PP était sensé s'installer dans un monde viable 
@@ -42,7 +42,6 @@ des capsules contenant des cristaux d'énergie solaire pure.
 Des sortes de Cœurs de chaleur. 
 
 9 d'entre-eux nous suffiraient pour charger les moteurs et rejoindre la Terre. 
-
 Nous avons assez d'énergie pour envoyer une navette d'exploration dans un atterisseur. 
 Il faudra parcourir plusieurs mondes pour récolter assez de cœurs, mais c'est possible. 
 Le pilote devra rentrer à la base avant la nuit s'il veut survivre au froid. 
