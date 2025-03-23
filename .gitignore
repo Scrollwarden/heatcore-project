@@ -1,6 +1,6 @@
 # Ignore virtual environment
-.venv/
-venv/
+.venv*/
+venv*/
 
 # Ignore Python cache files
 __pycache__/
@@ -14,5 +14,6 @@ __pycache__/
 # Ignore PyCharm stuff
 .idea/
 
-# Ignore log data
+# Ignore logs and game saves
 *log_data.csv
+*data.pkl

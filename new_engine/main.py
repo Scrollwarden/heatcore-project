@@ -94,9 +94,6 @@ class GraphicsEngine:
         
         if pg.mixer.music.get_busy():
             pg.mixer.music.stop()
-        pg.mixer.music.load("musics/The Road Ahead_LoudnessComp.wav")
-        pg.mixer.music.set_volume(0.0)
-        pg.mixer.music.play(-1)
         
         self.current_level += 1
     
@@ -168,6 +165,34 @@ class GraphicsEngine:
         """Update the time"""
         self.time = pg.time.get_ticks() * 0.001
 
+    def playsound(self):
+        """démarre un son si ancun son n'est joué, selon le lieu actuel"""
+        # select sound
+        if self.hud.hud_menu.active or self.hud.hud_buttons.active:
+            song = "musics/an_empty_planet_v1.mp3"
+            loop_count = 4
+        elif self.hud.hud_intro.active:
+            song = "NO SONG"
+            loop_count = 0 # infinite
+        elif self.planet.donjon != None:
+           song = "musics/who_built_it.mp3"
+           loop_count = 2
+        # elif cube:
+        #    song = "musics/a_cube_of_enigma.mp3"
+        #    loop_count = 0 # infinite
+        #    bypass = True
+        else:
+            song = "musics/The Road Ahead_LoudnessComp.wav"
+            loop_count = 1
+        
+            # play sound
+        if song == "NO SONG":
+            pg.mixer.music.stop()
+        elif not pg.mixer.music.get_busy():
+            pg.mixer.music.load(song)
+            pg.mixer.music.set_volume(0.4)
+            pg.mixer.music.play(loop_count-1)
+
     def run(self):
         """Main while loop"""
         self.get_time()
@@ -191,6 +216,8 @@ class GraphicsEngine:
             self.hud.update()
             for mesh in self.meshes.values():
                 mesh.update()
+
+            self.playsound()
 
             if not self.hud.hud_buttons.active:
                 self.controls = self.hud.hud_buttons.bindings
