@@ -141,7 +141,7 @@ class GraphicsEngine:
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_p):
                 self.quit_game()
-            if event.type == pg.KEYDOWN and event.key == self.controls["Reset Planet"]:
+            if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 if not (self.hud.hud_menu.active or self.hud.hud_buttons.active):
                     self.load_new_planet()
             if event.type == pg.KEYDOWN and event.key == pg.K_l:
