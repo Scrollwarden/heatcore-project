@@ -31,9 +31,7 @@ class HUDObject:
             self.hud_menu.handle_event(event)
             return
 
-        if event.type == pg.KEYDOWN and event.key == pg.K_h:
-            self.hud_game.active = not self.hud_game.active
-        elif event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
+        if event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
             if not self.hud_menu.active:
                 if self.hud_intro.active:
                     self.hud_intro.active = False
@@ -45,10 +43,10 @@ class HUDObject:
 
     def update(self):
         """met à jour les interfaces pour savoir qui est affiché"""
-        if self.app.planet is not None and self.hud_game is None:
-            self.hud_game = UI1(self.ui_surface)
         if self.app.planet is None and self.hud_game is not None:
             self.hud_game = None
+        if self.app.planet is not None and self.hud_game is None:
+            self.hud_game = UI1(self.app, self.ui_surface)
 
         if self.hud_menu.controls_requested: # menu to options
             self.hud_buttons.first_time = self.hud_menu.first_time

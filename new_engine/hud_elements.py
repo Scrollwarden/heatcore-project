@@ -8,9 +8,7 @@ import glm
 from new_engine.options import SCREEN_WIDTH, FOV
 
 from tensorflow.keras.models import load_model
-from intel_arti.cube_v2.agent import Agent
-
-
+from intel_arti.cube_v2.agent import Agent, SuperAgent
 
 DEFAULT_CONTROLS = {
     "Strafe Left": pg.K_q,
@@ -188,14 +186,15 @@ class UI1:
                 self.compass_bar_y, self.compass_bar_length,
                 (0, 0, 0), 15, 8
             )
-        
-        self.heatcore_bar.set_heatcore_count(self.app.planet.num_heatcores - len(self.heatcore_markers))
+
         
         ancient_structure = self.app.planet.ancient_structure
         self.ancient_structure_marker = HeatcoreMarker(
             self.screen, ancient_structure, self.compass_bar_y, self.compass_bar_length,
             (255, 0, 255), 20, 12
         )
+        enery_core_count = 3 if ancient_structure.won else 0
+        self.heatcore_bar.set_heatcore_count(self.app.planet.num_heatcores - len(self.heatcore_markers) + enery_core_count)
 
         starting_base = self.app.planet.starting_base
         self.starting_base_marker = HeatcoreMarker(
@@ -214,8 +213,10 @@ class UI1:
         for heatcore_marker in self.heatcore_markers.values():
             heatcore_marker.draw(camera)
 
-        if self.ancient_strcture_marker is not None:
-            self.ancient_strcture_marker.draw(camera)
+        if self.ancient_structure_marker is not None:
+            self.ancient_structure_marker.draw(camera)
+        if self.starting_base_marker is not None:
+            self.starting_base_marker.draw(camera)
 
         self.heatcore_bar.draw()
 
@@ -305,11 +306,14 @@ class UI2:
                 # if os.path.isfile(PATH_TO_DATA):
                 #     self.app.load_data(PATH_TO_DATA)
                 self.active = False
+                if self.app.planet is None:
+                    self.app.load_new_planet(self.app.load_data("new_engine/data.pkl"))
                 pg.mouse.set_visible(False)
                 pg.mouse.set_pos(self.width//2, self.height//2)
                 if self.first_time and not os.path.isfile(PATH_TO_DATA):
                     self.intro_requested = True
                     self.app.save_data(PATH_TO_DATA) # sinon ça refait l'intro jusqu'à ce que le joueur ai save manuellement
+                    self.app.save_buttons("new_engine/buttons.pkl")
                     
             elif self.controls_button_rect.collidepoint(mouse_pos):
                 print("Controls button clicked: Accessing Control Settings.")
@@ -320,9 +324,10 @@ class UI2:
             elif self.save_button_rect.collidepoint(mouse_pos):
                 print("Save button clicked: Saving data in file.")
                 self.app.save_data(PATH_TO_DATA)
+                self.app.save_buttons("new_engine/buttons.pkl")
 
             elif self.play_from_scratch_button_rect.collidepoint(mouse_pos):
-                if  self.first_time: # voir le commentaire au dessin des boutons dans la méthode draw au dessus
+                if self.first_time: # voir le commentaire au dessin des boutons dans la méthode draw au dessus
                     if os.path.isfile(PATH_TO_DATA):
                         os.remove(PATH_TO_DATA)
                         self.app.load_new_planet()
@@ -331,6 +336,7 @@ class UI2:
                     pg.mouse.set_pos(self.width//2, self.height//2)
                     self.intro_requested = True
                     self.app.save_data(PATH_TO_DATA) # sinon ça refait l'intro jusqu'à ce que le joueur ai save manuellement
+                    self.app.save_buttons("new_engine/buttons.pkl")
                 else:
                     pg.mouse.set_pos(self.width//2, self.height//2)
                     self.first_time = True
@@ -464,8 +470,6 @@ class MenuIntroUI:
         Gère les interactions (bouton skip)
         """
         if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Toggle Menu"]:
-            if 190 <= self.app.planet.light.time <= 300:
-                self.app.planet.light.time = 6
             self.animation_state = len(self.text_intro)
             self.check_end_condition()
 
@@ -648,18 +652,8 @@ class UI3:
         self.won = False         # If the human player won at least once.
 
         # Create the AI agent and load the model.
-        self.agent = Agent(True)
-        NUM_MODEL = 14
-        GENERATION = 0
-        MODEL_PATH = os.path.join(f"intel_arti/cube_v2/models/generation{GENERATION}/model{NUM_MODEL}.h5")
-        models = ((0, ), (0, ), (0, ), (0, 16))
-
-        try:
-            self.agent.model = load_model(MODEL_PATH)
-            print(f"Model loaded successfully from {MODEL_PATH}")
-        except FileNotFoundError as e:
-            print(f"Error: Model file not found at {MODEL_PATH}. Please verify that the file exists.")
-            self.agent.model = None  # Disable AI functionality if the model is missing.
+        self.agent = SuperAgent("models", ai_level)
+        print(f"Model loaded successfully")
 
     def reset_view(self):
         """Reset the cube camera view to its initial parameters."""

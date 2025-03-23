@@ -8,7 +8,7 @@ class Light:
         self.color = glm.vec3(color)
 
         self.normal = glm.vec3(normal)
-        self.time = 0
+        self.time = 5
         self.full_time = full_time # Nombre de seconde par rotation complète
         self.starting_direction = glm.vec3(direction)
 
@@ -37,4 +37,3 @@ class Light:
         current_direction = glm.rotate(glm.radians(self.time * 360 / self.full_time), self.normal) * glm.vec4(self.starting_direction, 0.0)
         self.set_direction(current_direction)
         self.time += self.app.delta_time / 1000 # number of seconds
-        print(f"Light time: {self.time}")

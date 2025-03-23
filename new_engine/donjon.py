@@ -24,11 +24,12 @@ class Donjon:
         
         self.controls = app.controls
         self.ai_level = min(3, level // 2)
-        self.hud_game = UI3(self.ui_surface, self.ai_level)
+        self.hud_game = UI3(self.ui_surface, 3)
         self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
 
-        self.starting_time = time.time()
+        self.time_taken = 0
+        self.delta_time = 0
         self.runing = True
         pg.mouse.set_visible(True)
 
@@ -117,9 +118,11 @@ class Donjon:
                 self.app.controls = self.controls
             self.render()
             pg.display.flip()
-            self.clock.tick(FPS)
+            self.delta_time = self.clock.tick(FPS)
 
             elapsed_time = time.perf_counter() - start_time
+            if not (self.hud_menu.active or self.hud_buttons.active):
+                self.time_taken += elapsed_time
 
     def destroy(self):
         self.mesh.destroy()

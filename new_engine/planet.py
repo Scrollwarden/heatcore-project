@@ -19,7 +19,8 @@ from new_engine.objects.popup import PopUp
 
 from new_engine.chunk_jittery_test import ChunkTerrain, ColorParams, PointsHeightParams, SplineHeightParams, PerlinGenerator, BIOME_POINTS
 from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, TextureDelaunayChunkMesh, CHUNK_SIZE, LG2_CS
-from new_engine.options import SCREEN_WIDTH, FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
+from new_engine.options import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, \
+    THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
 
 
@@ -50,12 +51,13 @@ class Planet:
             level, seed = saved_data[:2]
         else:
             level = saved_data[0]
-            seed = np.random.randint(0, 1500)
+            seed = np.random.randint(0, 1000)
         
         self.level = level
         self.radius = 8
         self.radius_squared = self.radius ** 2
         self.app = app
+        self.exit = False
         
         self.light = None
         self.camera = None
@@ -133,7 +135,7 @@ class Planet:
         radiuses = [rng.uniform(5, 10) for _ in range(self.num_heatcores)]
         
         # Make them spread
-        min_diff = 30 / (self.num_heatcores - 2)
+        min_diff = 40 / (self.num_heatcores - 1)
         for _ in range(3):
             for i in range(self.num_heatcores):
                 next_idx = (i + 1) % self.num_heatcores
@@ -205,25 +207,23 @@ class Planet:
                 self.chunks_to_load_set.add(chunk_coord)
 
     def handle_event(self, event):
-        if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
-            if not self.ancient_structure.won:
-                popup_text = "???"
-                if self.popup.text != popup_text:
-                    self.new_popup(popup_text, 3)
-                if event == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
-                    self.app.play_song("a_cube_of_enigma.mp3")
-                    donjon = Donjon(self.app, self.level)
-                    donjon.run()
-                    self.ancient_structure.won = donjon.hud_game.won
-        elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
-            popup_text = "Décoller vers une autre planète"
-            if self.popup.text != popup_text:
-                self.new_popup(popup_text, 3)
-                if event == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
-                    pass
-        else:
-            self.empty_popup()
+        if event.type == pg.MOUSEWHEEL:
+            self.player.camera_zoom *= 0.97 ** event.y
 
+        if event.type == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
+            print(not self.ancient_structure.won,
+                  glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE,
+                  glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE)
+            if not self.ancient_structure.won and \
+               glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
+                self.app.play_song("a cube of enigma.mp3")
+                donjon = Donjon(self.app, self.level)
+                donjon.run()
+                self.ancient_structure.won = donjon.hud_game.won
+                self.light.time += donjon.time_taken / 5
+                donjon.destroy()
+            elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
+                self.exit = True
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames"""
@@ -284,7 +284,8 @@ class Planet:
         """Update all components needed to be updated each frame"""
         # Long aaah line
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
-            self.light.update()
+            if not (self.app.hud.hud_intro.active or self.app.hud.hud_credits.active):
+                self.light.update()
             self.player.update()
             self.camera.update()
 
@@ -295,6 +296,17 @@ class Planet:
                     keys_to_delete.add(index)
             for index in keys_to_delete:
                 del self.heatcores[index]
+
+            if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
+                popup_text = "???"
+                if self.popup.text != popup_text:
+                    self.new_popup(popup_text, 3)
+            elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
+                popup_text = "Décoller vers une autre planète" if self.app.hud.hud_game.heatcore_bar.heat_core_count <= 8 else "Rentrer à la maison"
+                if self.popup.text != popup_text:
+                    self.new_popup(popup_text, 3)
+            else:
+                self.empty_popup()
 
 
 
@@ -472,6 +484,7 @@ class Planet:
     def cinematique_entree(self):
         """Cinematic of entrance to the world (not here yet)"""
         running = True
+        popup = PopUp(self.app, "Chargement...", SCREEN_WIDTH // 1.5, 50, SCREEN_HEIGHT // 1.5, 0.5, 1000, 0.5, True, 50, 50)
         while running:
             self.app.context.clear(color=(0, 0, 0))
             self.generate_chunks()
@@ -479,5 +492,8 @@ class Planet:
             if len(self.chunks_to_load_set) == 0 and len(self.chunks_loading) == 0:
                 running = False
 
+            popup.render()
+
             pg.display.flip()
             self.app.clock.tick(FPS)
+        popup.destroy()

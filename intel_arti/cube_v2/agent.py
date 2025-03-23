@@ -222,11 +222,10 @@ class Agent:
         return situations[i], actions[i]
 
 
-import os
 from random import choice
 from copy import deepcopy
 from numpy import ndarray, append, reshape, array
-from cube import Cube, Surface
+from intel_arti.cube_v2.cube import Cube, Surface
 from tensorflow import constant
 from tensorflow.keras.models import load_model  # type: ignore
 
@@ -239,7 +238,7 @@ class SuperAgent:
         self.load_models()
 
     def load_models(self):
-        self.models = [load_model(self.path.format(i)) for i in range(3)]
+        self.models = [load_model(f"{self.path}/model{i}.h5") for i in range(3)]
 
     def choisir(self, cube: Cube, joueur: int, coup_interdit: int = -1):
         if self.niveau == 0:
@@ -252,19 +251,19 @@ class SuperAgent:
             return self.choisir_deep_thought(cube, joueur, 5, 2, coup_interdit)
 
     def choisir_morpion(self, cube: Cube, joueur: int, coup_interdit: int = -1):
-        actions = sorted(cube.actions_possibles())
+        actions = sorted(cube.actions_possibles(coup_interdit))
         if actions[-1] < 18:
             return choice(actions)
         new_actions = []
         for action in actions:
             if action >= 18:
                 new_actions.append(action)
-        situations = ndarray(shape=(0, 9))
+        situations = ndarray(shape=(0, 3, 3, 1))
         for action in new_actions:
             scratch = deepcopy(cube)
             scratch.set_state(scratch.grille * joueur, True)
             scratch.jouer(action, 1)
-            situations = append(situations, [scratch.get_flatten_state()[:9]], 0)
+            situations = append(situations, reshape(scratch.get_flatten_state()[:9], (1, 3, 3, 1)), 0)
         values = self.models[0](situations)
         i_max = 0
         for i in range(1, len(values)):
@@ -280,7 +279,7 @@ class SuperAgent:
             scratch.set_state(scratch.grille * joueur, True)
             scratch.jouer(action, 1)
             situations = append(situations, [scratch.get_flatten_state()], 0)
-        values = self.models[niveau - 1](situations)
+        values = self.models[niveau](situations)
         i_max = 0
         for i in range(1, len(values)):
             if values[i] > values[i_max]:
@@ -322,7 +321,7 @@ class SuperAgent:
         for i in range(concrete_largeur):
             if actions[i] not in actions_gagnantes:
                 coup_interdit = (actions[i] + 9) % 18 if actions[i] < 18 else -1
-                new_value = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur * -1, largeur, profondeur - 1,
+                new_value = self.choisir_deep_rec(reshape(situations[i], (6, 3, 3)), joueur * -1, largeur, profondeur - 1,
                                              coup_interdit)[0]
                 if new_value == int(new_value):
                     if new_value > 1:

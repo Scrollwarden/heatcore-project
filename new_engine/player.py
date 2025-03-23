@@ -126,16 +126,17 @@ class FollowTerrainPlayer:
         self.right = glm.normalize(glm.cross(self.forward, self.up))
 
     def apply_base_collision(self):
-        base_pos = self.app.planet.starting_base.position
-        direction = self.position - base_pos
-        distance = glm.length(direction)
+        for i, base_pos in enumerate((self.app.planet.starting_base.position,
+                                      self.app.planet.ancient_structure.position)):
+            direction = self.position - base_pos
+            distance = glm.length(direction)
 
-        max_distance = CHUNK_SCALE * 3
-        if distance < max_distance:
-            repel_strength = (max_distance - distance) / max_distance
-            repel_force = glm.normalize(direction) * (repel_strength ** 3) * CHUNK_SCALE
+            max_distance = CHUNK_SCALE * (3, 5)[i] # Further for the ancient_structure
+            if distance < max_distance:
+                repel_strength = (max_distance - distance) / max_distance
+                repel_force = glm.normalize(direction) * (repel_strength ** 2) * CHUNK_SCALE
 
-            self.position += repel_force
+                self.position += repel_force
 
     def update_camera(self):
         """Smoothly updates the camera position to follow the player with zoom and slight delay."""
