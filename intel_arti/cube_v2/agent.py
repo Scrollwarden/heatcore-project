@@ -221,6 +221,145 @@ class Agent:
             somme_acc += values[i]
         return situations[i], actions[i]
 
+
+import os
+from random import choice
+from copy import deepcopy
+from numpy import ndarray, append, reshape, array
+from cube import Cube, Surface
+from tensorflow import constant
+from tensorflow.keras.models import load_model  # type: ignore
+
+
+class SuperAgent:
+    def __init__(self, path: str, niveau: int):
+        self.path = path
+        self.niveau = niveau
+        self.models = []
+        self.load_models()
+
+    def load_models(self):
+        self.models = [load_model(self.path.format(i)) for i in range(3)]
+
+    def choisir(self, cube: Cube, joueur: int, coup_interdit: int = -1):
+        if self.niveau == 0:
+            return self.choisir_morpion(cube, joueur, coup_interdit)
+        elif self.niveau in (1, 2):
+            return self.choisir_normal(cube, joueur, self.niveau, coup_interdit)
+        elif self.niveau == 3:
+            return self.choisir_deep_thought(cube, joueur, 5, 1, coup_interdit)
+        else:
+            return self.choisir_deep_thought(cube, joueur, 5, 2, coup_interdit)
+
+    def choisir_morpion(self, cube: Cube, joueur: int, coup_interdit: int = -1):
+        actions = sorted(cube.actions_possibles())
+        if actions[-1] < 18:
+            return choice(actions)
+        new_actions = []
+        for action in actions:
+            if action >= 18:
+                new_actions.append(action)
+        situations = ndarray(shape=(0, 9))
+        for action in new_actions:
+            scratch = deepcopy(cube)
+            scratch.set_state(scratch.grille * joueur, True)
+            scratch.jouer(action, 1)
+            situations = append(situations, [scratch.get_flatten_state()[:9]], 0)
+        values = self.models[0](situations)
+        i_max = 0
+        for i in range(1, len(values)):
+            if values[i] > values[i_max]:
+                i_max = i
+        return new_actions[i_max]
+
+    def choisir_normal(self, cube: Cube, joueur: int, niveau: int, coup_interdit: int = -1):
+        actions = cube.actions_possibles(coup_interdit)
+        situations = ndarray(shape=(0, 54))
+        for action in actions:
+            scratch = deepcopy(cube)
+            scratch.set_state(scratch.grille * joueur, True)
+            scratch.jouer(action, 1)
+            situations = append(situations, [scratch.get_flatten_state()], 0)
+        values = self.models[niveau - 1](situations)
+        i_max = 0
+        for i in range(1, len(values)):
+            if values[i] > values[i_max]:
+                i_max = i
+        return actions[i_max]
+
+    def choisir_deep_rec(self, etat: ndarray, joueur: int, largeur: int, profondeur: int, coup_interdit: int = -1):
+        surface = Surface(etat)
+        cube = Cube(surface)
+        actions = cube.actions_possibles(coup_interdit)
+        concrete_largeur = max(min(largeur, len(actions)), 1)
+        situations = []
+        actions_gagnantes = []
+        for action in actions:
+            scratch = Cube()
+            scratch.set_state(etat, True)
+            scratch.jouer(action, joueur)
+            if (gagnant := scratch.terminal_state())[0]:
+                gain = gagnant[1]
+                if gain * joueur >= 1:
+                    return constant(float(gain)) * 10, action
+                actions_gagnantes.append((action, gain))
+            situations.append(scratch.get_flatten_state())
+        values = list(self.models[-1](array(situations)))
+        for action, gagnant in actions_gagnantes:
+            values[actions.index(action)] = constant(float(gagnant)) * 10
+        if profondeur == 0:
+            if joueur == 1:  # Quand c'est le tour de l'IA
+                i = max(range(len(actions)), key=lambda x: values[x])
+            else:  # Quand c'est le tour de l'adversaire
+                i = min(range(len(actions)), key=lambda x: values[x])
+            return values[i], actions[i]
+        mapper = map(lambda i: values[i], range(len(actions)))
+        actions.sort(reverse=joueur == 1, key=lambda arg: next(mapper))
+        mapper = map(lambda i: values[i], range(len(situations)))
+        situations.sort(reverse=joueur == 1, key=lambda arg: next(mapper))
+        values.sort(reverse=joueur == 1)
+        values = values[:concrete_largeur]
+        for i in range(concrete_largeur):
+            if actions[i] not in actions_gagnantes:
+                coup_interdit = (actions[i] + 9) % 18 if actions[i] < 18 else -1
+                new_value = self.choisir_rec(reshape(situations[i], (6, 3, 3)), joueur * -1, largeur, profondeur - 1,
+                                             coup_interdit)[0]
+                if new_value == int(new_value):
+                    if new_value > 1:
+                        new_value -= 1
+                    elif new_value < -1:
+                        new_value += 1
+                values[i] = new_value
+        if joueur == 1:
+            i_max = max(range(concrete_largeur), key=lambda j: values[j])
+            i = i_max
+            while values[i] <= -1 and i < len(actions) - 1:
+                i = concrete_largeur
+                concrete_largeur += 1
+                values.append(
+                    self.choisir_deep_rec(reshape(situations[i], (6, 3, 3)), joueur * -1, largeur, profondeur - 1,
+                                          coup_interdit)[0])
+                if values[i_max] < values[i]:
+                    i_max = i
+        else:
+            i_max = min(range(concrete_largeur), key=lambda j: values[j])
+            i = i_max
+            while values[i] >= 1 and i < len(actions) - 1:
+                i = concrete_largeur
+                concrete_largeur += 1
+                values.append(
+                    self.choisir_deep_rec(reshape(situations[i], (6, 3, 3)), joueur * -1, largeur, profondeur - 1,
+                                          coup_interdit)[0])
+                if values[i_max] > values[i]:
+                    i_max = i
+        return values[i_max], actions[i_max]
+
+    def choisir_deep_thought(self, cube: Cube, joueur: int, largeur: int, profondeur: int, coup_interdit: int = -1):
+        res = self.choisir_deep_rec(cube.get_state() * joueur, 1, largeur, profondeur, coup_interdit)
+        action = res[1]
+        return action
+
+
 if __name__ == "__main__" :
     agent = Agent()
     generators = StateGenerator()
