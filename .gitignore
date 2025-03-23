@@ -1,5 +1,18 @@
-venv*
-__pycache__
-# je sais pas pourquoi la ligne suivante elle marche pas
-**/__pycache__
+# Ignore virtual environment
+.venv/
+venv/
 
+# Ignore Python cache files
+__pycache__/
+**/__pycache__/
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore PyCharm stuff
+.idea/
+
+# Ignore log data
+*log_data.csv

@@ -34,7 +34,7 @@ def collision(point, center, radius, vector):
 
 class FollowTerrainPlayer:
     MAX_SPEED = 0.06 * CHUNK_SCALE # How many chunks per second
-    MIN_SPEED = - 0.5 * MAX_SPEED
+    MIN_SPEED = 0.0
     MAX_ROTATION_SPEED = 60.0 / FPS # How many degrees per second
 
     # acceleration = speed / (t * FPS) <=> it takes t seconds to reach speed velocity
