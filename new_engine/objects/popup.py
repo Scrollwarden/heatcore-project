@@ -98,6 +98,8 @@ class PopUp:
 
     def render(self):
         self.update()
+        if self.mesh.alpha == 0:
+            return # Do not render a fully transparent mesh
         self.context.disable(mgl.DEPTH_TEST)
         self.context.enable(mgl.BLEND)
         self.context.blend_func = (mgl.SRC_ALPHA, mgl.ONE_MINUS_SRC_ALPHA)

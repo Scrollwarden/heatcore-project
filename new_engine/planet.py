@@ -6,6 +6,7 @@ import time
 import math
 import pygame as pg
 
+from new_engine.donjon import Donjon
 from new_engine.light import Light
 from new_engine.camera import CameraAlt, CameraFollow
 from new_engine.objects.advanced_skybox import AdvancedSkyBoxObject
@@ -14,10 +15,11 @@ from new_engine.player import FollowTerrainPlayer
 from new_engine.objects.starting_base import StartingBase
 from new_engine.objects.heatcore import HeatCore
 from new_engine.objects.ancient_structure import AncientStructure
+from new_engine.objects.popup import PopUp
 
 from new_engine.chunk_jittery_test import ChunkTerrain, ColorParams, PointsHeightParams, SplineHeightParams, PerlinGenerator, BIOME_POINTS
 from new_engine.meshes.chunk_mesh import ChunkMesh, DelaunayChunkMesh, TextureDelaunayChunkMesh, CHUNK_SIZE, LG2_CS
-from new_engine.options import FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
+from new_engine.options import SCREEN_WIDTH, FPS, CHUNK_SCALE, HEIGHT_SCALE, INV_NOISE_SCALE, NUM_OCTAVES, THREADS_LIMIT, TASKS_PER_FRAME
 from new_engine.shader_program import open_shaders
 
 
@@ -40,8 +42,7 @@ class Planet:
 
         Args:
             app (GraphicsEngine): the graphic engine object
-            seed (int): the Perlin seed for generation (positive integer)
-            biome (str): the biome name for generation
+            saved_data (tuple): data used to load the planet (saved data or just the level)
         """
         self.saved_data = saved_data
         self.load_from_data = len(saved_data) == 6
@@ -79,7 +80,10 @@ class Planet:
         self.ancient_structure = None
         self.donjon = None
         self.heatcores = {}
-        self.num_heatcores = 10
+        self.num_heatcores = 2 + self.level
+        self.popup = None
+        self.new_popup("Vous êtes atterris", 3)
+        self.can_enter = False
 
         self.result_queue = queue.Queue()
         self.threads = []
@@ -95,7 +99,7 @@ class Planet:
     def load_attributes(self):
         """Load attributes dependant of planet being present in the main app"""
         self.app.get_time()
-        self.light = Light(self.app)
+        self.light = Light(self.app, 360)
         self.camera = CameraFollow(self.app)
         self.player = FollowTerrainPlayer(self.app)
         if self.load_from_data:
@@ -117,7 +121,7 @@ class Planet:
         # Ancient structure
         rng = np.random.default_rng(self.seed)
         angle = rng.uniform(0, 360)
-        radius = rng.uniform(5, 10)
+        radius = rng.uniform(1, 2)
         position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
         position = self.avoid_water(position, NUM_OCTAVES)
         self.ancient_structure = AncientStructure(self.app, self.app.meshes["ancient_structure"], position)
@@ -160,7 +164,6 @@ class Planet:
         self.chunk_shader['colors'].write(colors_256.tobytes())
         # self.texture.use(location=1)
         # self.chunk_shader["textureSampler"].value = 1
-        
 
     def generate_chunk_worker(self, coord, detail):
         """Worker function for generating chunks and rendering
@@ -200,6 +203,27 @@ class Planet:
                         continue # Don't load a chunk with same detail
                 self.chunks_to_load_dic[chunk_coord] = detail
                 self.chunks_to_load_set.add(chunk_coord)
+
+    def handle_event(self, event):
+        if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
+            if not self.ancient_structure.won:
+                popup_text = "???"
+                if self.popup.text != popup_text:
+                    self.new_popup(popup_text, 3)
+                if event == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
+                    self.app.play_song("a_cube_of_enigma.mp3")
+                    donjon = Donjon(self.app, self.level)
+                    donjon.run()
+                    self.ancient_structure.won = donjon.hud_game.won
+        elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
+            popup_text = "Décoller vers une autre planète"
+            if self.popup.text != popup_text:
+                self.new_popup(popup_text, 3)
+                if event == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
+                    pass
+        else:
+            self.empty_popup()
+
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames"""
@@ -272,9 +296,19 @@ class Planet:
             for index in keys_to_delete:
                 del self.heatcores[index]
 
+
+
         self.generate_chunks()
         self.update_chunks()
         self.update_shader()
+
+    def new_popup(self, text, wait_time, size=SCREEN_WIDTH // 2, font_size=40, y=100,
+                  fade_in=0.5, fade_out=0.5, center_text=True, border_radius=10, border_width=10):
+        self.popup = PopUp(self.app, text, size, font_size, y,
+                           fade_in, wait_time, fade_out, center_text, border_radius, border_width)
+
+    def empty_popup(self):
+        self.new_popup("easter egg 69420", 0, fade_in=0, fade_out=0)
 
     def render(self):
         """Render all chunks within the active radius"""
@@ -296,6 +330,7 @@ class Planet:
         for heatcore in self.heatcores.values():
             heatcore.render()
         self.player.render()
+        self.popup.render()
 
     def destroy(self):
         """Clean up resources (garbage collector)"""

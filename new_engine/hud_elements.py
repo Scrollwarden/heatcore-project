@@ -1,6 +1,6 @@
 import sys
 from intel_arti.cube_v2.cube import Cube
-from intel_arti.cube_v2.cube_ui import Renderer, Camera, CubeUI
+from intel_arti.cube_v2.cube_ui import Renderer, Camera, CubeUI, ROTATION_TRANSLATOR
 import os, math
 import pygame as pg
 import glm
@@ -16,9 +16,8 @@ DEFAULT_CONTROLS = {
     "Strafe Left": pg.K_q,
     "Forward": pg.K_z,
     "Strafe Right": pg.K_d,
-    "Backward": pg.K_s,
     "Toggle Menu": pg.K_ESCAPE,
-    "Reset Planet": pg.K_r
+    "Interact": pg.K_e,
 }
 
 MENU_BACKGROUND_ICON = pg.image.load("txt/background_logo.png")
@@ -167,7 +166,8 @@ class UI1:
             for data in marker_data
         ]
         self.heatcore_markers = {}
-        self.ancient_strcture_marker = None
+        self.ancient_structure_marker = None
+        self.starting_base_marker = None
 
         height = 200
         width = 10
@@ -192,9 +192,15 @@ class UI1:
         self.heatcore_bar.set_heatcore_count(self.app.planet.num_heatcores - len(self.heatcore_markers))
         
         ancient_structure = self.app.planet.ancient_structure
-        self.ancient_strcture_marker = HeatcoreMarker(
+        self.ancient_structure_marker = HeatcoreMarker(
             self.screen, ancient_structure, self.compass_bar_y, self.compass_bar_length,
             (255, 0, 255), 20, 12
+        )
+
+        starting_base = self.app.planet.starting_base
+        self.starting_base_marker = HeatcoreMarker(
+            self.screen, starting_base, self.compass_bar_y, self.compass_bar_length,
+            (255, 255, 0), 20, 12
         )
         
 
@@ -451,7 +457,7 @@ class MenuIntroUI:
         self.animation_ended = False
         self.texte_affiche = ''
 
-        self.font = pg.font.SysFont("Futura", 35)
+        self.font = pg.font.SysFont("", 35)
 
     def handle_event(self, event):
         """
@@ -488,7 +494,7 @@ class MenuIntroUI:
             self.overlay_background.fill((0, 0, 0, 255-(self.animation_state//8) if self.animation_state < 255*8 else 0))
             self.screen.blit(self.overlay_background, (0, 0))
             texte_surface = self.font.render(self.texte_affiche, True, (255, 255, 255))
-            x, y = self.width//6, self.height//2
+            x, y = self.width//8, self.height//2
             x_max_text = len(self.texte_affiche)*12
             text_rect = pg.draw.polygon(self.screen, pg.Color(0, 0, 0, 120), ((x, y), (x+x_max_text, y), (x+x_max_text, y-22), (x, y-22)))
             self.screen.blit(texte_surface, text_rect)
@@ -517,7 +523,7 @@ class CreditsUI:
         self.texte_affiche = ''
         self.y_scrolling_text = self.height
 
-        self.font = pg.font.SysFont("Futura", 35)
+        self.font = pg.font.SysFont("", 35)
 
     def handle_event(self, event):
         """
@@ -587,7 +593,9 @@ class CreditsUI:
         self.screen.blit(title_image, ((self.width-title_image.get_size()[0])//2, 60))
 
 class UI3:
-    def __init__(self, screen):
+    CAMERA_FRICTION = 0.90
+
+    def __init__(self, screen, ai_level):
         self.screen = screen  # The UI surface passed from the GraphicsEngine.
         self.width, self.height = self.screen.get_size()
         self.active = True
@@ -607,6 +615,7 @@ class UI3:
         self.camera = Camera(latitude=math.radians(30),
                              longitude=2 * math.pi / 3,
                              distance=10.0)
+        self.camera_velocity = [0, 0]
         self.renderer = Renderer(self.camera, screen_data=pg.math.Vector2(self.game_rect.width, self.game_rect.height))
         self.cube = Cube()
         self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
@@ -624,26 +633,27 @@ class UI3:
         self.button_color = (0, 128, 255)
         self.button_border_color = (255, 255, 255)
         self.hints_remaining = 5
+        self.popup_flag = ""
 
         # Flags for UI3 exit and mouse click.
         self.exit_ui3 = False
-        self.mouse_clicked = False
+        self.mouse_clicks = [0, 0]
 
         # --- Cube AI Integration ---
         # Set up turn management: assume human is 1 and AI is -1.
         self.current_player = 1  # Human player's turn initially.
-        self.ai_player = -1      # AI player.
+        self.ai_player = -1       # AI player.
         self.coup_interdit = -1  # A move that is temporarily forbidden.
         self.fini = False        # Game over flag.
+        self.won = False         # If the human player won at least once.
 
         # Create the AI agent and load the model.
         self.agent = Agent(True)
-        NUM_MODEL = 1
-        GENERATION = 1
-        MODEL_PATH = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "models", f"generation{GENERATION}", f"model{NUM_MODEL}.h5"
-        )
+        NUM_MODEL = 14
+        GENERATION = 0
+        MODEL_PATH = os.path.join(f"intel_arti/cube_v2/models/generation{GENERATION}/model{NUM_MODEL}.h5")
+        models = ((0, ), (0, ), (0, ), (0, 16))
+
         try:
             self.agent.model = load_model(MODEL_PATH)
             print(f"Model loaded successfully from {MODEL_PATH}")
@@ -651,39 +661,13 @@ class UI3:
             print(f"Error: Model file not found at {MODEL_PATH}. Please verify that the file exists.")
             self.agent.model = None  # Disable AI functionality if the model is missing.
 
-    def handle_event(self, event):
-        """Handle events for both the cube game and the overlay buttons."""
-        if event.type == pg.MOUSEBUTTONDOWN:
-            mouse_pos = event.pos
-            # Check if any overlay button is clicked.
-            for name, rect in self.buttons.items():
-                if rect.collidepoint(mouse_pos):
-                    if name == 'reset_view':
-                        self.reset_view()
-                    elif name == 'reset_game':
-                        self.reset_game()
-                    elif name == 'hint':
-                        self.use_hint()
-                    elif name == 'return':
-                        self.exit_ui3 = True
-                    return  # Consume the event if a button was clicked.
-            # If no overlay button was clicked, check for a left-click in the game area.
-            if event.button == 1 and self.game_rect.collidepoint(mouse_pos):
-                self.mouse_clicked = True
-
-        if event.type == pg.MOUSEMOTION:
-            if self.game_rect.collidepoint(event.pos):
-                # Update the cube camera if the right mouse button is held.
-                if event.buttons[2]:
-                    rel = event.rel
-                    self.camera.update_camera_from_mouse(delta_x=-rel[0], delta_y=-rel[1])
-                    self.renderer.reset()
-                    self.cube_ui.reset_info()
-
     def reset_view(self):
         """Reset the cube camera view to its initial parameters."""
-        self.camera.longitude = 2 * math.pi / 3
-        self.camera.latitude = math.pi / 6
+        forces = [((b - a + math.pi) % (2 * math.pi) - math.pi) * (1 - self.CAMERA_FRICTION)
+                  for a, b in [[self.camera.longitude, 2 * math.pi / 3],
+                               [self.camera.latitude,     math.pi / 5]]]
+        forces[1] *= -1
+        self.camera_velocity = [*forces, 1, 1]
         self.camera.reset_position()
         self.renderer.reset()
         self.cube_ui.reset_info()
@@ -695,14 +679,19 @@ class UI3:
         self.cube_ui = CubeUI(self.cube, self.renderer, side_length=self.game_rect.height * math.pi)
         # Reset turn management.
         self.current_player = 1
-        self.coup_interdit = -1
+        self.coup_interdit = 1
         self.fini = False
         print("Reset game button pressed.")
 
     def use_hint(self):
         """Consume one hint (if available) and print a message."""
         if self.hints_remaining > 0:
+            action = self.agent.choisir(self.cube, self.current_player, self.coup_interdit)
+            print("Coup conseillé :", action)
+            self.reset_view()
+            self.cube_ui.conseil.activate(action)
             print("Hint used!")
+            self.popup_flag = "Indice utilisé"
             self.hints_remaining -= 1
         else:
             print("No hints remaining.")
@@ -713,44 +702,86 @@ class UI3:
         Processes human moves (via cell clicks) and, if it's the AI's turn,
         makes the AI choose and play a move.
         """
-        # ----- Process Human Move -----
-        if self.cube_ui.events_listener.button_clicked != (-1, -1):
-            i, j = self.cube_ui.events_listener.button_clicked
-            current_value = self.cube_ui.cube.get_pion((0, j, i))
-            print(f"Before placing, cell (0, {j}, {i}) value: {current_value}")
-            if current_value != 0:
-                print(f"Cell ({i}, {j}) already occupied")
-            else:
-                print(f"Placing human piece at ({i}, {j})")
-                self.cube_ui.cube.set_pion((0, j, i), self.current_player)
-            self.cube_ui.events_listener.button_clicked = (-1, -1)
-            self.cube_ui.reset_info()
-            self.current_player *= -1
+        self.popup_flag = ""
+        mouse_buttons = pg.mouse.get_pressed()
+        dx, dy = pg.mouse.get_rel()
 
+        for index in range(2):
+            if mouse_buttons[2 * index]:
+                self.mouse_clicks[index] += 1
+            else:
+                self.mouse_clicks[index] = 0
+
+        self.camera_velocity[:2] = [ele * self.CAMERA_FRICTION for ele in self.camera_velocity[:2]]
+        if self.mouse_clicks[1] != 0: # Right click is held down
+            self.camera_velocity = [- dx * self.camera.orientation, - dy]
+        self.camera.update_camera_from_mouse(*self.camera_velocity)
+        self.renderer.reset()
+        self.cube_ui.reset_info()
+
+        if self.mouse_clicks[0] == 1:
+            mouse_pos = pg.mouse.get_pos()
+            for name, rect in self.buttons.items():
+                if rect.collidepoint(mouse_pos):
+                    if name == 'reset_view':
+                        self.reset_view()
+                    elif name == 'reset_game':
+                        self.reset_game()
+                    elif name == 'hint':
+                        self.use_hint()
+                    elif name == 'return':
+                        self.exit_ui3 = True
+                    return
+
+        change_player = False
         # ----- Process AI Move -----
         if self.current_player == self.ai_player and not self.fini:
-            action = self.agent.choisir(self.cube, self.current_player, self.coup_interdit)
+            action = self.agent.choisir(self.cube, self.ai_player, self.coup_interdit)
             if action is not None:
                 print(f"AI chose action: {action}")
+                self.cube_ui.cube.jouer(action, self.ai_player)
                 if action < 9:
-                    # Placement move on the top face.
-                    i = action % 3  # Column index
-                    j = action // 3  # Row index
-                    if self.cube.get_pion((0, j, i)) == 0:
-                        print(f"Placing AI piece at ({i}, {j})")
-                        self.cube.set_pion((0, j, i), self.current_player)
-                    else:
-                        print(f"AI move: cell ({i}, {j}) already occupied.")
                     self.coup_interdit = action + 9
                 elif action < 18:
-                    # Rotation move.
-                    self.cube.jouer(action, self.current_player)
                     self.coup_interdit = action - 9
                 else:
                     self.coup_interdit = -1
                 print(f"AI played action {action}, coup_interdit: {self.coup_interdit}")
-                self.current_player *= -1
-                self.cube_ui.reset_info()
+            change_player = True
+
+
+        # ----- Process Human Move -----
+        if not self.fini and self.current_player == - self.ai_player:
+            if (move := self.cube_ui.events_listener.button_clicked) != (-1, -1):
+                i, j = move
+                current_value = self.cube_ui.cube.get_pion((0, j, i))
+                print(f"Before placing, cell (0, {j}, {i}) value: {current_value}")
+                if current_value != 0:
+                    print(f"Cell ({i}, {j}) already occupied")
+                    self.popup_flag = "Coup interdit !"
+                else:
+                    print(f"Placing human piece at ({i}, {j})")
+                    self.cube_ui.cube.set_pion((0, j, i), self.current_player)
+                    change_player = True
+                self.cube_ui.events_listener.button_clicked = (-1, -1)
+                self.coup_interdit = -1
+            elif (rotation := self.cube_ui.events_listener.turn_button_pressed) != -1:
+                actual_rotation = ROTATION_TRANSLATOR[rotation]
+                if actual_rotation == self.coup_interdit:
+                    print("Il s'agit d'un coup interdit. L'action a été annulée.")
+                    self.popup_flag = "Coup interdit !"
+                else:
+                    self.cube_ui.cube.jouer_tourner(actual_rotation)
+                    self.cube_ui.conseil.desactivate()
+                    print(f"Le joueur a décidé de tourner {actual_rotation} (originalement indice {rotation})")
+                    if actual_rotation < 9:
+                        self.coup_interdit = actual_rotation + 9
+                    elif actual_rotation < 18:
+                        self.coup_interdit = actual_rotation - 9
+                    change_player = True
+
+        if change_player:
+            self.current_player *= -1
 
     def draw(self):
         """Draw the cube game interface and overlay buttons onto the UI surface."""
@@ -763,9 +794,7 @@ class UI3:
         local_mouse = pg.math.Vector2(pg.mouse.get_pos()[0] - self.game_rect.x,
                                       pg.mouse.get_pos()[1] - self.game_rect.y)
         # Pass the click flag to cube_ui.draw.
-        self.cube_ui.draw(self.game_surface, local_mouse, self.mouse_clicked)
-        # Reset the click flag after processing.
-        self.mouse_clicked = False
+        self.cube_ui.draw(self.game_surface, local_mouse, self.mouse_clicks[0] == 1)
         # Blit the game surface onto the UI surface.
         self.screen.blit(self.game_surface, self.game_rect.topleft)
 
@@ -775,13 +804,15 @@ class UI3:
             pg.draw.rect(self.screen, self.button_color, rect)
             pg.draw.rect(self.screen, self.button_border_color, rect, 2)
             if name == 'reset_view':
-                text = "Reset View"
+                text = "Centrer Camera"
             elif name == 'reset_game':
-                text = "Reset Game"
+                text = "Rejouer"
             elif name == 'hint':
-                text = f"Hint ({self.hints_remaining})"
+                text = f"Indice ({self.hints_remaining})"
             elif name == 'return':
-                text = "Return"
+                text = "Fermer"
+            else:
+                text = "Easter egg"
             text_surf = font.render(text, True, (255, 255, 255))
             text_rect = text_surf.get_rect(center=rect.center)
             self.screen.blit(text_surf, text_rect)

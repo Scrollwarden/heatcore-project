@@ -1083,6 +1083,9 @@ if __name__ == "__main__":
     running = True
 
     while running :
+
+
+        ### DONE
         if not fini and player == ia_player :
             action = agent.choisir(cube_ui.cube, player, coup_interdit)
             cube_ui.cube.jouer(action, player)
@@ -1100,6 +1103,9 @@ if __name__ == "__main__":
                 fini = True
                 saver.save_game()
         show_visible_face = False
+        ### DONE
+
+        ### IGNORE
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -1128,6 +1134,8 @@ if __name__ == "__main__":
                     print(cube_ui.num)
                 elif event.key == pygame.K_0 :
                     cube.jouer(2, 1)
+        ### IGNORE
+
 
         # Mouse detections
         mouse_buttons = pygame.mouse.get_pressed()
@@ -1145,13 +1153,11 @@ if __name__ == "__main__":
             current_mouse_x, current_mouse_y = mouse_pos
             delta_x = (prev_mouse_x - current_mouse_x) * camera.orientation
             delta_y =  prev_mouse_y - current_mouse_y
-            prev_mouse_x, prev_mouse_y = current_mouse_x, current_mouse_y
 
             camera.update_camera_from_mouse(delta_x, delta_y)
             renderer.reset()
             cube_ui.reset_info()
-        else:
-            prev_mouse_x, prev_mouse_y = mouse_pos
+        prev_mouse_x, prev_mouse_y = mouse_pos
         change = False
         if cube_ui.events_listener.button_clicked != (-1, -1) and not fini :
             i, j = cube_ui.events_listener.button_clicked
@@ -1180,12 +1186,17 @@ if __name__ == "__main__":
                     else :
                         coup_interdit = actual_rotation - 9
                 change = True
+
+        # IGNORE
         if change :
             saver.save(cube.get_flatten_state())
             print("step was saved")
             if cube.terminal_state()[0]:
                 fini = True
                 saver.save_game()
+
+        # IGNORE BOTTOM
+
 
         # Fill the screen with black
         screen.fill(BLACK)

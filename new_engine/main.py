@@ -49,6 +49,7 @@ class GraphicsEngine:
         self.planet = None
         self.hud = HUDObject(self)
         self.popup = None
+        self.current_song = None
         
         self.logs = Logs()
         print("Graphics engine initialized successfully")
@@ -151,6 +152,7 @@ class GraphicsEngine:
                 self.planet.donjon.run()
             if event.type == pg.MOUSEWHEEL:
                 self.planet.player.camera_zoom *= 0.97 ** event.y
+            self.planet.handle_event(event)
             self.hud.handle_event(event)
 
     def render(self):
@@ -165,33 +167,26 @@ class GraphicsEngine:
         """Update the time"""
         self.time = pg.time.get_ticks() * 0.001
 
+    def play_song(self, song=None, fade=3000, replace=True, restart=False):
+        if pg.mixer.music.get_busy() and replace:
+            pg.mixer.music.stop()
+        if song is not None:
+            if self.current_song == song and not restart:
+                return
+            pg.mixer.music.load(f"musics/{song}")
+            pg.mixer.music.set_volume(0.4)
+            pg.mixer.music.play(-1, fade_ms=fade)
+        self.current_song = song
+
     def playsound(self):
         """démarre un son si ancun son n'est joué, selon le lieu actuel"""
         # select sound
         if self.hud.hud_menu.active or self.hud.hud_buttons.active:
-            song = "musics/an_empty_planet_v1.mp3"
-            loop_count = 4
+            self.play_song("an_empty_planet_v1.mp3")
         elif self.hud.hud_intro.active:
-            song = "NO SONG"
-            loop_count = 0 # infinite
-        elif self.planet.donjon != None:
-           song = "musics/who_built_it.mp3"
-           loop_count = 2
-        # elif cube:
-        #    song = "musics/a_cube_of_enigma.mp3"
-        #    loop_count = 0 # infinite
-        #    bypass = True
+            self.play_song()
         else:
-            song = "musics/The Road Ahead_LoudnessComp.wav"
-            loop_count = 1
-        
-            # play sound
-        if song == "NO SONG":
-            pg.mixer.music.stop()
-        elif not pg.mixer.music.get_busy():
-            pg.mixer.music.load(song)
-            pg.mixer.music.set_volume(0.4)
-            pg.mixer.music.play(loop_count-1)
+            self.play_song("The Road Ahead_LoudnessComp.wav")
 
     def run(self):
         """Main while loop"""

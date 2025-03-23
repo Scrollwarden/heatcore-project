@@ -3,12 +3,13 @@ import glm
 class Light:
     """Class for the light in the Graphic engine"""
     
-    def __init__(self, app, normal=(0.0, 0.5, 1.0), direction=(1.0, -0.2, 0.0), color=(1, 1, 1)):
+    def __init__(self, app, full_time, normal=(0.0, 0.5, 1.0), direction=(1.0, -0.2, 0.0), color=(1, 1, 1)):
         self.app = app
         self.color = glm.vec3(color)
 
         self.normal = glm.vec3(normal)
-        self.time = 195
+        self.time = 0
+        self.full_time = full_time # Nombre de seconde par rotation complète
         self.starting_direction = glm.vec3(direction)
 
         self.direction = glm.vec3()
@@ -33,8 +34,7 @@ class Light:
 
     def update(self):
         """Update the light class for each frame"""
-        time_full_rotation = 300 # in seconds
-        current_direction = glm.rotate(glm.radians(self.time * 360 / time_full_rotation), self.normal) * glm.vec4(self.starting_direction, 0.0)
+        current_direction = glm.rotate(glm.radians(self.time * 360 / self.full_time), self.normal) * glm.vec4(self.starting_direction, 0.0)
         self.set_direction(current_direction)
         self.time += self.app.delta_time / 1000 # number of seconds
         print(f"Light time: {self.time}")
