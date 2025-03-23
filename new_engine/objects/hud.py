@@ -15,7 +15,7 @@ class HUDObject:
         self.hud_game = UI1(app, self.ui_surface)
         self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
-        self.hud_intro = MenuIntroUI(self.ui_surface)
+        self.hud_intro = MenuIntroUI(app, self.ui_surface)
         self.hud_credits = CreditsUI(self.ui_surface)
 
     def handle_event(self, event):
@@ -34,37 +34,36 @@ class HUDObject:
         if event.type == pg.KEYDOWN and event.key == pg.K_h:
             self.hud_game.active = not self.hud_game.active
         elif event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
-            if self.hud_intro.active:
-                self.hud_intro.active = False
-            else:
-                self.hud_menu.first_time = False
-                self.hud_menu.active = True
-                pg.mouse.set_visible(True)
+            if not self.hud_menu.active:
+                if self.hud_intro.active:
+                    self.hud_intro.active = False
+                    self.hud_game.active = True
+                else:
+                    self.hud_menu.first_time = False
+                    self.hud_menu.active = True
+                    pg.mouse.set_visible(True)
 
     def update(self):
+        """met à jour les interfaces pour savoir qui est affiché"""
         if self.app.planet is not None and self.hud_game is None:
             self.hud_game = UI1(self.ui_surface)
         if self.app.planet is None and self.hud_game is not None:
             self.hud_game = None
 
-        if self.hud_menu.controls_requested: # from menu to options
+        if self.hud_menu.controls_requested: # menu to options
             self.hud_buttons.first_time = self.hud_menu.first_time
             self.hud_menu.controls_requested = False
             self.hud_buttons.active = True
             pg.mouse.set_visible(True)
-        if self.hud_menu.intro_requested: # from menu to intro
+        if self.hud_menu.intro_requested: # menu to intro
             self.hud_menu.intro_requested = False
             self.hud_menu.active = False
-            self.hud_intro.animation_state = -20 # (ça marche pas dans hud_element)
-            self.hud_intro.texte_affiche = ''
             self.hud_intro.active = True
-        if self.hud_menu.credits_requested: # from menu to credits
+        if self.hud_menu.credits_requested: # menu to credits
             self.hud_menu.credits_requested = False
             self.hud_menu.active = False
-            self.hud_credits.animation_state = -20 # (ça marche pas dans hud_element)
-            self.hud_credits.texte_affiche = ''
             self.hud_credits.active = True
-        if self.hud_buttons.return_to_ui2: # from options to intro
+        if self.hud_buttons.return_to_ui2: # options to menu
             self.hud_menu.first_time = self.hud_buttons.first_time
             self.hud_buttons.return_to_ui2 = False
             self.hud_menu.controls_requested = False # juste au cas où
@@ -73,7 +72,7 @@ class HUDObject:
         if self.hud_intro.animation_ended: # intro to game
             self.hud_intro.animation_ended = False
             self.hud_intro.active = False
-        if self.hud_credits.animation_ended: # from credits to menu
+        if self.hud_credits.animation_ended: # credits to menu
             self.hud_credits.animation_ended = False
             self.hud_credits.active = False
             self.hud_menu.first_time = True

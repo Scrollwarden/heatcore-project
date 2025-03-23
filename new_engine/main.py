@@ -147,7 +147,7 @@ class GraphicsEngine:
             if event.type == pg.KEYDOWN and event.key == pg.K_l:
                 self.planet.light.time = 0
             if event.type == pg.KEYDOWN and event.key == pg.K_m:
-                self.popup = PopUp(self, "Vous avez récoltez tous les coeurs d'énergies. Retournez à la base pour décoller vers la prochaine planète.",
+                self.popup = PopUp(self, "Vous avez récolté tous les coeurs de chaleur. Retournez à la base pour décoller vers la prochaine planète.",
                                    500, 20, 200, 0.5, 5, 0.5, True, 20, 50)
             if event.type == pg.KEYDOWN and event.key == pg.K_c:
                 self.planet.donjon = Donjon(self, self.current_level)
@@ -185,6 +185,8 @@ class GraphicsEngine:
             start_time = time.perf_counter()  # High-resolution timer
 
             self.get_time()
+            self.hud.hud_intro.check_end_condition()
+            self.hud.hud_credits.check_end_condition()
             self.check_events()
             self.hud.update()
             for mesh in self.meshes.values():

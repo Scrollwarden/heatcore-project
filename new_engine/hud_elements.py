@@ -21,11 +21,6 @@ DEFAULT_CONTROLS = {
     "Reset Planet": pg.K_r
 }
 
-HARDSET_CONTROLS = {
-    "Zoom": "Molette (scroll)",
-    "Focus": "Clique Droit"
-}
-
 MENU_BACKGROUND_ICON = pg.image.load("txt/background_logo.png")
 MENU_INGAME_BACKGROUND_ICON = pg.image.load("txt/dark_background_logo.png")
 
@@ -324,6 +319,7 @@ class UI2:
                 if  self.first_time: # voir le commentaire au dessin des boutons dans la méthode draw au dessus
                     if os.path.isfile(PATH_TO_DATA):
                         os.remove(PATH_TO_DATA)
+                        self.app.load_new_planet()
                     self.active = False
                     pg.mouse.set_visible(False)
                     pg.mouse.set_pos(self.width//2, self.height//2)
@@ -443,7 +439,8 @@ class MenuIntroUI:
     '''
     L'écran sur lequel défile le dialogue d'introduction au début du jeu
     '''
-    def __init__(self, screen):
+    def __init__(self, app, screen):
+        self.app = app
         self.screen = screen
         self.width, self.height = screen.get_size()
         self.active = False
@@ -460,11 +457,17 @@ class MenuIntroUI:
         """
         Gère les interactions (bouton skip)
         """
-        if event.type == pg.K_ESCAPE:
-            self.active = False
-            self.animation_state = len(self.text_intro)-3
+        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Toggle Menu"]:
+            if 190 <= self.app.planet.light.time <= 300:
+                self.app.planet.light.time = 6
+            self.animation_state = len(self.text_intro)
+            self.check_end_condition()
+
+    def check_end_condition(self):
+        """vérifie la condition de fin"""
         if self.animation_state >= len(self.text_intro)-3:
             self.animation_state = -20
+            self.wait_compteur = 0
             self.texte_affiche = ''
             self.animation_ended = True
 
@@ -520,15 +523,19 @@ class CreditsUI:
         """
         Gère les interactions (bouton skip)
         """
-        print(self.animation_state, 'for', len(self.text_ending)-3)
-        if event.type == pg.K_ESCAPE:
-            self.active = False
-            self.animation_state = len(self.text_ending)-3
+        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Toggle Menu"]:
+            self.animation_state = len(self.text_ending)
+            self.check_end_condition()
+
+    def check_end_condition(self):
+        """vérifie la condition de fin"""
         if self.animation_state >= len(self.text_ending)-3:
             self.animation_state = -20
+            self.wait_compteur = 0
             self.texte_affiche = ''
-            self.active = False
+            self.y_scrolling_text = self.height
             self.animation_ended = True
+            self.active = False
 
     def affichage_texte_credits(self):
         """gère l'affichage en scrolling des crédits"""
