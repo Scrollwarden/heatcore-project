@@ -49,8 +49,8 @@ class Planet:
             level, seed = saved_data[:2]
             self.heatcore_count = saved_data[5]
         else:
-            level = saved_data[0]
-            seed = (np.random.randint(1000,2000) * 2) + 1
+            level, self.heatcore_count = saved_data[:2]
+            seed = np.random.randint(0, 100000) * 2 + 1 # Parce que les seeds pairs ne marchent pas... me demande pas pourquoi
             while seed%7 != 0 or seed%103 != 0: #honnetement incomprehensible mais pb reglee, donc je me plains pas
                 seed = (np.random.randint(1000, 2000) * 2) + 1
         

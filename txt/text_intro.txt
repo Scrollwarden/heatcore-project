@@ -45,7 +45,11 @@ Des sortes de Cœurs de chaleur.
 Nous avons assez d'énergie pour envoyer une navette d'exploration dans un atterrisseur.
 Il faudra parcourir plusieurs mondes pour récolter ces 9 cœurs.
 Le pilote devra rentrer à la base avant la nuit s'il veut survivre au froid.
-Il décolle dans quelques minutes pour un premier monde.
+Décoller lui coûtera 3 Cœurs de chaleur. C'est le moins cher qu'on a pu faire.
+S'il ne rejoint pas l'atterrisseur avant la nuit, sa navette passera en autoguidage,
+et le ramènera en sécurité au prix de tous ses cœurs.
+
+Il part dans quelques minutes pour un premier monde.
 Nous espérons qu'il parviendra à trouver assez de ces Cœurs de chaleur.
 
 Et que ceux qui ont laissé ces cœurs, s'ils sont encore là, soient pacifiques...

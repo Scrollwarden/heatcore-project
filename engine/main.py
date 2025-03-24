@@ -49,8 +49,7 @@ class GraphicsEngine:
         self.planet = None
         self.hud = HUDObject(self)
         self.current_song = None
-        
-        self.logs = Logs()
+
         print("Graphics engine initialized successfully")
     
     def load_meshes(self):
@@ -95,7 +94,6 @@ class GraphicsEngine:
 
         self.hud.update()
         self.hud.hud_game.heatcore_markers = {}
-        self.hud.hud_game.heatcore_bar.sections = self.planet.num_heatcores
 
         self.current_level = saved_data[0] + 1
     
@@ -151,7 +149,6 @@ class GraphicsEngine:
         if self.planet is not None:
             self.planet.destroy()
         pg.quit()
-        self.logs.save("logs/log_data")
         sys.exit()
 
     def check_events(self):
@@ -248,12 +245,6 @@ class GraphicsEngine:
             self.delta_time = self.clock.tick(FPS)
 
             elapsed_time = time.perf_counter() - start_time
-            if self.planet is not None:
-                num_loaded = len(self.planet.chunk_meshes)
-                num_loading = len(self.planet.chunks_loading)
-            else:
-                num_loaded = num_loading = 0
-            self.logs.add_to_log(elapsed_time, num_loaded, num_loading)
             
             # print(f"FPS: {format_fps(elapsed_time)}, Frame Time: {elapsed_time:.3f}s")
             # print()
@@ -264,7 +255,7 @@ class GraphicsEngine:
                     self.hud.hud_menu.active = False
                     self.hud.hud_menu.credits_requested = True
                 else:
-                    self.load_new_planet(heatcore_count=min(0, self.planet.heatcore_count))
+                    self.load_new_planet(heatcore_count=max(0, self.planet.heatcore_count))
 
 def format_fps(delta_time):
     """Format a string for the FPS at a certain frame
