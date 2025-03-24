@@ -60,7 +60,7 @@ class Planet:
             print()
         
         self.level = level
-        self.radius = 8
+        self.radius = 12
         self.radius_squared = self.radius ** 2
         self.app = app
         self.exit = False
@@ -140,7 +140,7 @@ class Planet:
 
         # Heatcores
         angles = [rng.uniform(0, 360) for _ in range(self.num_heatcores)]
-        radiuses = [rng.uniform(7, 15) for _ in range(self.num_heatcores)]
+        radiuses = [rng.uniform(7, 12) for _ in range(self.num_heatcores)]
         
         # Make them spread
         min_diff = 40 / (self.num_heatcores - 1)
