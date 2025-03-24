@@ -146,7 +146,8 @@ class Donjon:
                     for event in pg.event.get():
                         if event.type == pg.KEYDOWN and event.key == self.app.controls["Activer le menu"]:
                             break_paragraph = True
-
+                    if break_paragraph:
+                        break
                     self.render()
                     popup.render()
                     pg.display.flip()
@@ -155,6 +156,7 @@ class Donjon:
                     elapsed_time = time.perf_counter() - start_time
                 if break_paragraph:
                     break
+
 
     def destroy(self):
         self.mesh.destroy()

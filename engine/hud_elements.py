@@ -317,7 +317,7 @@ class UI2:
                 if self.first_time: # voir le commentaire au dessin des boutons dans la méthode draw au dessus
                     if os.path.isfile(PATH_TO_DATA):
                         os.remove(PATH_TO_DATA)
-                        self.app.load_new_planet()
+                    self.app.load_new_planet()
                     self.active = False
                     pg.mouse.set_visible(False)
                     pg.mouse.set_pos(self.width//2, self.height//2)

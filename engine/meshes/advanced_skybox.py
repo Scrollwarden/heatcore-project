@@ -25,8 +25,8 @@ class AdvancedSkyBoxMesh(BaseMesh):
 
     def init_shader(self):
         self.shader_program = open_shaders(self.app, "advanced_skybox")
-        # self.shader_program['u_texture_skybox'] = 0
-        # self.texture.use(location=0)
+        self.shader_program['u_texture_skybox'] = 0
+        self.texture.use(location=0)
 
     def init_vertex_data(self):
         z = 0.9999 # Clipping space
