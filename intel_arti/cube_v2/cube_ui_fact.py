@@ -1,8 +1,8 @@
 import math
-import pygame, sys, os, pyautogui
+import pygame, sys
 from random import choice
 import time
-from pygame import Vector2, SurfaceType, Vector3
+from pygame import Vector2, SurfaceType
 from agent import Agent
 from tensorflow.keras.models import load_model #type: ignore
 from cube import Cube

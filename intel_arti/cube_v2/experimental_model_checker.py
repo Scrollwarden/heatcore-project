@@ -5,9 +5,6 @@ permet de récupérer différents paramètres.
 
 from agent import Agent
 from cube import Cube
-from numpy import reshape
-from collections import deque
-from statistics import mean
 from tensorflow.keras.models import load_model #type: ignore
 
 NUM_MODEL = 9

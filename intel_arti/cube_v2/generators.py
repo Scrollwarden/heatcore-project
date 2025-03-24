@@ -2,7 +2,7 @@
 Tous les générateurs de situations de jeu pour entrainer l'agent.
 '''
 
-from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor # for tests
 from random import randint, choice, gauss
 from intel_arti.cube_v2.cube import Cube, check_type
 from numpy import zeros, ndarray, append, array, ones, savez, load

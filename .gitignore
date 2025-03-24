@@ -12,8 +12,11 @@ __pycache__/
 *.pyd
 
 # Ignore PyCharm stuff
-.idea*/
+.idea*/*
+
+# Ignore MacOS stuff
+.DS_Store
 
 # Ignore logs and game saves
-*log_data.csv
-*data.pkl
+logs/*
+saves/*

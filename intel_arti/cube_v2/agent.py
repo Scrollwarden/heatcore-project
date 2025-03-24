@@ -1,4 +1,3 @@
-from typing import Any
 from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import Dense # type: ignore
 from tensorflow.keras import Input, Model # type: ignore

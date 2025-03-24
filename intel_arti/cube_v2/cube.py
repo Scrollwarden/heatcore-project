@@ -1,4 +1,4 @@
-from numpy import zeros, array, ndarray, array_equal, fliplr
+from numpy import zeros, array, ndarray, array_equal
 from copy import deepcopy
 from random import randint
 from time import perf_counter

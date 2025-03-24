@@ -2,8 +2,6 @@
 Les paramètres des models.
 '''
 
-# Best                                                                                                                                           BEST
-
 NB_NEURONES = 800 #         M1 : 200    | M2 : 200    | M3 : 200    | M6 : 200    | M7 : 200    | M8 : 400      | M9 : 400      | M10 : 800     | M11 : 800     | M12 : 800
 NB_COUCHES = 1 #            M1 : 1      | M2 : 1      | M3 : 1      | M6 : 1      | M7 : 1      | M8 : 1        | M9 : 1        | M10 : 1       | M11 : 1       | M12 : 1
 LEARNING_RATE = 0.001 #     M1 : 0.001  | M2 : 0.001  | M3 : 0.001  | M6 : 0.001  | M7 : 0.001  | M8 : 0.001    | M9 : 0.001    | M10 : 0.001   | M11 : 0.001   | M12 : 0.001
@@ -15,22 +13,6 @@ EPOCH = 1000 #              M1 : 10     | M2 : 20     | M3 : 200    | M6 : 100  
 # WinState used             M1 : Yes    | M2 : Yes    | M3 : Yes    | M6 : No     | M7 : No     | M8 : Yes      | M9 : Yes      | M10 : No      | M11 : Yes     | M12 : Yes
 # Inverted WinState team    M1 : No     | M2 : No     | M3 : No     | M6 : No     | M7 : No     | M8 : No       | M9 : No       | M10 : No      | M11 : No      | M12 : Yes
 # Human game examples       M1 : No     | M2 : No     | M3 : No     | M6 : No     | M7 : No     | M8 : No       | M9 : No       | M10 : No      | M11 : No      | M12 : No
-
-
-
-# "Normal" players  Strange players (no pawns at beginning)     MAIN CLASSMENT
-# #1 : M11          #1 : M8                                     #01 : M11
-# #2 : M10          #2 : M7                                     #02 : M10
-# #3 : M12          #3 : M5                                     #03 : M12
-# #4 : M9                                                       #04 : M9
-# #5 : M4                                                       #05 : M4
-# #6 : M3                                                       #06 : M8
-# #7 : M2                                                       #07 : M7
-# #8 : M1                                                       #08 : M5
-# #9 : M6                                                       #09 : M3
-#                                                               #10 : M2
-#                                                               #11 : M1
-#                                                               #12 : M6
 
 INFOS_ALL_MODELS = {
     1: ('~ 21-11-2024', 'BASE'),
