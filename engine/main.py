@@ -108,7 +108,7 @@ class GraphicsEngine:
                        self.planet.heatcore_count,
                        self.planet.ancient_structure.won]
         else:
-            objects = [self.current_level - int(self.planet is not None)]
+            objects = [self.current_level, 0]
         with open(file_path, 'wb') as f:
             pickle.dump(objects, f)
         print(f"Data successfully saved in {file_path}")
@@ -124,7 +124,7 @@ class GraphicsEngine:
             with open(file_path, 'rb') as f:
                 return pickle.load(f)
         except FileNotFoundError:
-            return [0]
+            return [0, 0]
 
     def load_buttons(self, file_path: str):
         try:
