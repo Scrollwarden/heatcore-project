@@ -46,12 +46,13 @@ class Planet:
             saved_data (tuple): data used to load the planet (saved data or just the level)
         """
         self.saved_data = saved_data
-        self.load_from_data = len(saved_data) == 6
+        self.load_from_data = len(saved_data) == 7
         if self.load_from_data:
             level, seed = saved_data[:2]
+            self.heatcore_count = saved_data[5]
         else:
-            level = saved_data[0]
-            seed = np.random.randint(0, 1000)
+            level, self.heatcore_count = saved_data[:2]
+            seed = np.random.randint(0, 100000) * 2 + 1 # Parce que les seeds pairs ne marchent pas... me demande pas pourquoi
         
         self.level = level
         self.radius = 8
@@ -65,10 +66,10 @@ class Planet:
         self.nuit = False
         self.decollage = False
 
-        self.biome = sorted(list(BIOME_POINTS.keys()))[hash(seed) % len(BIOME_POINTS)]
+        self.seed = seed
+        self.biome = sorted(list(BIOME_POINTS.keys()))[hash((self.seed, 0)) % len(BIOME_POINTS)]
         self.height_params = SplineHeightParams(self.biome, HEIGHT_SCALE)
         self.color_params = ColorParams(self.biome)
-        self.seed = seed
         self.noise = PerlinGenerator(self.height_params, self.color_params,
                                      seed=self.seed, scale=100 / INV_NOISE_SCALE, octaves=NUM_OCTAVES)
         # self.chunk_shader = open_shaders(self.app, 'chunk_texture')
@@ -85,7 +86,6 @@ class Planet:
         self.donjon = None
         self.heatcores = {}
         self.num_heatcores = 3 + self.level
-        self.heatcore_count = 0
         self.popup = None
         self.new_popup("Vous êtes atterris", 3)
         self.can_enter = False
@@ -131,7 +131,7 @@ class Planet:
         position = self.avoid_water(position, NUM_OCTAVES)
         self.ancient_structure = AncientStructure(self.app, self.app.meshes["ancient_structure"], position)
         if self.load_from_data:
-            self.ancient_structure.won = self.saved_data[5]
+            self.ancient_structure.won = self.saved_data[6]
 
         # Heatcores
         angles = [rng.uniform(0, 360) for _ in range(self.num_heatcores)]
@@ -233,6 +233,7 @@ class Planet:
                 donjon.destroy()
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
                 self.exit = True
+                self.heatcore_count -= 3
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames"""
@@ -309,11 +310,11 @@ class Planet:
 
             if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
                 popup_text = "??? [Intéragir]"
-                if self.popup.text != popup_text:
+                if self.popup is None or self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
                 popup_text = "Décoller vers une autre planète [Intéragir]" if self.heatcore_count <= 8 else "Rentrer à la maison [Intéragir]"
-                if self.popup.text != popup_text:
+                if self.popup is None or self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             else:
                 self.remove_popup()
@@ -322,8 +323,9 @@ class Planet:
                 self.new_popup("Il vous reste 30s", 3)
                 self.nuit = True
             if self.light.time >= self.light.full_time / 2 + 25 and not self.decollage:
-                self.new_popup("Décollage dans 5s", 4)
+                self.new_popup("Décollage d'urgence dans 5s", 4)
                 self.decollage = True
+                self.heatcore_count = 0
 
         self.generate_chunks()
         self.update_chunks()

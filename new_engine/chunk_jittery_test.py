@@ -10,7 +10,7 @@ CHUNK_SIZE = 16
 LG2_CS = math.floor(math.log2(CHUNK_SIZE))
 # from new_engine.options import CHUNK_SIZE, LG2_CS
 
-SIDE_LENGTH = 5
+SIDE_LENGTH = 30
 SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
 JITTER_STRENGTH = 1 / 3
 
@@ -516,7 +516,7 @@ def display_chunk(screen, chunk_mesh: ChunkMesh, scale: float | int):
         color = chunk_mesh.chunk.noise.color_params.get_color_from_id(face_id)
         # color = [min(value + (sum(chunk_mesh.chunk.coord) % 2) * 30, 255) for value in color]
 
-        a, b, c = [[int(ele[0][i] * scale) for i in (0, 2)] for ele in data]
+        a, b, c = [[int(450 + ele[0][i] * scale) for i in (0, 2)] for ele in data]
         pygame.draw.polygon(screen, color, [a, b, c])
 
 def generate_chunk(x_chunk, y_chunk, noise, detail: float = 1.0):
@@ -527,39 +527,15 @@ def generate_chunk(x_chunk, y_chunk, noise, detail: float = 1.0):
     return chunk_mesh
 
 if __name__ == "__main__":
-    height_param = HeightParams()
-    color_param = ColorParams("archipel")
-    perlin_noise = PerlinGenerator(height_param, color_param, seed=2500, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
-
-    # chunk = ChunkTerrain(perlin_noise, 0, 0)
-
-    # sst = time.time()
-    # chunk.generate_detail(0.3)
-    # mmt = time.time()
-    # chunk_mesh = ChunkMesh(chunk)
-    # chunk_mesh.update_detail(0.3)
-    # eet = time.time()
-
-    # st = time.time()
-    # chunk.generate_detail(0)
-    # mt = time.time()
-    # chunk_mesh = ChunkMesh(chunk)
-    # chunk_mesh.update_detail(0)
-    # et = time.time()
-    # print(f"Time taken generating: {mmt - sst:.5f}s")
-    # print(f"Time taken meshing: {eet - mmt:.5f}s")
-    # print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
-    # print()
-    # print(f"Time taken generating all data: {mt - st:.5f}s")
-    # print(f"Time taken meshing to max detail: {et - mt:.5f}s")
-    # print(f"Size of chunk: {format_size(chunk_mesh.get_byte_size())}")
-    # print()
-    # print(f"Total time: {et - sst:.5f}s")
+    biome = "volcanos"
+    height_param = SplineHeightParams(biome)
+    color_param = ColorParams(biome)
+    perlin_noise = PerlinGenerator(height_param, color_param, seed=1133, scale=30.0, octaves=10, persistence=0.5, lacunarity=2.0)
     
     st = time.time()
     chunk_meshes = []
-    for x in range(SIDE_LENGTH):
-        for y in range(SIDE_LENGTH):
+    for x in range(-SIDE_LENGTH//2, SIDE_LENGTH//2 + 1):
+        for y in range(-SIDE_LENGTH//2, SIDE_LENGTH//2 + 1):
             chunk_mesh = generate_chunk(x, y, perlin_noise, 0.5)
             chunk_meshes.append(chunk_mesh)
     et = time.time()

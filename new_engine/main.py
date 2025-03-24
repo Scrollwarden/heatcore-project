@@ -76,7 +76,7 @@ class GraphicsEngine:
         # self.textures["depth_texture"] = self.context.depth_texture(SCREEN_WIDTH / SCREEN_HEIGHT)
 
 
-    def load_new_planet(self, saved_data = None):
+    def load_new_planet(self, saved_data = None, heatcore_count = 0):
         """Load a whole new planet
 
         Args:
@@ -85,7 +85,7 @@ class GraphicsEngine:
         if self.planet is not None:
             self.planet.destroy()
         if saved_data is None:
-            saved_data = [self.current_level]
+            saved_data = [self.current_level, heatcore_count]
         if pg.mixer.music.get_busy():
             pg.mixer.music.stop()
 
@@ -107,6 +107,7 @@ class GraphicsEngine:
                        self.planet.player.position,
                        self.planet.player.forward,
                        tuple(self.planet.heatcores.keys()),
+                       self.planet.heatcore_count,
                        self.planet.ancient_structure.won]
         else:
             objects = [self.current_level - int(self.planet is not None)]
@@ -263,12 +264,12 @@ class GraphicsEngine:
                     self.hud.hud_menu.active = False
                     self.hud.hud_menu.credits_requested = True
                 else:
-                    self.load_new_planet()
+                    self.load_new_planet(heatcore_count=min(0, self.planet.heatcore_count))
 
 def format_fps(delta_time):
     """Format a string for the FPS at a certain frame
 
-    Args:
+    Args:x
         delta_time (float): difference of time between two frames
 
     Returns:

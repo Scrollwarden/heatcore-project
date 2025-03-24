@@ -38,13 +38,14 @@ vec3 gammaCorrect(vec3 color, float value) {
 void main() {
     vec4 worldCoords = m_invProjView * clipCoords;
     vec3 texCubeCoord = normalize(worldCoords.xyz / worldCoords.w);
-    vec4 skyColor = texture(u_texture_skybox, texCubeCoord);
-    skyColor = vec4(0.22, 0.33, 0.52, 1.0);
+    vec4 skyColor;
 
     // **Sky Brightness Factor**
     float sunAltitude = u_sun_dir.y;
     vec4 lowColor = mix(vec4(0.2, 0.4, 0.7, 1.0), vec4(1.0, 1.0, 1.0, 1.0), sunAltitude);
     skyColor = mix(lowColor, vec4(0.0, 0.37, 0.81, 1.0), pow(abs(texCubeCoord.y + 0.1), 0.5));
+    skyColor = texture(u_texture_skybox, texCubeCoord);
+
 
     // **Fix: Smooth fade-in from full black instead of instant jump**
     float fullBlackFactor = smoothstep(VERY_NIGHT_HEIGHT, NIGHT_HEIGHT, sunAltitude); // 0 → 1 transition
