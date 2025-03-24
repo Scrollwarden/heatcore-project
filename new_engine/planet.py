@@ -298,11 +298,11 @@ class Planet:
                 del self.heatcores[index]
 
             if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "???"
+                popup_text = "??? [Interact]"
                 if self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "Décoller vers une autre planète" if self.app.hud.hud_game.heatcore_bar.heat_core_count <= 8 else "Rentrer à la maison"
+                popup_text = "Décoller vers une autre planète [Interact]" if self.app.hud.hud_game.heatcore_bar.heatcore_count <= 8 else "Rentrer à la maison [Interact]"
                 if self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             else:
@@ -484,7 +484,7 @@ class Planet:
     def cinematique_entree(self):
         """Cinematic of entrance to the world (not here yet)"""
         running = True
-        popup = PopUp(self.app, "Chargement...", SCREEN_WIDTH // 1.5, 50, SCREEN_HEIGHT // 1.5, 0.5, 1000, 0.5, True, 50, 50)
+        popup = PopUp(self.app, "Décollage vers une nouvelle planète...", SCREEN_WIDTH // 1.5, 50, SCREEN_HEIGHT // 3, 0.5, 1000, 0.5, True, 50, 50)
         while running:
             self.app.context.clear(color=(0, 0, 0))
             self.generate_chunks()

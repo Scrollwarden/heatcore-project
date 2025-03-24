@@ -343,7 +343,6 @@ class UI2:
 
             elif self.show_intro_again_rect.collidepoint(mouse_pos):
                 self.active = False
-                pg.mouse.set_visible(False)
                 self.intro_requested = True
 
             elif self.show_credits_rect.collidepoint(mouse_pos):
