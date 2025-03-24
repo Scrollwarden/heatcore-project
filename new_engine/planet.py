@@ -62,6 +62,8 @@ class Planet:
         self.light = None
         self.camera = None
         self.player = None
+        self.nuit = False
+        self.decollage = False
 
         self.biome = sorted(list(BIOME_POINTS.keys()))[hash(seed) % len(BIOME_POINTS)]
         self.height_params = SplineHeightParams(self.biome, HEIGHT_SCALE)
@@ -82,7 +84,8 @@ class Planet:
         self.ancient_structure = None
         self.donjon = None
         self.heatcores = {}
-        self.num_heatcores = 2 + self.level
+        self.num_heatcores = 3 + self.level
+        self.heatcore_count = 0
         self.popup = None
         self.new_popup("Vous êtes atterris", 3)
         self.can_enter = False
@@ -132,7 +135,7 @@ class Planet:
 
         # Heatcores
         angles = [rng.uniform(0, 360) for _ in range(self.num_heatcores)]
-        radiuses = [rng.uniform(5, 10) for _ in range(self.num_heatcores)]
+        radiuses = [rng.uniform(1, 2) for _ in range(self.num_heatcores)]
         
         # Make them spread
         min_diff = 40 / (self.num_heatcores - 1)
@@ -210,7 +213,9 @@ class Planet:
         if event.type == pg.MOUSEWHEEL:
             self.player.camera_zoom *= 0.97 ** event.y
 
-        if event.type == pg.KEYDOWN and event.key == self.app.controls["Interact"]:
+        if event.type == pg.KEYDOWN and event.key == self.app.controls["Intéragir"] and not self.decollage:
+            if self.popup.text in ("Décollage dans 5s", "Il vous reste 30s") and not self.popup.finished:
+                return
             print(not self.ancient_structure.won,
                   glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE,
                   glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE)
@@ -218,8 +223,12 @@ class Planet:
                glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
                 self.app.play_song("a cube of enigma.mp3")
                 donjon = Donjon(self.app, self.level)
+                if self.level == 0:
+                    donjon.cinematique()
                 donjon.run()
-                self.ancient_structure.won = donjon.hud_game.won
+                if donjon.hud_game.won:
+                    self.ancient_structure.won = True
+                    self.heatcore_count += 3
                 self.light.time += donjon.time_taken / 5
                 donjon.destroy()
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
@@ -263,7 +272,7 @@ class Planet:
 
         #print(f"Chunks loading: {self.chunks_loading}")
         #print(f"Chunks that finished loading: {temp}")
-    
+
     def update_shader(self):
         """Update the chunk shader"""
         # Light
@@ -294,21 +303,27 @@ class Planet:
                 if glm.length2(heatcore.position.xz - self.player.position.xz) <= CHUNK_SCALE:
                     print("Heatcore taken !")
                     keys_to_delete.add(index)
+                    self.heatcore_count += 1
             for index in keys_to_delete:
                 del self.heatcores[index]
 
             if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "??? [Interact]"
+                popup_text = "??? [Intéragir]"
                 if self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "Décoller vers une autre planète [Interact]" if self.app.hud.hud_game.heatcore_bar.heatcore_count <= 8 else "Rentrer à la maison [Interact]"
+                popup_text = "Décoller vers une autre planète [Intéragir]" if self.heatcore_count <= 8 else "Rentrer à la maison [Intéragir]"
                 if self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             else:
-                self.empty_popup()
+                self.remove_popup()
 
-
+            if self.light.time >= self.light.full_time / 2 and not self.nuit:
+                self.new_popup("Il vous reste 30s", 3)
+                self.nuit = True
+            if self.light.time >= self.light.full_time / 2 + 25 and not self.decollage:
+                self.new_popup("Décollage dans 5s", 4)
+                self.decollage = True
 
         self.generate_chunks()
         self.update_chunks()
@@ -316,11 +331,15 @@ class Planet:
 
     def new_popup(self, text, wait_time, size=SCREEN_WIDTH // 2, font_size=40, y=100,
                   fade_in=0.5, fade_out=0.5, center_text=True, border_radius=10, border_width=10):
+        if self.popup is not None:
+            self.popup.destroy()
         self.popup = PopUp(self.app, text, size, font_size, y,
                            fade_in, wait_time, fade_out, center_text, border_radius, border_width)
 
-    def empty_popup(self):
-        self.new_popup("easter egg 69420", 0, fade_in=0, fade_out=0)
+    def remove_popup(self):
+        if self.popup is not None:
+            self.popup.destroy()
+        self.popup = None
 
     def render(self):
         """Render all chunks within the active radius"""
@@ -342,16 +361,8 @@ class Planet:
         for heatcore in self.heatcores.values():
             heatcore.render()
         self.player.render()
-        self.popup.render()
-
-    def destroy(self):
-        """Clean up resources (garbage collector)"""
-        self.semaphore.acquire()
-        for t in self.threads:
-            t.join()
-
-        [mesh.destroy() for mesh in self.chunk_meshes.values()]
-        self.chunk_shader.release()
+        if self.popup is not None:
+            self.popup.render()
 
     def get_perlin_height(self, position: glm.vec3, octaves: int = 1):
         """Generate the height of a position in 3d (y component can be anything)
@@ -497,3 +508,13 @@ class Planet:
             pg.display.flip()
             self.app.clock.tick(FPS)
         popup.destroy()
+
+    def destroy(self):
+        """Clean up resources (garbage collector)"""
+        self.semaphore.acquire()
+        for t in self.threads:
+            t.join()
+
+        [mesh.destroy() for mesh in self.chunk_meshes.values()]
+        self.chunk_shader.release()
+        self.remove_popup()

@@ -2,10 +2,10 @@ import glm
 import pygame as pg
 
 FOV = 50
-NEAR = 0.01
+NEAR = 1.0
 FAR = 100
-SPEED = 0.001
-SENSITIVITY = 0.05
+SPEED = 0.005
+SENSITIVITY = 0.02
 
 class Camera:
     def __init__(self, app, position=(0.1, 0.07, 0.1), yaw=0, pitch=-20):
@@ -54,6 +54,7 @@ class Camera:
         self.rotate()
         self.update_camera_vectors()
         self.view_matrix = self.get_view_matrix()
+        self.view_matrix = glm.lookAt(self.position, glm.vec3(0, 0, 0), glm.normalize(glm.vec3(0.5, 0.5, 0.5)))
 
     def move(self):
         velocity = SPEED * self.app.delta_time

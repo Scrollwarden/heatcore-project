@@ -1,30 +1,15 @@
-Nlr i kle anm eme jekp olor.
+Nlr îie kle anm ême jekp tpolor, Omp k azg nêvh mhripst.
+Lecture de pensée terminée. Adaptation terminée. Langage sélectionné.
 
-Lecture de pensée terminée.
-Adaptation terminée. Langage sélectionné.
-
-Bienvenue visiteur.
-
-Vous pensiez atteindre le Cœur de puissance si facilement ?
-
+Bienvenue visiteur. Vous pensiez atteindre le Cœur de puissance si facilement ?
 J'ai été créée spécialement pour vous en barrer l'accès.
+Pour l'obtenir, il faudra démontrer une intelligence semblable à mes créateurs,
+en me mettant en échec sur le jeu du NeoCube. Approchez, vous allez comprendre.
 
-Pour l'obtenir, il faudra prouver que vous êtes au moins aussi intelligents
-que mes créateurs, en me mettant en échec sur le jeu du Cube.
-
-Approchez, posez vos mains sur le cube. Vous allez comprendre.
-
-
-# *Le joueur interagit avec le cube en pressant la touche assignée. Il quitte l'écran
-# de la structure et passe à l'écran du cube.*
-
-Votre but est d'aligner trois pions sur n'importe quelle face.
-Vous jouez les {player_color}.
-
-Vous pouvez poser un pions sur la face claire. Celle du dessus si vous n'avez pas encore
-tourné le cube.
-
-Vous pouvez aussi tourner une rangée, en tirant sur l'une des flèches vertes qui
-apparaissent sur les bords du cube.
+Votre but est d'aligner trois pions sur n'importe quelle face. Vous jouez les ronds.
+Vous pouvez poser un pion sur la face claire. En principe celle du dessus.
+Vous pouvez aussi tourner une rangée, grâce aux flèches vertes qui apparaissent sur les bords du cube.
 
 Tant que vous n'arrivez pas à me battre, je ne vous donnerai pas accès au Cœur de puissance.
+En cas de victoire, ce Cœur de puissance vous donnera l'équivalent de 3 Cœurs de chaleur.
+Attention, le temps coule encore en dehors, ne prenez pas trop de temps.

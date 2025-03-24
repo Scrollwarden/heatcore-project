@@ -1,6 +1,6 @@
 import numpy as np
 from new_engine.meshes.base_mesh import BaseMesh
-from new_engine.chunk import ChunkTerrain, CHUNK_SIZE, LG2_CS
+from new_engine.chunk_jittery_test import ChunkTerrain, CHUNK_SIZE, LG2_CS
 from new_engine.options import MAX_FALL_DISTANCE
 import glm
 from scipy.spatial import Delaunay

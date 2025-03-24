@@ -11,11 +11,11 @@ from tensorflow.keras.models import load_model
 from intel_arti.cube_v2.agent import Agent, SuperAgent
 
 DEFAULT_CONTROLS = {
-    "Strafe Left": pg.K_q,
-    "Forward": pg.K_z,
-    "Strafe Right": pg.K_d,
-    "Toggle Menu": pg.K_ESCAPE,
-    "Interact": pg.K_e,
+    "Rotation Gauche": pg.K_q,
+    "Rotation Droite": pg.K_d,
+    "Avancer": pg.K_z,
+    "Activer le menu": pg.K_ESCAPE,
+    "Intéragir": pg.K_e,
 }
 
 MENU_BACKGROUND_ICON = pg.image.load("txt/background_logo.png")
@@ -171,7 +171,7 @@ class UI1:
         width = 10
         x = screen.get_width() - (width + 50)
         y = screen.get_height() - (height + 50)
-        self.heatcore_bar = HeatcoreBar(screen, x, y, width, height)
+        self.heatcore_bar = HeatcoreBar(screen, x, y, width, height, 10)
     
     def update(self):
         heatcore_keys = set(self.app.planet.heatcores.keys())
@@ -194,7 +194,7 @@ class UI1:
             (255, 0, 255), 20, 12
         )
         enery_core_count = 3 if ancient_structure.won else 0
-        self.heatcore_bar.set_heatcore_count(self.app.planet.num_heatcores - len(self.heatcore_markers) + enery_core_count)
+        self.heatcore_bar.set_heatcore_count(self.app.planet.heatcore_count)
 
         starting_base = self.app.planet.starting_base
         self.starting_base_marker = HeatcoreMarker(
@@ -234,13 +234,15 @@ class UI2:
         self.overlay_background = pg.Surface((self.width, self.height), pg.SRCALPHA)
         self.overlay_background.fill((20, 20, 20, 100))
 
-        self.play_button_rect = pg.Rect(self.width//7, (self.height - 150) // 3, 250, 50)
-        self.play_from_scratch_button_rect = pg.Rect(self.play_button_rect.left, self.play_button_rect.bottom + 20, 250, 50)
-        self.show_intro_again_rect = pg.Rect(self.play_button_rect.left, self.play_from_scratch_button_rect.bottom + 40, 250, 50)
-        self.controls_button_rect = pg.Rect(self.play_button_rect.left, self.show_intro_again_rect.bottom + 20, 250, 50)
-        self.save_button_rect = pg.Rect(self.play_button_rect.left, self.controls_button_rect.bottom + 20, 250, 50)
-        self.show_credits_rect = pg.Rect(self.play_button_rect.left, self.save_button_rect.bottom + 50, 250, 50)
-        self.close_button_rect = pg.Rect(self.play_button_rect.left, self.show_credits_rect.bottom + 20, 250, 50)
+        height = self.height // 40
+        fsheight = int(2.5 * height)
+        self.play_button_rect = pg.Rect(self.width//7, 10 * height, 250, fsheight)
+        self.play_from_scratch_button_rect = pg.Rect(self.play_button_rect.left, self.play_button_rect.bottom + height, 250, fsheight)
+        self.show_intro_again_rect = pg.Rect(self.play_button_rect.left, self.play_from_scratch_button_rect.bottom + 2 * height, 250, fsheight)
+        self.controls_button_rect = pg.Rect(self.play_button_rect.left, self.show_intro_again_rect.bottom + height, 250, fsheight)
+        self.save_button_rect = pg.Rect(self.play_button_rect.left, self.controls_button_rect.bottom + height, 250, fsheight)
+        self.show_credits_rect = pg.Rect(self.play_button_rect.left, self.save_button_rect.bottom + fsheight, 250, fsheight)
+        self.close_button_rect = pg.Rect(self.play_button_rect.left, self.show_credits_rect.bottom + height, 250, fsheight)
 
         self.font = pg.font.SysFont("Arial", 24)
         self.title_font = pg.font.SysFont("Arial", 48)
@@ -468,7 +470,7 @@ class MenuIntroUI:
         """
         Gère les interactions (bouton skip)
         """
-        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Toggle Menu"]:
+        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Activer le menu"]:
             self.animation_state = len(self.text_intro)
             self.check_end_condition()
 
@@ -532,7 +534,7 @@ class CreditsUI:
         """
         Gère les interactions (bouton skip)
         """
-        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Toggle Menu"]:
+        if event.type == pg.KEYDOWN and event.key == DEFAULT_CONTROLS["Activer le menu"]:
             self.animation_state = len(self.text_ending)
             self.check_end_condition()
 
@@ -599,6 +601,12 @@ class UI3:
     CAMERA_FRICTION = 0.90
 
     def __init__(self, screen, ai_level):
+        """Class constructeur
+
+        Args:
+            screen (pg.Surface): pygame surface to blit to
+            ai_level (int): the level of the ai from 0 to 4
+        """
         self.screen = screen  # The UI surface passed from the GraphicsEngine.
         self.width, self.height = self.screen.get_size()
         self.active = True
@@ -645,7 +653,7 @@ class UI3:
         # --- Cube AI Integration ---
         # Set up turn management: assume human is 1 and AI is -1.
         self.current_player = 1  # Human player's turn initially.
-        self.ai_player = -1       # AI player.
+        self.ai_player = 1       # AI player.
         self.coup_interdit = -1  # A move that is temporarily forbidden.
         self.fini = False        # Game over flag.
         self.won = False         # If the human player won at least once.
@@ -803,7 +811,7 @@ class UI3:
             elif name == 'hint':
                 text = f"Indice ({self.hints_remaining})"
             elif name == 'return':
-                text = "Fermer"
+                text = "Quitter"
             else:
                 text = "Easter egg"
             text_surf = font.render(text, True, (255, 255, 255))

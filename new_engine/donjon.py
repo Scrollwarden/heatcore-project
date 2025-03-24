@@ -23,20 +23,27 @@ class Donjon:
                            0.5, 1, 0.5, True)
         
         self.controls = app.controls
-        self.ai_level = min(3, level // 2)
-        self.hud_game = UI3(self.ui_surface, 3)
+        self.ai_level = min(5, level // 2)
+        self.hud_game = UI3(self.ui_surface, self.ai_level)
         self.hud_menu = UI2(app, self.ui_surface)
         self.hud_buttons = UI2_1(self.ui_surface)
 
         self.time_taken = 0
         self.delta_time = 0
-        self.runing = True
+        self.running = True
         pg.mouse.set_visible(True)
 
     def new_popup(self, text, wait_time, size=SCREEN_WIDTH // 2, font_size=40, y=100,
                   fade_in=0.5, fade_out=0.5, center_text=True, border_radius=10, border_width=10):
+        if self.popup is not None:
+            self.popup.destroy()
         self.popup = PopUp(self.app, text, size, font_size, y,
                            fade_in, wait_time, fade_out, center_text, border_radius, border_width)
+
+    def remove_popup(self):
+        if self.popup is not None:
+            self.popup.destroy()
+        self.popup = None
 
     def check_events(self):
         for event in pg.event.get():
@@ -48,7 +55,7 @@ class Donjon:
                 self.hud_menu.handle_event(event)
                 return
 
-            if event.type == pg.KEYDOWN and event.key == self.app.controls["Toggle Menu"]:
+            if event.type == pg.KEYDOWN and event.key == self.app.controls["Activer le menu"]:
                 self.hud_menu.first_time = False
                 self.hud_menu.active = True
             elif event.type == pg.KEYDOWN and event.key == pg.K_p:
@@ -58,7 +65,7 @@ class Donjon:
 
     def update(self):
         if self.hud_game.exit_ui3:
-            self.runing = False
+            self.running = False
             return
 
         if self.hud_menu.controls_requested:
@@ -75,16 +82,16 @@ class Donjon:
                 text = "Parti fini, vous avez perdu !"
             else:
                 text = "Parti fini, vous avez gagné !"
-            self.new_popup(text, 10000, SCREEN_WIDTH // 2, 50)
+                self.hud_game.won = True
+            self.new_popup(text, 69420, SCREEN_WIDTH // 2, 50)
             self.hud_game.fini = True
-            self.hud_game.won = True
-
+        if self.hud_game.fini == False and self.popup is not None and self.popup.wait_time == 69420:
+            self.remove_popup()
 
     def render(self):
         self.ui_surface.fill((0, 0, 0, 0))
 
         self.hud_game.draw()
-        self.popup.render()
 
         if self.hud_buttons.active:
             self.hud_buttons.draw()
@@ -101,18 +108,19 @@ class Donjon:
         self.context.blend_func = (mgl.SRC_ALPHA, mgl.ONE_MINUS_SRC_ALPHA)
 
         self.mesh.render()
-        self.popup.render()
+        if self.popup is not None:
+            self.popup.render()
 
         self.context.disable(mgl.BLEND)
         self.context.enable(mgl.DEPTH_TEST)
 
     def run(self):
-        while self.runing:
+        while self.running:
             start_time = time.perf_counter()  # High-resolution timer
 
             self.check_events()
             self.update()
-            if not self.runing: break
+            if not self.running: break
             if not self.hud_buttons.active:
                 self.controls = self.hud_buttons.bindings
                 self.app.controls = self.controls
@@ -123,6 +131,30 @@ class Donjon:
             elapsed_time = time.perf_counter() - start_time
             if not (self.hud_menu.active or self.hud_buttons.active):
                 self.time_taken += elapsed_time
+
+    def cinematique(self):
+        with open("txt/text_cube_ia.txt", 'r', encoding='utf-8') as f:
+            content = f.read().strip()  # Read file and remove leading/trailing newlines
+        paragraphs = [paragraph.splitlines() for paragraph in content.split("\n\n") if paragraph.strip()]
+        self.remove_popup()
+        for paragraph in paragraphs:
+            for line in paragraph:
+                break_paragraph = False
+                popup = PopUp(self.app, line, 800, 40, 300, 0.5, 3.5, 0.5, True, 20, 20)
+                while not popup.finished:
+                    start_time = time.perf_counter()  # High-resolution timer
+                    for event in pg.event.get():
+                        if event.type == pg.KEYDOWN and event.key == self.app.controls["Activer le menu"]:
+                            break_paragraph = True
+
+                    self.render()
+                    popup.render()
+                    pg.display.flip()
+                    self.delta_time = self.clock.tick(FPS)
+
+                    elapsed_time = time.perf_counter() - start_time
+                if break_paragraph:
+                    break
 
     def destroy(self):
         self.mesh.destroy()

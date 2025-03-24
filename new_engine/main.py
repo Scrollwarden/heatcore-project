@@ -48,7 +48,6 @@ class GraphicsEngine:
         self.load_textures()
         self.planet = None
         self.hud = HUDObject(self)
-        self.popup = None
         self.current_song = None
         
         self.logs = Logs()
@@ -103,14 +102,14 @@ class GraphicsEngine:
     def save_data(self, file_path: str):
         """Save data to a file"""
         if self.planet is not None:
-            objects = [self.current_level - 1,
+            objects = [self.current_level - int(self.planet is not None),
                        self.planet.seed,
                        self.planet.player.position,
                        self.planet.player.forward,
                        tuple(self.planet.heatcores.keys()),
                        self.planet.ancient_structure.won]
         else:
-            objects = [self.current_level - 1]
+            objects = [self.current_level - int(self.planet is not None)]
         with open(file_path, 'wb') as f:
             pickle.dump(objects, f)
         print(f"Data successfully saved in {file_path}")
@@ -259,7 +258,7 @@ class GraphicsEngine:
             # print()
 
             if self.planet is not None and self.planet.exit:
-                if self.hud.hud_game.heatcore_bar.heatcore_count >= 9:
+                if self.planet.heatcore_count >= 9:
                     pg.mouse.set_visible(False)
                     self.hud.hud_menu.active = False
                     self.hud.hud_menu.credits_requested = True

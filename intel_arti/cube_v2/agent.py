@@ -247,8 +247,10 @@ class SuperAgent:
             return self.choisir_normal(cube, joueur, self.niveau, coup_interdit)
         elif self.niveau == 3:
             return self.choisir_deep_thought(cube, joueur, 5, 1, coup_interdit)
-        else:
+        elif self.niveau == 4:
             return self.choisir_deep_thought(cube, joueur, 5, 2, coup_interdit)
+        else:
+            return self.choisir_deep_thought(cube, joueur, 5, 3, coup_interdit)
 
     def choisir_morpion(self, cube: Cube, joueur: int, coup_interdit: int = -1):
         actions = sorted(cube.actions_possibles(coup_interdit))

@@ -40,8 +40,6 @@ class GraphicsEngine:
                 self.logs.save("new_engine/log_data")
                 #self.logs.display_single_window()
                 sys.exit()
-            if event.type == pg.MOUSEWHEEL:
-                self.player.camera_zoom *= 0.97 ** event.y
 
     def render(self):
         self.context.clear(color=BACKGROUND_COLOR)
