@@ -19,15 +19,15 @@ const vec3 SUN_COLOR_DAY = vec3(1.0, 0.9, 0.6);      // Bright white sun when hi
 const float SUN_CORE_RADIUS = 0.02;                  // Radius of full-color sun core
 const float SUN_FADE_RADIUS = 0.04;                  // Slight gradient at the edge of the sun core
 
-const float HALO_RADIUS_DAY = 2.0;                  // Smaller halo when sun is high
+const float HALO_RADIUS_DAY = 9.0;                  // Smaller halo when sun is high
 const float HALO_RADIUS_NIGHT = 3.0;                 // Wider halo when sun is low
 
-const float HALO_SPREAD_DAY = 0.4;                   // Sharper glow at midday
+const float HALO_SPREAD_DAY = 1.0;                   // Sharper glow at midday
 const float HALO_SPREAD_NIGHT = 0.6;                 // Broader, more lateral spread at sunset/night
 
 const float HALO_HORIZONTAL_FACTOR_NIGHT = 4.0;      // Strength of horizontal spreading of the glow at night
 
-const float SUN_GLOW_FACTOR_DAY = 4.0;
+const float SUN_GLOW_FACTOR_DAY = 6.0;
 const float SUN_GLOW_FACTOR_NIGHT = 10.0;             // Adjusts intensity of glow (higher = stronger glow)
 
 // **Gamma Correction**
@@ -48,7 +48,6 @@ void main() {
 
 
     // **Fix: Smooth fade-in from full black instead of instant jump**
-    float fullBlackFactor = smoothstep(VERY_NIGHT_HEIGHT, NIGHT_HEIGHT, sunAltitude); // 0 → 1 transition
     if (sunAltitude < VERY_NIGHT_HEIGHT) {
         fragColor = vec4(0.02, 0.02, 0.05, 1.0);
         return;
@@ -86,6 +85,7 @@ void main() {
 
     // **Dark Sky Transition (Full black fades in smoothly)**
     vec3 nightSky = vec3(0.02, 0.02, 0.05);
+    float fullBlackFactor = smoothstep(VERY_NIGHT_HEIGHT, NIGHT_HEIGHT, sunAltitude); // 0 → 1 transition
     vec3 skyFinalColor = mix(nightSky, skyColor.rgb, skyDarkness * fullBlackFactor);
 
     // **Fix: Apply sunriseFactor so glow fades in smoothly**

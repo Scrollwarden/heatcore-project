@@ -9,7 +9,7 @@ from scipy.interpolate import CubicSpline
 CHUNK_SIZE = 16
 LG2_CS = math.floor(math.log2(CHUNK_SIZE))
 
-SIDE_LENGTH = 30
+SIDE_LENGTH = 15
 SCALE = 900 / CHUNK_SIZE / SIDE_LENGTH
 JITTER_STRENGTH = 1 / 3
 
@@ -535,7 +535,7 @@ if __name__ == "__main__":
     chunk_meshes = []
     for x in range(-SIDE_LENGTH//2, SIDE_LENGTH//2 + 1):
         for y in range(-SIDE_LENGTH//2, SIDE_LENGTH//2 + 1):
-            chunk_mesh = generate_chunk(x, y, perlin_noise, 0.5)
+            chunk_mesh = generate_chunk(x, y, perlin_noise, 0.2)
             chunk_meshes.append(chunk_mesh)
     et = time.time()
     print(f"Size of chunks: {format_size(sum(chunk_mesh.get_byte_size() for chunk_mesh in chunk_meshes))}")

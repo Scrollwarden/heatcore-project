@@ -31,7 +31,7 @@ def collision(point, center, radius, vector):
     return point + t * vector
 
 class FollowTerrainPlayer:
-    MAX_SPEED = 0.15 * CHUNK_SCALE # How many chunks per second
+    MAX_SPEED = 0.06 * CHUNK_SCALE # How many chunks per second
     MIN_SPEED = 0.0
     MAX_ROTATION_SPEED = 60.0 / FPS # How many degrees per second
 

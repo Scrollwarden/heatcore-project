@@ -2,6 +2,8 @@ import glm
 import numpy as np
 import threading, queue
 import struct
+import time
+import math
 import pygame as pg
 
 from engine.donjon import Donjon
@@ -50,9 +52,12 @@ class Planet:
             self.heatcore_count = saved_data[5]
         else:
             level, self.heatcore_count = saved_data[:2]
-            seed = np.random.randint(0, 100000) * 2 + 1 # Parce que les seeds pairs ne marchent pas... me demande pas pourquoi
-            while seed%7 != 0 or seed%103 != 0: #honnetement incomprehensible mais pb reglee, donc je me plains pas
+            seed = (np.random.randint(1000,2000) * 2) + 1
+            print(seed)
+            while seed%7 != 0 and seed%103 != 0: #honnetement incomprehensible mais pb reglee, donc je me plains pas
+                print(seed)
                 seed = (np.random.randint(1000, 2000) * 2) + 1
+            print()
         
         self.level = level
         self.radius = 8
@@ -126,7 +131,7 @@ class Planet:
         # Ancient structure
         rng = np.random.default_rng(self.seed)
         angle = rng.uniform(0, 360)
-        radius = rng.uniform(1, 2)
+        radius = rng.uniform(14, 20)
         position = radius * glm.vec3(np.cos(np.radians(angle)), 0.0, np.sin(np.radians(angle)))
         position = self.avoid_water(position, NUM_OCTAVES)
         self.ancient_structure = AncientStructure(self.app, self.app.meshes["ancient_structure"], position)
@@ -135,7 +140,7 @@ class Planet:
 
         # Heatcores
         angles = [rng.uniform(0, 360) for _ in range(self.num_heatcores)]
-        radiuses = [rng.uniform(1, 2) for _ in range(self.num_heatcores)]
+        radiuses = [rng.uniform(7, 15) for _ in range(self.num_heatcores)]
         
         # Make them spread
         min_diff = 40 / (self.num_heatcores - 1)
@@ -322,6 +327,10 @@ class Planet:
             if self.light.time >= self.light.full_time / 2 and not self.nuit:
                 self.new_popup("Il vous reste 30s", 3)
                 self.nuit = True
+            if self.light.time >= self.light.full_time / 2 + 30:
+                self.decollage = True
+                self.exit = True
+                self.heatcore_count = 0
             if self.light.time >= self.light.full_time / 2 + 25 and not self.decollage:
                 self.new_popup("Décollage d'urgence dans 5s", 4)
                 self.decollage = True
@@ -497,7 +506,8 @@ class Planet:
     def cinematique_entree(self):
         """Cinematic of entrance to the world (not here yet)"""
         running = True
-        popup = PopUp(self.app, "Décollage vers une nouvelle planète...", SCREEN_WIDTH // 1.5, 50, SCREEN_HEIGHT // 3, 0.5, 1000, 0.5, True, 50, 50)
+        popup = PopUp(self.app, "Décollage vers une nouvelle planète...", SCREEN_WIDTH // 1.5, 50,
+                      SCREEN_HEIGHT // 3, 0.5, 1000, 0.5, True, 50, 50)
         while running:
             self.app.context.clear(color=(0, 0, 0))
             self.generate_chunks()
