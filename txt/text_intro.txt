@@ -5,8 +5,6 @@ pour permettre à l'humanité de continuer à proliférer au-delà de la Voie La
 Six mois plus tard, le 24PP atteignait l'ensemble de systèmes,
 et sa plus grande étoile, Ambera.
 À bord du vaisseau-colonie, l'équipage envoyait ses premiers rapports.
-Nous avons remarqué par ailleurs que certaines planètes sont partiellement détruites.
-Comme labourées dans un sens sur des kilomètres. Un effet étrange.
 
 
 17/03/2500 - 08:37 - Transmission du 24PP
@@ -25,6 +23,8 @@ Ce n'est que grâce à l'autre moitié de leur orbite,
 bien plus proches de leur soleil,
 que les mondes ne gèlent pas complètement.
 Leur sol gagne à peine assez de chaleur pour ne pas devenir un glaçon.
+Nous avons remarqué par ailleurs que certaines planètes sont partiellement détruites.
+Comme labourées dans un sens sur des kilomètres. Un effet étrange.
 
 Nous n'avons pas assez d'énergie pour faire demi-tour.
 Le 24PP était censé s'installer dans un monde viable
@@ -55,5 +55,6 @@ Il part dans quelques minutes pour un premier monde.
 Nous espérons qu'il parviendra à trouver assez de ces Cœurs de chaleur.
 
 Et que ceux qui ont laissé ces cœurs, s'ils sont encore là, soient pacifiques...
+
 
 X
