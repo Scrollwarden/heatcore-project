@@ -3,10 +3,10 @@ Principe
 
 ## 📋 Sommaire
 1. **[📥 Installation et dépendances](#-installation-et-dépendances)**
-2. **[⏯️ Lancement du jeu](#-lancement-du-jeu)**
+2. **[⏯️ Lancement du jeu](#%EF%B8%8F-lancement-du-jeu)**
 3. **[🎮 Règles du jeu](#-règles-du-jeu)**
 4. **[🧨 Bugs et problèmes connus](#-bugs-et-problèmes-connus)**
-5. **[⚙️ Description technique du projet](#-description-technique-du-projet)**
+5. **[⚙️ Description technique du projet](#%EF%B8%8F-description-technique-du-projet)**
 6. **[👥 Crédits](#-crédits)**
 
 ## 📥 Installation et dépendances
