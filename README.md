@@ -1,5 +1,7 @@
 # HeatCore - Fronzen worlds
-Principe
+Arrivé dans un système solaire en perdition, dans lequel aucune planète n'est viable, l'équipage du 24PP crois sa fin arrivée. Heureusement, des Cœurs de chaleurs sont détectés, qui lui permettraient de repartir.  
+Vous, pilote de la navette d'exploration, devrez visiter les nombreux mondes d'Ambera pour récolter l'énergie laissée là par de mystérieux prédécesseurs.  
+Qui sait ce que vous découvrirez d'autres ici ?
 
 ## 📋 Sommaire
 1. **[📥 Installation et dépendances](#-installation-et-dépendances)**
