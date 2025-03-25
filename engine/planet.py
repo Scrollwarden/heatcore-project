@@ -60,7 +60,7 @@ class Planet:
             print()
         
         self.level = level
-        self.radius = 4
+        self.radius = 12
         self.radius_squared = self.radius ** 2
         self.app = app
         self.exit = False
@@ -69,6 +69,7 @@ class Planet:
         self.camera = None
         self.player = None
         self.nuit = False
+        self.last_seconds = False
         self.decollage = False
 
         self.seed = seed
@@ -109,7 +110,7 @@ class Planet:
     def load_attributes(self):
         """Load attributes dependant of planet being present in the main app"""
         self.app.get_time()
-        self.light = Light(self.app, 30)
+        self.light = Light(self.app, 360)
         self.camera = CameraFollow(self.app)
         self.player = FollowTerrainPlayer(self.app)
         if self.load_from_data:
@@ -326,8 +327,11 @@ class Planet:
                 self.remove_popup()
 
             if self.light.time >= self.light.full_time / 2 and not self.nuit:
-                self.new_popup("Il vous reste 30s", 3)
+                self.new_popup("Il vous reste 30s", 2)
                 self.nuit = True
+            if self.light.time >= self.light.full_time / 2 + 25 and not self.last_seconds:
+                self.new_popup("Décollage d'urgence dans 5s", 2)
+                self.last_seconds = True
             if self.light.time >= self.light.full_time / 2 + 30:
                 self.decollage = True
                 self.exit = True
