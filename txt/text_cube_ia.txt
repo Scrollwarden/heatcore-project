@@ -11,5 +11,5 @@ Vous pouvez poser un pion sur la face claire. En principe celle du dessus.
 Vous pouvez aussi tourner une rangée, grâce aux flèches vertes qui apparaissent sur les bords du cube.
 
 Tant que vous n'arrivez pas à me battre, je ne vous donnerai pas accès au Cœur de puissance.
-En cas de victoire, ce Cœur de puissance vous donnera l'équivalent de 3 Cœurs de chaleur.
-Attention, le temps coule encore en dehors, ne prenez pas trop de temps.
+En cas de victoire, ce Cœur de puissance vous donnera l'équivalent de 4 Cœurs de chaleur.
+Attention, le temps coule encore en dehors, ne soyez pas trop long.

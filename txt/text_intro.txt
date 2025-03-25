@@ -14,15 +14,11 @@ L'ambition nous a dévorés.
 La mission est au bord de l'échec.
 Les systèmes Amberiens sont en perdition. Il n'y a aucune chance d'installation durable ici.
 L'orbite de toutes les planètes a été modifiée. Probablement par un météore, nous ne savons pas.
-Elles décrivent maintenant toutes une ellipse autour de leur étoile,
-qui les portent périodiquement à une distance mortelle.
+Elles sont maintenant soumises à un froid mortel durant la nuit.
 Aucun être vivant n'y a survécu.
-D'après nos scanners, aucune trace de vie n'est à recenser dans tout Ambera,
-excepté un peu d'herbe et des micro-organismes marins.
-Ce n'est que grâce à l'autre moitié de leur orbite,
-bien plus proches de leur soleil,
-que les mondes ne gèlent pas complètement.
-Leur sol gagne à peine assez de chaleur pour ne pas devenir un glaçon.
+D'après nos scanners, aucune trace de vie n'est à recenser dans tout Ambera.
+Il ne reste que de l'herbe. Et encore.
+Leur sol gagne à peine assez de chaleur le jour pour ne pas devenir un glaçon la nuit.
 Nous avons remarqué par ailleurs que certaines planètes sont partiellement détruites.
 Comme labourées dans un sens sur des kilomètres. Un effet étrange.
 
@@ -47,14 +43,13 @@ Des sortes de Cœurs de chaleur.
 Nous avons assez d'énergie pour envoyer une navette d'exploration dans un atterrisseur.
 Il faudra parcourir plusieurs mondes pour récolter ces 9 cœurs.
 Le pilote devra rentrer à la base avant la nuit s'il veut survivre au froid.
-Décoller lui coûtera 3 Cœurs de chaleur. C'est le moins cher qu'on a pu faire.
+Décoller lui coûtera 2 Cœurs de chaleur. C'est le moins cher qu'on a pu faire.
 S'il ne rejoint pas l'atterrisseur avant la nuit, sa navette passera en autoguidage,
 et le ramènera en sécurité au prix de tous ses cœurs.
 
 Il part dans quelques minutes pour un premier monde.
-Nous espérons qu'il parviendra à trouver assez de ces Cœurs de chaleur.
 
-Et que ceux qui ont laissé ces cœurs, s'ils sont encore là, soient pacifiques...
+Nous espérons que ceux qui ont laissé ces cœurs, s'ils sont encore là, soient pacifiques...
 
 
 X

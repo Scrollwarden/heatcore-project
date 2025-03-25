@@ -233,12 +233,12 @@ class Planet:
                 donjon.run()
                 if donjon.hud_game.won:
                     self.ancient_structure.won = True
-                    self.heatcore_count += 3
+                    self.heatcore_count += 4
                 self.light.time += donjon.time_taken / 5
                 donjon.destroy()
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
                 self.exit = True
-                self.heatcore_count -= 3
+                self.heatcore_count -= 2
 
     def update_chunks(self):
         """Distribute chunk generation tasks across multiple frames"""
@@ -314,11 +314,11 @@ class Planet:
                 del self.heatcores[index]
 
             if glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "??? [Intéragir]"
+                popup_text = "Structure inconnue [E]"
                 if self.popup is None or self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             elif glm.length2(self.player.position.xz - self.starting_base.position.xz) <= 4 * CHUNK_SCALE:
-                popup_text = "Décoller vers une autre planète [Intéragir]" if self.heatcore_count <= 8 else "Rentrer à la maison [Intéragir]"
+                popup_text = "Décoller vers une autre planète [E]" if self.heatcore_count < 11 else "Rentrer à la maison [E]"
                 if self.popup is None or self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
             else:

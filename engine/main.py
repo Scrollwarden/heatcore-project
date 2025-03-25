@@ -155,6 +155,8 @@ class GraphicsEngine:
         """Pygame events loop"""
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_p):
+                if event.key == pg.K_p:
+                    print("WARN : Game was killed")
                 self.quit_game()
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 if not (self.hud.hud_menu.active or self.hud.hud_buttons.active):
@@ -251,9 +253,11 @@ class GraphicsEngine:
 
             if self.planet is not None and self.planet.exit:
                 if self.planet.heatcore_count >= 9:
+                    self.planet.heatcore_count = 0
+                    self.planet.exit = False
                     pg.mouse.set_visible(False)
-                    self.hud.hud_menu.active = False
                     self.hud.hud_menu.credits_requested = True
+                    self.hud.hud_menu.active = False
                 else:
                     self.load_new_planet(heatcore_count=max(0, self.planet.heatcore_count))
 

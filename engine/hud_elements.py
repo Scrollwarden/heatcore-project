@@ -104,8 +104,7 @@ class HeatcoreBar:
         self.colors = {
             "inactive": (50, 50, 50),
             "active": (255, 165, 0),
-            "full_base": (255, 165, 0),
-            "full_target": (255, 255, 0),
+            "cout_decollage": (124, 33, 33)
         }
         self.pulsation_speed = 7
 
@@ -120,7 +119,9 @@ class HeatcoreBar:
         bar_height = (self.height - (self.sections - 1) * section_spacing) // self.sections
 
         for i in range(self.sections):
-            color = self.colors["active"] if i < self.heatcore_count else self.colors["inactive"]
+            color = self.colors["active"] if i < self.heatcore_count-2 \
+                else self.colors["cout_decollage"] if i < self.heatcore_count \
+                else self.colors["inactive"]
             self._draw_section(i, color, bar_height, section_spacing)
 
     def _draw_section(self, index, color, bar_height, section_spacing):
@@ -154,11 +155,11 @@ class UI1:
         self.ancient_structure_marker = None
         self.starting_base_marker = None
 
-        height = 200
-        width = 10
+        height = 300
+        width = 12
         x = screen.get_width() - (width + 50)
         y = screen.get_height() - (height + 50)
-        self.heatcore_bar = HeatcoreBar(screen, x, y, width, height, 10)
+        self.heatcore_bar = HeatcoreBar(screen, x, y, width, height, 11) # 9 heatcores +2 pour le décollage
     
     def update(self):
         heatcore_keys = set(self.app.planet.heatcores.keys())
