@@ -60,7 +60,7 @@ class Planet:
             print()
         
         self.level = level
-        self.radius = 12
+        self.radius = 4
         self.radius_squared = self.radius ** 2
         self.app = app
         self.exit = False
@@ -109,7 +109,7 @@ class Planet:
     def load_attributes(self):
         """Load attributes dependant of planet being present in the main app"""
         self.app.get_time()
-        self.light = Light(self.app, 360)
+        self.light = Light(self.app, 30)
         self.camera = CameraFollow(self.app)
         self.player = FollowTerrainPlayer(self.app)
         if self.load_from_data:
@@ -219,7 +219,7 @@ class Planet:
             self.player.camera_zoom *= 0.97 ** event.y
 
         if event.type == pg.KEYDOWN and event.key == self.app.controls["Intéragir"] and not self.decollage:
-            if self.popup.text in ("Décollage dans 5s", "Il vous reste 30s") and not self.popup.finished:
+            if self.popup.text in ("Décollage d'urgence dans 5s", "Il vous reste 30s") and not self.popup.finished:
                 return
             print(not self.ancient_structure.won,
                   glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE,
@@ -299,6 +299,7 @@ class Planet:
         """Update all components needed to be updated each frame"""
         # Long aaah line
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
+            print(self.popup)
             if not (self.app.hud.hud_intro.active or self.app.hud.hud_credits.active):
                 self.light.update()
             self.player.update()
@@ -321,7 +322,7 @@ class Planet:
                 popup_text = "Décoller vers une autre planète [Intéragir]" if self.heatcore_count <= 8 else "Rentrer à la maison [Intéragir]"
                 if self.popup is None or self.popup.text != popup_text:
                     self.new_popup(popup_text, 3)
-            else:
+            elif self.popup is not None and self.popup.text not in ("Décollage d'urgence dans 5s", "Il vous reste 30s") and not self.popup.finished:
                 self.remove_popup()
 
             if self.light.time >= self.light.full_time / 2 and not self.nuit:
@@ -331,10 +332,8 @@ class Planet:
                 self.decollage = True
                 self.exit = True
                 self.heatcore_count = 0
-            if self.light.time >= self.light.full_time / 2 + 25 and not self.decollage:
-                self.new_popup("Décollage d'urgence dans 5s", 4)
-                self.decollage = True
-                self.heatcore_count = 0
+
+
 
         self.generate_chunks()
         self.update_chunks()
