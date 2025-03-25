@@ -300,7 +300,6 @@ class Planet:
         """Update all components needed to be updated each frame"""
         # Long aaah line
         if not (self.app.hud.hud_buttons.active or self.app.hud.hud_menu.active):
-            print(self.popup)
             if not (self.app.hud.hud_intro.active or self.app.hud.hud_credits.active):
                 self.light.update()
             self.player.update()

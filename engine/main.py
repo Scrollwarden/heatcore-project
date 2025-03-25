@@ -109,11 +109,18 @@ class GraphicsEngine:
                        self.planet.ancient_structure.won]
         else:
             objects = [self.current_level, 0]
+
+        directory = file_path.split('/')[0]
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
         with open(file_path, 'wb') as f:
             pickle.dump(objects, f)
         print(f"Data successfully saved in {file_path}")
 
     def save_buttons(self, file_path: str):
+        directory = file_path.split('/')[0]
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
         with open(file_path, 'wb') as f:
             pickle.dump(self.controls, f)
         print(f"Button data saved successfully in {file_path}")

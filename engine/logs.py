@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import os
 
 class Logs:
     """Class for logs in graphic engine performence"""
@@ -99,6 +100,9 @@ class Logs:
         Args:
             file_name (str): the file path for saving logs
         """
+        directory = file_name.split('/')[0]
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
         with open(f"{file_name}.csv", mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Time", "FPS", "Chunks Loaded", "Chunks Loading", "Accumulated Time"])
@@ -138,5 +142,5 @@ class Logs:
 
 if __name__ == '__main__':
     logs = Logs()
-    logs.load("new_engine/log_data")
+    logs.load("logs/log_data")
     logs.display_single_window()

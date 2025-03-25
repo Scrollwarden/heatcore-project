@@ -797,7 +797,7 @@ class UI3:
             elif name == 'hint':
                 text = f"Indice ({self.hints_remaining})"
             elif name == 'return':
-                text = "Quitter"
+                text = "Quitter la pièce"
             else:
                 text = "Easter egg"
             text_surf = font.render(text, True, (255, 255, 255))
