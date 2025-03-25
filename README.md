@@ -7,7 +7,7 @@ Principe
 3. **[🎮 Règles du jeu](#-règles-du-jeu)**
 4. **[🧨 Bugs et problèmes connus](#-bugs-et-problèmes-connus)**
 5. **[⚙️ Description technique du projet](#-description-technique-du-projet)**
-6. **[👥 Crédits](#-crédits-et-problèmes-connus)**
+6. **[👥 Crédits](#-crédits)**
 
 ## 📥 Installation et dépendances
 ### Environnement virtuel (recommandation)
