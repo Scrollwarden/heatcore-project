@@ -220,7 +220,7 @@ class Planet:
             self.player.camera_zoom *= 0.97 ** event.y
 
         if event.type == pg.KEYDOWN and event.key == self.app.controls["Intéragir"] and not self.decollage:
-            if self.popup.text in ("Décollage d'urgence dans 5s", "Il vous reste 30s") and not self.popup.finished:
+            if self.popup is not None and self.popup.text in ("Décollage d'urgence dans 5s", "Il vous reste 30s") and not self.popup.finished:
                 return
             print(not self.ancient_structure.won,
                   glm.length2(self.player.position.xz - self.ancient_structure.position.xz) <= 4 * CHUNK_SCALE,
