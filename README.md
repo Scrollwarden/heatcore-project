@@ -13,10 +13,11 @@ Qui sait ce que vous découvrirez d'autres ici ?
 
 ## 🛡️🚨 Problème de sécurité !
 Une dépendance du projet est sujette à une vulnérabilité de *haute séverité*. La vulnérabilité [CVE-2025-47273](https://github.com/Scrollwarden/heatcore-project/security/dependabot/1) concerne l'installation des requirements.
-Suite au manque de temps de notre équipe, nous **ne pouvons pas prendre en charge la résolution de ce problème** avant les vacances d'été à minima.
+Suite au manque de temps de notre équipe, nous ***__ne pouvons pas__ prendre en charge la résolution de ce problème*** avant les vacances d'été à minima.
 
-Il est fortement recommandé d'installer ce projet sur une machine sans danger qui ne contient aucune information d'importance et n'est pas reliée à un réseau sur lequel se trouvetn des données sensibles.
+Il est fortement recommandé d'installer ce projet sur une machine sans danger qui ne contient aucune information d'importance, et n'est pas reliée à un réseau sur lequel se trouvent des données sensibles.
 Un attaquant pourrai s'en servir pour écrire des fichiers à n'importe quel emplacement dans une machine à partir de ce programme, ce qui pourrai mener à de **l'exécution de programme à distance (RCE)**.
+Cela pourrai porter une grave atteinte à **l'intégrité de votre machine**.
 
 ## 📥 Installation et dépendances
 ### Environnement virtuel (recommandation)
