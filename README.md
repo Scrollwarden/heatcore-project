@@ -1,4 +1,4 @@
-# HeatCore - Fronzen worlds
+# HeatCore - Frozen worlds
 Arrivé dans un système solaire en perdition, dans lequel aucune planète n'est viable, l'équipage du 24PP crois sa fin arrivée. Heureusement, des Cœurs de chaleurs sont détectés, qui lui permettraient de repartir.  
 Vous, pilote de la navette d'exploration, devrez visiter les nombreux mondes d'Ambera pour récolter l'énergie laissée là par de mystérieux prédécesseurs.  
 Qui sait ce que vous découvrirez d'autres ici ?
@@ -13,7 +13,7 @@ Qui sait ce que vous découvrirez d'autres ici ?
 
 ## 🛡️🚨 Problème de sécurité !
 Une dépendance du projet est sujette à une vulnérabilité de *haute séverité*. La vulnérabilité [CVE-2025-47273](https://github.com/Scrollwarden/heatcore-project/security/dependabot/1) concerne l'installation des requirements.
-Suite au manque de temps de notre équipe, nous ***__ne pouvons pas__ prendre en charge la résolution de ce problème*** avant les vacances d'été à minima.
+Suite au manque de temps de notre équipe, nous ***__ne pouvons pas__ prendre en charge la résolution de ce problème*** dans les prochains mois.
 
 Il est fortement recommandé d'installer ce projet sur une machine sans danger qui ne contient aucune information d'importance, et n'est pas reliée à un réseau sur lequel se trouvent des données sensibles.
 Un attaquant pourrait s'en servir pour écrire des fichiers à n'importe quel emplacement dans une machine à partir de ce programme, ce qui pourrait mener à de **l'exécution de programme à distance (RCE)**.
